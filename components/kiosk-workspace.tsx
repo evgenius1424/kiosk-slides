@@ -92,7 +92,6 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
     if (fileRef.current) fileRef.current.value = ''
   }
   return <main className={`workspace ${presenting ? 'is-presenting' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}>
-    <style>{slideStyles}</style>
     <input ref={fileRef} type="file" accept=".md,.markdown,text/markdown,text/plain" hidden onChange={e => importSource(e.target.files?.[0])} />
     <header className="app-header">
       <a href="/" className="brand" aria-label="Kiosk Slides home"><span className="brand-icon"><Layers2 size={19} strokeWidth={2.2} /></span><span>Kiosk<span className="brand-light">Slides</span></span><span className="beta">BETA</span></a>
