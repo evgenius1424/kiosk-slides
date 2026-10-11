@@ -30,7 +30,7 @@ pnpm dev
 | `pnpm lint:fix`     | Lint with Oxlint and apply safe fixes                                        |
 | `pnpm test`         | Run the Vitest suite                                                         |
 | `pnpm build`        | Production build of the site                                                 |
-| `pnpm build:skills` | Package the two Claude skills from the shared renderer                       |
+| `pnpm build:skills` | Package the agent skill from the shared renderer                             |
 
 Open http://127.0.0.1:3000. Ask AI only works on 127.0.0.1, signed in with your own ChatGPT plan.
 
@@ -38,7 +38,7 @@ Open http://127.0.0.1:3000. Ask AI only works on 127.0.0.1, signed in with your 
 
 - Keep each pull request to one change.
 - Run `pnpm check` and `pnpm build` before you push. CI runs the same steps.
-- If you change the renderer, also run `pnpm build:skills` and check that a presentation rendered by the skill looks the same as one downloaded from the site. The two must never drift.
+- If you change the renderer, also run `pnpm build:skills`, commit the files it generates, and check that a presentation rendered by the skill looks the same as one downloaded from the site. The two must never drift.
 - If you change the presentation format, update [FORMAT.md](FORMAT.md) and [public/example.md](public/example.md) in the same pull request.
 - Keep site copy plain and non-technical. People come here to get a presentation in a minute.
 

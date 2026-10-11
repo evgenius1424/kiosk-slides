@@ -27,3 +27,5 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm build:skills
+      - name: Skills are up to date
+        run: git diff --exit-code -- skills && test -z "$(git status --porcelain -- skills)"

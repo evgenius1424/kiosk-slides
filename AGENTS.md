@@ -1,6 +1,6 @@
 # Kiosk Slides
 
-A Next.js site where you write or chat a presentation in Markdown and present it as HTML slides. Two Claude skills under `skills/` do the same without the site. Read [README.md](README.md) for the product and [FORMAT.md](FORMAT.md) for the presentation format. Use the words in [GLOSSARY.md](GLOSSARY.md): "presentation" and "slide", never "deck", in anything a person or an AI reads.
+A Next.js site where you write or chat a presentation in Markdown and present it as HTML slides. An agent skill in `skills/kiosk-slides/` does the same without the site. Read [README.md](README.md) for the product and [FORMAT.md](FORMAT.md) for the presentation format. Use the words in [GLOSSARY.md](GLOSSARY.md): "presentation" and "slide", never "deck", in anything a person or an AI reads.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
@@ -26,7 +26,7 @@ Use pnpm (version pinned in `package.json`) and Node 20.9 or later.
 | `pnpm build`        | Production build                                                 |
 | `pnpm build:skills` | Bundle `skills/render.ts` and copy references and fonts          |
 
-CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm build` and `pnpm build:skills`.
+CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm build` and `pnpm build:skills`, and fails if the built skills differ from what is committed.
 
 ## Layout
 
@@ -40,7 +40,8 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `lib/player.ts`       | Transitions, keys, swipe and wheel rules shared by every player                        |
 | `lib/chat*.ts`        | AI prompt and the local ChatGPT plan-usage client                                      |
 | `messages/en.json`    | Every UI string, read through next-intl                                                |
-| `skills/`             | The two Claude skills; `scripts/`, `references/` and `assets/` are generated           |
+| `skills/`             | The agent skill; its `scripts/`, `references/` and `assets/` are generated             |
+| `.claude-plugin/`     | Plugin and marketplace manifests that publish the skill                                |
 | `.scratch/`           | Specs and issues as Markdown (see Agent skills below)                                  |
 
 ## Rendering architecture
@@ -57,7 +58,7 @@ Everything else is a thin adapter: `app/` and `components/kiosk-workspace.tsx` f
 
 - UI text goes in `messages/en.json` and is read with `useTranslations`. Parser errors, the AI prompt and the shared renderer stay English in code.
 - Site copy is plain and non-technical, with no product or brand names.
-- The site export and `skills/render.ts` share one renderer and must never drift. After touching `components/slide/`, `lib/presentation/` or `lib/slide-styles.ts`, run `pnpm build:skills` and check a skill-rendered presentation matches the site download.
+- The site export and `skills/render.ts` share one renderer and must never drift. After touching `components/slide/`, `lib/presentation/` or `lib/slide-styles.ts`, run `pnpm build:skills`, commit what it generates (installers copy the skill straight from GitHub), and check a skill-rendered presentation matches the site download.
 - Presentation format changes update `FORMAT.md` and `public/example.md` together; tests read both.
 - Keep comments to a minimum and skip doc comments on functions.
 - Public functions and constants go at the top of a file, helpers at the bottom.
