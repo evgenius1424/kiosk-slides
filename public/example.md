@@ -62,6 +62,34 @@ footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
 ---
 
 <!--
+title: Results
+label: Metric
+footer: One number, one caption, readable from across the room.
+-->
+
+# Short decks ==hold attention==
+
+<!-- metric -->
+**3x**
+more visitors stayed for the whole loop
+
+---
+
+<!--
+title: Next steps
+label: Buttons
+footer: Up to three https:// links, each opening in a new tab.
+-->
+
+# Take it ==further==
+
+<!-- buttons -->
+- [View the source](https://github.com/evgenius1424/kiosk-slides)
+- [Read the format guide](https://github.com/evgenius1424/kiosk-slides#readme)
+
+---
+
+<!--
 title: Contrast
 label: Before / after
 footer: A Before | After table becomes a side-by-side comparison.

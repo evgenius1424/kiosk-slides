@@ -39,6 +39,31 @@ describe('SlideView', () => {
     expect(img.getAttribute('alt')).toBe('A screen')
     expect(article.querySelector('.slide-image figcaption')?.textContent).toBe('From the back')
   })
+
+  it('renders a metric value with its caption', () => {
+    const article = view({ ...chrome, kind: 'metric', value: '3x', caption: 'more questions answered' })
+    expect(article.className).toContain('kind-metric')
+    expect(article.querySelector('.slide-metric strong')?.textContent).toBe('3x')
+    expect(article.querySelector('.slide-metric > span')?.textContent).toBe('more questions answered')
+  })
+})
+
+describe('SlideView: buttons', () => {
+  it('renders one external link button per entry', () => {
+    const article = view({ ...chrome, kind: 'buttons', buttons: [
+      { label: 'View the repo', url: 'https://github.com/example/repo' },
+      { label: 'See the product', url: 'https://example.com' },
+    ] })
+    const links = [...article.querySelectorAll('.slide-buttons a')]
+    expect(links.map(a => [a.textContent, a.getAttribute('href')])).toEqual([
+      ['View the repo', 'https://github.com/example/repo'],
+      ['See the product', 'https://example.com'],
+    ])
+    for (const a of links) {
+      expect(a.getAttribute('target')).toBe('_blank')
+      expect(a.getAttribute('rel')).toContain('noopener')
+    }
+  })
 })
 
 describe('SlideView: table and before/after', () => {
