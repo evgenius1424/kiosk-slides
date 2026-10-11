@@ -3,6 +3,7 @@ import type { SlideKind, SlideOfKind } from '@/lib/deck'
 import { CodeWidget } from './code'
 import { ImageWidget } from './image'
 import { StepsWidget } from './steps'
+import { ButtonsWidget } from './buttons'
 
 /** The render component for each slide kind. TypeScript fails here until every kind has one. */
 export const widgets: { [K in SlideKind]: ComponentType<{ slide: SlideOfKind<K> }> | null } = {
@@ -10,4 +11,5 @@ export const widgets: { [K in SlideKind]: ComponentType<{ slide: SlideOfKind<K> 
   steps: StepsWidget,
   code: CodeWidget,
   image: ImageWidget,
+  buttons: ButtonsWidget,
 }

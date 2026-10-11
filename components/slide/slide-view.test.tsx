@@ -40,3 +40,21 @@ describe('SlideView', () => {
     expect(article.querySelector('.slide-image figcaption')?.textContent).toBe('From the back')
   })
 })
+
+describe('SlideView: buttons', () => {
+  it('renders one external link button per entry', () => {
+    const article = view({ ...chrome, kind: 'buttons', buttons: [
+      { label: 'View the repo', url: 'https://github.com/example/repo' },
+      { label: 'See the product', url: 'https://example.com' },
+    ] })
+    const links = [...article.querySelectorAll('.slide-buttons a')]
+    expect(links.map(a => [a.textContent, a.getAttribute('href')])).toEqual([
+      ['View the repo', 'https://github.com/example/repo'],
+      ['See the product', 'https://example.com'],
+    ])
+    for (const a of links) {
+      expect(a.getAttribute('target')).toBe('_blank')
+      expect(a.getAttribute('rel')).toContain('noopener')
+    }
+  })
+})

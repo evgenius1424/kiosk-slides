@@ -62,6 +62,20 @@ footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
 ---
 
 <!--
+title: Next steps
+label: Buttons
+footer: Up to three https:// links, each opening in a new tab.
+-->
+
+# Take it ==further==
+
+<!-- buttons -->
+- [View the source](https://github.com/evgenius1424/kiosk-slides)
+- [Read the format guide](https://github.com/evgenius1424/kiosk-slides#readme)
+
+---
+
+<!--
 title: Closing
 label: Takeaway
 footer: Press P for unattended looping; any click or manual move pauses it.

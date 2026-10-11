@@ -171,3 +171,45 @@ describe('parseDeck: errors', () => {
     expect(error(md('# One', '```js', 'x'))).toBe('Close the code block with ```')
   })
 })
+
+describe('parseDeck: buttons', () => {
+  const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
+
+  it('turns an annotated bullet list of links into buttons', () => {
+    const [slide] = parseDeck(md(
+      '# Try it ==yourself==',
+      '',
+      '<!-- buttons -->',
+      '- [View the repo](https://github.com/example/repo)',
+      '- [See the product](https://example.com)',
+    )).slides
+    expect(slide).toEqual({
+      kind: 'buttons', title: '', label: '', footer: '', layout: 'auto',
+      heading: 'Try it ==yourself==', body: '',
+      buttons: [
+        { label: 'View the repo', url: 'https://github.com/example/repo' },
+        { label: 'See the product', url: 'https://example.com' },
+      ],
+    })
+  })
+
+  it('caps buttons at three', () => {
+    const links = ['a', 'b', 'c', 'd'].map(x => `- [${x}](https://example.com/${x})`)
+    expect(error(md('# Go', '', '<!-- buttons -->', ...links))).toBe('Line 4: Use at most 3 buttons.')
+  })
+
+  it('rejects a button link that is not https://', () => {
+    expect(error(md('# Go', '', '<!-- buttons -->', '- [Repo](https://example.com)', '- [Docs](http://example.com)')))
+      .toBe('Line 5: Button links must be https:// URLs.')
+  })
+
+  it('rejects a bullet that is not a single link', () => {
+    expect(error(md('# Go', '', '<!-- buttons -->', '- [Repo](https://example.com)', '- just text')))
+      .toBe('Line 5: Each button must be a single [Label](https://...) link.')
+  })
+
+  it('rejects a buttons annotation above something other than a bullet list', () => {
+    expect(error(md('# Go', '', '<!-- buttons -->', '1. [Repo](https://example.com)')))
+      .toBe('Line 4: Buttons must be a bullet list of [Label](https://...) links.')
+  })
+})
