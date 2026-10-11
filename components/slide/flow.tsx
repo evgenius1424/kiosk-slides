@@ -11,7 +11,7 @@ type Rows = { start: number; end: number }
 function layout(lines: string[][]) {
   const column = new Map<string, number>()
   const rows = new Map<string, Rows>()
-  const edges = new Map<string, { from: string; to: string; rows: Rows }>()
+  const edges = new Map<string, { key: string; from: string; to: string; rows: Rows }>()
   const span = (prev: Rows | undefined, row: number): Rows =>
     prev ? { start: Math.min(prev.start, row), end: Math.max(prev.end, row) } : { start: row, end: row }
 
@@ -19,7 +19,7 @@ function layout(lines: string[][]) {
     rows.set(box, span(rows.get(box), row))
     if (i > 0) {
       const key = `${line[i - 1]}\u0000${box}`
-      edges.set(key, { from: line[i - 1], to: box, rows: span(edges.get(key)?.rows, row) })
+      edges.set(key, { key, from: line[i - 1], to: box, rows: span(edges.get(key)?.rows, row) })
     }
   }))
   // Longest path from a chain start; bounded so a loop between chains can't spin forever.
@@ -38,7 +38,7 @@ export function FlowView({ slide }: { slide: SlideOfKind<'flow'> }) {
   // Boxes take odd grid columns, arrows the even columns between them.
   return <div className="slide-flow">
     {boxes.map(box => <p className="flow-box" key={box.text} style={area(box.rows, box.column * 2 + 1, box.column * 2 + 2)}>{box.text}</p>)}
-    {edges.map(edge => <span className="flow-arrow" aria-hidden="true" key={`${edge.from}\u0000${edge.to}`}
+    {edges.map(edge => <span className="flow-arrow" aria-hidden="true" key={edge.key}
       style={area(edge.rows, column.get(edge.from)! * 2 + 2, column.get(edge.to)! * 2 + 1)}>→</span>)}
   </div>
 }
