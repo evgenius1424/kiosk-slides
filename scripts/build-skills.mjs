@@ -14,7 +14,7 @@ for (const skill of SKILLS) {
     target: 'node18',
     jsx: 'automatic',
     minify: true,
-    legalComments: 'none',
+    legalComments: 'eof',
     define: { 'process.env.NODE_ENV': '"production"' },
     banner: {
       js: "import{createRequire}from'module';const require=createRequire(import.meta.url);",
@@ -30,7 +30,7 @@ for (const file of REFERENCES)
 const fonts = (await readdir('public/fonts')).filter(file => file.endsWith('.woff2'))
 for (const skill of SKILLS) {
   await mkdir(`${skill}/assets/fonts`, { recursive: true })
-  for (const file of fonts) await copyFile(`public/fonts/${file}`, `${skill}/assets/fonts/${file}`)
+  for (const file of [...fonts, 'LICENSE.md']) await copyFile(`public/fonts/${file}`, `${skill}/assets/fonts/${file}`)
 }
 
 console.log(`Built ${SKILLS.join(', ')}`)
