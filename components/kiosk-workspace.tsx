@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import {
   ArrowDownToLine,
   ArrowRight,
-  BookOpen,
   Check,
   CheckCheck,
   ChevronDown,
@@ -15,7 +14,6 @@ import {
   Code2,
   Copy,
   Expand,
-  FileText,
   Keyboard,
   Layers2,
   Monitor,
@@ -66,6 +64,7 @@ import {
 } from '@/lib/presentations'
 import { PresentationChat } from './presentation-chat'
 import { downloadFile } from './download'
+import { PresentationEditor, selectSlide, useLiveSource } from './presentation-editor'
 import { PresentationMenu } from './presentation-menu'
 import { SlideView } from './slide'
 
@@ -78,7 +77,7 @@ const SHORTCUTS = [
   'shareSafe',
   'leave',
   'ends',
-  'update',
+  'tidy',
 ] as const
 const SCALES: Scale[] = ['normal', 'large', 'kiosk']
 
@@ -127,9 +126,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   }))
   const [loaded, setLoaded] = useState(false)
   const [chatKey, setChatKey] = useState(0)
-  const [source, setSource] = useState(example)
-  const [draft, setDraft] = useState(example)
-  const presentation = useMemo(() => parsePresentation(source), [source])
+  const live = useLiveSource(example)
+  const { source, error } = live
+  const empty = useMemo(() => ({ ...parsePresentation(blank), slides: [] }), [blank])
+  const presentation = live.presentation ?? empty
   const [index, setIndex] = useState(0)
   const [tab, setTab] = useState<'preview' | 'markdown' | 'chat'>('preview')
   const [accent, setAccent] = useState<string>(tones[0].color)
@@ -141,7 +141,6 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const [presenting, setPresenting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [toast, setToast] = useState('')
-  const [error, setError] = useState('')
   const [exporting, setExporting] = useState(false)
   const [sidebar, setSidebar] = useState(true)
   const [modal, setModal] = useState<'help' | 'format' | null>(null)
@@ -149,18 +148,15 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const [idle, setIdle] = useState(false)
   const [brandDraft, setBrandDraft] = useState<string | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const slides = presentation.slides
   const current = library.items.find(p => p.id === library.current) ?? library.items[0]
   const theme = presentation.theme
   const look = presentationLook(presentation)
-  // The presentation's front matter owns these settings, so the controls rewrite them in the source and the unbuilt draft.
-  const setFront = (key: string, value?: string) => {
-    setSource(s => setFrontMatter(s, key, value))
-    setDraft(d => setFrontMatter(d, key, value))
-  }
+  const setFront = (key: string, value?: string) => live.replace(setFrontMatter(source, key, value))
   const setTheme = (next: Theme) => setFront('theme', next)
-  const slide = slides[Math.min(index, slides.length - 1)]
+  const slide = slides[Math.min(index, slides.length - 1)] as Slide | undefined
   const motion = activeTransition(transition, safe)
   const change = useSlideChange(index, slide, motion)
   const notice = useCallback((message: string) => setToast(message), [])
@@ -178,7 +174,12 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const select = (i: number) => {
     setPlaying(false)
     setIndex(i)
+    if (tab === 'markdown' && textareaRef.current) selectSlide(textareaRef.current, source, i)
   }
+  const focusSlide = (text: string, i: number) =>
+    requestAnimationFrame(() => {
+      if (textareaRef.current) selectSlide(textareaRef.current, text, i)
+    })
   const present = useCallback(() => {
     setTab('preview')
     setPresenting(true)
@@ -210,6 +211,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     }))
   }, [source])
   useEffect(() => {
+    setDuration(presentation.duration)
+    setLoop(presentation.loop)
+  }, [presentation.duration, presentation.loop])
+  useEffect(() => {
     if (!toast) return
     const timer = setTimeout(() => setToast(''), 2600)
     return () => clearTimeout(timer)
@@ -219,7 +224,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     else dialogRef.current?.close()
   }, [modal])
   useEffect(() => {
-    if (!playing) return
+    if (!playing || !slide) return
     const timer = setTimeout(
       () => {
         if (index === slides.length - 1 && !loop) {
@@ -342,32 +347,18 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     return () => observer.disconnect()
   }, [index, tab, presenting, slide])
   function show(value: string) {
-    try {
-      const next = parsePresentation(value)
-      setSource(value)
-      setDraft(value)
-      setDuration(next.duration)
-      setLoop(next.loop)
-      setError('')
-    } catch (err) {
-      setSource(blank)
-      setDraft(value)
-      setTab('markdown')
-      setError((err as Error).message)
-    }
+    if (live.load(value).error) setTab('markdown')
     setIndex(0)
     setPlaying(false)
   }
-  const keepsDraft = () => draft === source || confirm(t('editor.discard'))
   const openPresentation = (id: string) => {
     const target = library.items.find(p => p.id === id)
-    if (!target || id === current.id || !keepsDraft()) return
+    if (!target || id === current.id) return
     setLibrary(l => ({ ...l, current: id }))
     show(target.source)
     setChatKey(k => k + 1)
   }
   const newPresentation = () => {
-    if (!keepsDraft()) return
     const created = createPresentation(untitled, blank, library.items)
     setLibrary(l => ({ current: created.id, items: [...l.items, created] }))
     show(blank)
@@ -394,21 +385,13 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     show(next.source)
     setChatKey(k => k + 1)
   }
-  const apply = () => {
-    try {
-      const next = parsePresentation(draft)
-      const formatted = formatPresentation(draft)
-      setSource(formatted)
-      setDraft(formatted)
-      setIndex(0)
-      setDuration(next.duration)
-      setLoop(next.loop)
-      setError('')
-      setTab('preview')
-      notice(t('toast.updated'))
-    } catch (err) {
-      setError((err as Error).message)
+  const tidy = () => {
+    const formatted = formatPresentation(source)
+    if (formatted !== source) {
+      live.replace(formatted)
+      focusSlide(formatted, index)
     }
+    notice(t('toast.tidied'))
   }
   const loadGenerated = (generated: string, fresh: boolean) => {
     const value = formatPresentation(generated)
@@ -435,14 +418,9 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           )
         : [...l.items, target],
     }))
-    const next = parsePresentation(value)
-    setSource(value)
-    setDraft(value)
+    const next = live.load(value)
     setIndex(0)
-    setDuration(next.duration)
-    setLoop(next.loop)
-    setError('')
-    notice(t('toast.loaded', { name: target.name, count: next.slides.length }))
+    notice(t('toast.loaded', { name: target.name, count: next.presentation?.slides.length ?? 0 }))
     return target.name
   }
   const copyPrompt = async () => {
@@ -522,12 +500,12 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
             className="btn export-btn"
             title={t('downloadHint')}
             onClick={exportHTML}
-            disabled={exporting}
+            disabled={exporting || !slides.length}
           >
             <ArrowDownToLine size={15} />
             {exporting ? t('preparing') : t('download')}
           </button>
-          <button className="btn primary" onClick={present}>
+          <button className="btn primary" onClick={present} disabled={!slides.length}>
             <Play size={14} fill="currentColor" />
             <span>{t('present')}</span>
             <kbd>F</kbd>
@@ -571,8 +549,11 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         <button
           className="add-slide"
           onClick={() => {
-            setDraft(`${source}\n\n---\n\n# ${t('newSlide.heading')}\n\n${t('newSlide.body')}\n`)
+            const text = `${source.trimEnd()}\n\n---\n\n# ${t('newSlide.heading')}\n\n${t('newSlide.body')}\n`
+            live.replace(text)
+            setIndex(slides.length)
             setTab('markdown')
+            focusSlide(text, slides.length)
             notice(t('toast.slideAdded'))
           }}
         >
@@ -647,7 +628,11 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
                   key={`slide-${index}`}
                   className={`canvas-slide ${change.leaving ? 'kt-enter' : ''}`}
                 >
-                  <SlideView slide={slide} theme={theme} accent={accent} look={look} />
+                  {slide ? (
+                    <SlideView slide={slide} theme={theme} accent={accent} look={look} />
+                  ) : (
+                    <p className="canvas-empty">{t('canvas.empty')}</p>
+                  )}
                 </div>
               </div>
               <div className="canvas-controls">
@@ -690,39 +675,25 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
               )}
             </>
           ) : (
-            <div className="source-editor">
-              <div className="source-header">
-                <span>
-                  <FileText size={14} />
-                  {current.name}
-                </span>
-                <div>
-                  <button className="btn" onClick={() => setModal('format')}>
-                    <BookOpen size={14} />
-                    {t('editor.help')}
-                  </button>
-                  <button className="btn primary" onClick={apply}>
-                    <Check size={14} />
-                    {t('editor.update')}
-                  </button>
+            <PresentationEditor
+              name={current.name}
+              source={source}
+              error={error}
+              textareaRef={textareaRef}
+              onChange={live.type}
+              onTidy={tidy}
+              onHelp={() => setModal('format')}
+              onSlide={setIndex}
+            >
+              {slide && (
+                <div
+                  className={`source-slide slide-backdrop ${theme}`}
+                  style={{ '--slide-tone': accent } as React.CSSProperties}
+                >
+                  <SlideView slide={slide} theme={theme} accent={accent} look={look} />
                 </div>
-              </div>
-              <textarea
-                aria-label={t('editor.label')}
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                onKeyDown={e => {
-                  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
-                    e.preventDefault()
-                    apply()
-                  }
-                }}
-                spellCheck={false}
-              />
-              <div className={`source-status ${error ? 'error' : ''}`} role="status">
-                {error || t('editor.status')}
-              </div>
-            </div>
+              )}
+            </PresentationEditor>
           )}
           <div className="presenter-tip" hidden={tab !== 'preview'}>
             <Keyboard size={15} />
@@ -1067,7 +1038,7 @@ function exitFullscreen() {
   else (document as WebkitDocument).webkitExitFullscreen?.()
 }
 
-function useSlideChange(index: number, slide: Slide, motion: ActiveTransition) {
+function useSlideChange(index: number, slide: Slide | undefined, motion: ActiveTransition) {
   const [change, setChange] = useState({
     index,
     slide,
@@ -1079,7 +1050,7 @@ function useSlideChange(index: number, slide: Slide, motion: ActiveTransition) {
     setChange({
       index,
       slide,
-      leaving: motion === 'none' ? null : change.slide,
+      leaving: motion === 'none' ? null : (change.slide ?? null),
       direction: index < change.index ? -1 : 1,
       count: change.count + 1,
     })

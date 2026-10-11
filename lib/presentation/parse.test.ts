@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { parsePresentation, setPresentationTheme, setFrontMatter } from '@/lib/presentation'
+import {
+  parsePresentation,
+  setPresentationTheme,
+  setFrontMatter,
+  slideLines,
+} from '@/lib/presentation'
 
 const md = (...lines: string[]) => lines.join('\n')
 
@@ -882,5 +887,16 @@ describe('setFrontMatter', () => {
       md('---', 'title: T', '---', '# Hi'),
     )
     expect(setFrontMatter(md('# Hi'), 'scale')).toBe('# Hi')
+  })
+})
+
+describe('slideLines', () => {
+  it('gives the first written line of each slide, skipping empty ones', () => {
+    const source = '---\ntitle: T\n---\n\n# One\n\n---\n\n---\n\n```\n---\n```\n# Two\n'
+    expect(slideLines(source)).toEqual([5, 11])
+  })
+
+  it('works on text that does not parse', () => {
+    expect(slideLines('# One\n\n---\n\n```\nopen')).toEqual([1, 5])
   })
 })

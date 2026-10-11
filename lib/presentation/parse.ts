@@ -45,6 +45,17 @@ export function parsePresentation(source: string): Presentation {
   return { title, theme, duration: Math.max(2, Math.min(120, duration)), loop, ...look, slides }
 }
 
+export function slideLines(source: string) {
+  const lines = source.replace(/\r/g, '').split('\n')
+  const end =
+    lines[0]?.trim() === '---' ? lines.findIndex((l, i) => i > 0 && l.trim() === '---') : -1
+  const start = lines[0]?.trim() === '---' ? (end < 0 ? lines.length : end + 1) : 0
+  return chunksOf(lines, start).chunks.flatMap(c => {
+    const offset = c.text.split('\n').findIndex(l => l.trim())
+    return offset < 0 ? [] : [c.line + offset]
+  })
+}
+
 function parseFrontMatter(lines: string[]) {
   let title = UNTITLED
   let theme: Theme = 'room-dark'
@@ -87,6 +98,12 @@ function parseFrontMatter(lines: string[]) {
 
 /** Split on bare `---` lines outside code fences. Each chunk remembers its first absolute line. */
 function splitSlides(lines: string[], start: number): Chunk[] {
+  const { chunks, fenceLine } = chunksOf(lines, start)
+  if (fenceLine) failAt(fenceLine, 'Close the code block with ```')
+  return chunks
+}
+
+function chunksOf(lines: string[], start: number) {
   const chunks: { text: string[]; line: number }[] = [{ text: [], line: start + 1 }]
   let fenceLine = 0 // 1-based line of the open code fence, 0 when outside one
   for (let i = start; i < lines.length; i++) {
@@ -95,8 +112,7 @@ function splitSlides(lines: string[], start: number): Chunk[] {
     if (!fenceLine && line.trim() === '---') chunks.push({ text: [], line: i + 2 })
     else chunks[chunks.length - 1].text.push(line)
   }
-  if (fenceLine) failAt(fenceLine, 'Close the code block with ```')
-  return chunks.map(c => ({ text: c.text.join('\n'), line: c.line }))
+  return { chunks: chunks.map(c => ({ text: c.text.join('\n'), line: c.line })), fenceLine }
 }
 
 /** Reject annotation keys the widget doesn't declare, so a typo like `typ=bar` gets a pointed message. */
