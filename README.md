@@ -67,3 +67,9 @@ The deck format is described in [FORMAT.md](FORMAT.md), with a full example in [
 ## Made by
 
 Kiosk Slides is the idea and work of [Evgenii](https://github.com/evgenius1424): slides that are seen, not built.
+
+## License
+
+Kiosk Slides is open source under the [MIT License](LICENSE). The bundled fonts are under the SIL Open Font License, listed in [public/fonts/LICENSE.md](public/fonts/LICENSE.md).
+
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), and report security problems privately as described in [SECURITY.md](SECURITY.md).
