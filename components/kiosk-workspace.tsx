@@ -6,6 +6,8 @@ import { downloadFile, parseDeck, setDeckTheme, tones, type Theme } from '@/lib/
 import { DeckChat } from './deck-chat'
 import { SlideView } from './slide'
 
+const SWIPE_DISTANCE = 45
+
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {
   return <button type="button" role="switch" aria-checked={checked} aria-label={label} className={`toggle ${checked ? 'on' : ''}`} onClick={onChange}><span /></button>
 }
@@ -30,6 +32,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
   const [sidebar, setSidebar] = useState(true)
   const [modal, setModal] = useState<'help' | 'decks' | null>(null)
   const [fit, setFit] = useState(true)
+  const [idle, setIdle] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -41,6 +44,12 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
   const notice = useCallback((message: string) => setToast(message), [])
   const move = useCallback((delta: number) => { setPlaying(false); setIndex(i => Math.max(0, Math.min(slides.length - 1, i + delta))) }, [slides.length])
   const select = (i: number) => { setPlaying(false); setIndex(i) }
+  const present = useCallback(() => {
+    setTab('preview'); setPresenting(true); setPlaying(false); (document.activeElement as HTMLElement)?.blur()
+    enterFullscreen()
+    notice(matchMedia('(hover: none)').matches ? 'Presenting · Swipe to move · Tap ✕ to return' : 'Presenting · Esc to return · P to autoplay')
+  }, [notice])
+  const leave = useCallback(() => { setPresenting(false); setPlaying(false); if (fullscreenElement()) exitFullscreen() }, [])
   useEffect(() => { if (!toast) return; const timer = setTimeout(() => setToast(''), 2600); return () => clearTimeout(timer) }, [toast])
   useEffect(() => { if (modal) dialogRef.current?.showModal(); else dialogRef.current?.close() }, [modal])
   useEffect(() => {
@@ -51,17 +60,17 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.isComposing || event.keyCode === 229) return
-      if (event.key === 'Escape') { setPresenting(false); setPlaying(false); setModal(null); return }
+      if (event.key === 'Escape') { leave(); setModal(null); return }
       if ((event.target as HTMLElement).closest('input,textarea,select,button,dialog') || tab !== 'preview') return
       if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); move(1) }
       if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) { event.preventDefault(); move(-1) }
       if (event.key.toLowerCase() === 'p') { setPlaying(p => !p); notice(playing ? 'Autoscroll off' : 'Autoscroll on') }
-      if (event.key.toLowerCase() === 'f') setPresenting(p => !p)
+      if (event.key.toLowerCase() === 'f') { if (presenting) leave(); else present() }
       if (event.key === 'Home') { setIndex(0); setPlaying(false) }
       if (event.key === 'End') { setIndex(slides.length - 1); setPlaying(false) }
     }
     window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler)
-  }, [move, playing, tab, notice, slides.length])
+  }, [move, playing, tab, notice, slides.length, presenting, present, leave])
   useEffect(() => {
     const target = canvasRef.current; if (!target) return
     let total = 0; let locked = false; let timer: ReturnType<typeof setTimeout>
@@ -71,8 +80,21 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
       total += event.deltaY * (event.deltaMode === 1 ? 16 : 1)
       if (Math.abs(total) > 65) { move(Math.sign(total)); total = 0; locked = true }
     }
-    target.addEventListener('wheel', wheel, { passive: false }); return () => { target.removeEventListener('wheel', wheel); clearTimeout(timer) }
+    const stopSwipe = onSwipe(target, move)
+    target.addEventListener('wheel', wheel, { passive: false }); return () => { target.removeEventListener('wheel', wheel); stopSwipe(); clearTimeout(timer) }
   }, [move, tab, presenting])
+  useEffect(() => {
+    const exited = () => { if (!fullscreenElement()) { setPresenting(false); setPlaying(false) } }
+    document.addEventListener('fullscreenchange', exited); document.addEventListener('webkitfullscreenchange', exited)
+    return () => { document.removeEventListener('fullscreenchange', exited); document.removeEventListener('webkitfullscreenchange', exited) }
+  }, [])
+  useEffect(() => {
+    if (!presenting) return
+    let timer: ReturnType<typeof setTimeout>
+    const wake = () => { setIdle(false); clearTimeout(timer); timer = setTimeout(() => setIdle(true), 2600) }
+    wake(); window.addEventListener('pointermove', wake); window.addEventListener('pointerdown', wake)
+    return () => { window.removeEventListener('pointermove', wake); window.removeEventListener('pointerdown', wake); clearTimeout(timer); setIdle(false) }
+  }, [presenting])
   useEffect(() => {
     const target = canvasRef.current; if (!target) return
     const check = () => { const content = target.querySelector('.slide-content'); setFit(!content || content.scrollHeight <= content.clientHeight + 3) }
@@ -84,7 +106,6 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
     setExporting(true)
     try { const { deckHtml, fetchAsDataUrl } = await import('./slide/deck-html'); downloadFile(await deckHtml({ ...deck, slides, duration, loop }, { theme, tone: accent, motion: motion && !safe, embedImage: fetchAsDataUrl }), 'kiosk-slides.html', 'text/html'); notice('Self-contained HTML exported') } catch (err) { notice((err as Error).message) } finally { setExporting(false) }
   }
-  const present = () => { setTab('preview'); setPresenting(true); setPlaying(false); (document.activeElement as HTMLElement)?.blur(); notice('Presenting · Esc to return · P to autoplay') }
   const importSource = async (file?: File) => {
     if (!file) return
     if (file.size > 2_000_000) { notice('Please use a Markdown file smaller than 2 MB.'); return }
@@ -92,7 +113,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
     try { const next = parseDeck(value); setSource(value); setDraft(value); setIndex(0); setDuration(next.duration); setLoop(next.loop); setModal(null); setError(''); notice('Markdown deck imported') } catch (err) { setDraft(value); setTab('markdown'); setError((err as Error).message); setModal(null) }
     if (fileRef.current) fileRef.current.value = ''
   }
-  return <main className={`workspace ${presenting ? 'is-presenting' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}>
+  return <main className={`workspace ${presenting ? 'is-presenting' : ''} ${presenting && idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}>
     <input ref={fileRef} type="file" accept=".md,.markdown,text/markdown,text/plain" hidden onChange={e => importSource(e.target.files?.[0])} />
     <header className="app-header">
       <a href="/" className="brand" aria-label="Kiosk Slides home"><span className="brand-icon"><Layers2 size={19} strokeWidth={2.2} /></span><span>Kiosk<span className="brand-light">Slides</span></span><span className="beta">BETA</span></a>
@@ -110,7 +131,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
       <div className="editor-toolbar"><div className="view-tabs">{!sidebar && <button className="icon-btn" aria-label="Show slide list" onClick={() => setSidebar(true)}><Layers2 size={16} /></button>}<button className={tab === 'preview' ? 'active' : ''} onClick={() => setTab('preview')}><Monitor size={14} />Preview</button><button className={tab === 'markdown' ? 'active' : ''} onClick={() => setTab('markdown')}><Code2 size={15} />Markdown</button><button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}><Sparkles size={14} />Ask AI</button></div><span className="ready-label"><CheckCheck size={14} />{fit ? 'Ready for the room' : 'Check slide fit'}</span></div>
       <div className={`editor-body ${tab !== 'preview' ? 'markdown-body' : ''}`}>
         <div className="chat-host" hidden={tab !== 'chat'}><DeckChat source={source} onDeck={loadGenerated} onOpen={() => setTab('chat')} /></div>
-        {tab === 'chat' ? null : tab === 'preview' ? <><div ref={canvasRef} className={`canvas-shell ${motion && !safe ? 'with-motion' : ''}`} onClick={() => setPlaying(false)}><div key={`${index}-${theme}`} className="canvas-slide"><SlideView slide={slide} theme={theme} accent={accent} /></div></div><div className="canvas-controls"><span><span className="status-dot" />{presenting ? 'Presentation' : '16:9'}<span className="control-separator">/</span>{theme === 'room-dark' ? 'Room dark' : 'Room light'}</span><div className="slide-pagination"><button className="icon-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={17} /></button><span>{String(index + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span></span><button className="icon-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={17} /></button></div><button className="icon-btn" aria-label="Enter presentation mode" onClick={present}><Expand size={16} /></button></div></> : <div className="source-editor"><div className="source-header"><span><FileText size={14} />example.md</span><button className="btn primary" onClick={apply}><Check size={14} />Build deck</button></div><textarea aria-label="Deck Markdown source" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} /><div className={`source-status ${error ? 'error' : ''}`} role="status">{error || 'Edit your Markdown, then build. Your last valid deck stays intact.'}</div></div>}
+        {tab === 'chat' ? null : tab === 'preview' ? <><div ref={canvasRef} className={`canvas-shell ${motion && !safe ? 'with-motion' : ''}`} onClick={() => setPlaying(false)}><div key={`${index}-${theme}`} className="canvas-slide"><SlideView slide={slide} theme={theme} accent={accent} /></div></div><div className="canvas-controls"><span><span className="status-dot" />{presenting ? 'Presentation' : '16:9'}<span className="control-separator">/</span>{theme === 'room-dark' ? 'Room dark' : 'Room light'}</span><div className="slide-pagination"><button className="icon-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={17} /></button><span>{String(index + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span></span><button className="icon-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={17} /></button></div><button className="icon-btn" aria-label="Enter presentation mode" onClick={present}><Expand size={16} /></button></div>{presenting && <div className="present-bar"><button className="present-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={22} /></button><span>{index + 1} / {slides.length}</span><button className="present-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={22} /></button><button className="present-btn present-exit" aria-label="Leave presentation" onClick={leave}><X size={22} /></button></div>}</> : <div className="source-editor"><div className="source-header"><span><FileText size={14} />example.md</span><button className="btn primary" onClick={apply}><Check size={14} />Build deck</button></div><textarea aria-label="Deck Markdown source" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} /><div className={`source-status ${error ? 'error' : ''}`} role="status">{error || 'Edit your Markdown, then build. Your last valid deck stays intact.'}</div></div>}
         <div className="presenter-tip" hidden={tab !== 'preview'}><Keyboard size={15} /><span>Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<span className="tip-extra"> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</span></span><button onClick={() => setModal('help')}>All shortcuts <span>↗</span></button></div>
 
       </div>
@@ -124,4 +145,36 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
     {toast && <div className="toast" role="status"><Check size={15} />{toast}</div>}
     <dialog ref={dialogRef} className="workspace-dialog" onCancel={() => setModal(null)} onClick={e => { if (e.target === e.currentTarget) setModal(null) }}><div className="dialog-heading"><h2>{modal === 'help' ? 'Make yourself at home.' : 'Your local workspace'}</h2><button className="icon-btn" aria-label="Close dialog" onClick={() => setModal(null)}><X size={18} /></button></div>{modal === 'help' ? <><p>Everything you need. Nothing in the way.</p><dl className="shortcut-list">{[['Next slide','↓ / → / Page Down'],['Previous slide','↑ / ← / Page Up'],['Toggle autoplay','P'],['Presentation mode','F'],['Leave presentation','Esc'],['First / last slide','Home / End']].map(([name, key]) => <div key={name}><dt>{name}</dt><dd><kbd>{key}</kbd></dd></div>)}</dl><div className="dialog-note">Scroll over the canvas to move one slide at a time. Click the presentation or navigate to pause autoplay. Download Markdown to keep your edits; this workspace does not save them after refresh.</div></> : <><p>Open a Markdown deck, or start with the example.</p><button className="deck-option" onClick={() => { setSource(initialSource); setDraft(initialSource); setIndex(0); setModal(null); setDuration(12); setLoop(true) }}><Presentation size={24} /><span><strong>The art of being seen</strong><small>Example deck · 7 slides</small></span><ArrowRight size={17} /></button><button className="btn import-button" onClick={() => fileRef.current?.click()}><Upload size={16} />Import Markdown</button><p className="dialog-note">Export a self-contained HTML file to present offline. Download your Markdown to keep an editable copy.</p></>}</dialog>
   </main>
+}
+
+function onSwipe(target: HTMLElement, move: (delta: number) => void) {
+  let start: { x: number; y: number } | null = null
+  const down = (event: TouchEvent) => { start = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null }
+  const up = (event: TouchEvent) => {
+    if (!start) return
+    const dx = event.changedTouches[0].clientX - start.x
+    const dy = event.changedTouches[0].clientY - start.y
+    start = null
+    if (Math.abs(dx) > SWIPE_DISTANCE && Math.abs(dx) > Math.abs(dy) * 1.2) move(dx < 0 ? 1 : -1)
+  }
+  target.addEventListener('touchstart', down, { passive: true }); target.addEventListener('touchend', up)
+  return () => { target.removeEventListener('touchstart', down); target.removeEventListener('touchend', up) }
+}
+
+type WebkitDocument = Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => void }
+type WebkitElement = HTMLElement & { webkitRequestFullscreen?: () => void }
+
+function fullscreenElement() {
+  return document.fullscreenElement ?? (document as WebkitDocument).webkitFullscreenElement ?? null
+}
+
+function enterFullscreen() {
+  const root = document.documentElement as WebkitElement
+  if (root.requestFullscreen) root.requestFullscreen().catch(() => {})
+  else root.webkitRequestFullscreen?.()
+}
+
+function exitFullscreen() {
+  if (document.exitFullscreen) document.exitFullscreen().catch(() => {})
+  else (document as WebkitDocument).webkitExitFullscreen?.()
 }

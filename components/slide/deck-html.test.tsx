@@ -26,4 +26,11 @@ describe('deckHtml', () => {
     expect(await render(true)).toContain('animation:slide-enter')
     expect(await render(false)).toContain('.portable-slide.active .slide{animation:none}')
   })
+
+  it('ships touch controls and swipe navigation', async () => {
+    const html = await render()
+    expect(html).toContain('aria-label="Previous slide"')
+    expect(html).toContain('aria-label="Next slide"')
+    expect(html).toContain("addEventListener('touchend'")
+  })
 })
