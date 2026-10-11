@@ -1,6 +1,5 @@
-import { readFile } from 'node:fs/promises'
-import path from 'node:path'
 import type { ChatEvent, ChatMessage } from '@/lib/chat'
+import { systemPrompt } from '@/lib/chat-prompt'
 import { ChatGPTError, checkLocalRequest, streamResponse } from '@/lib/chatgpt'
 import { parseDeck } from '@/lib/deck'
 
@@ -8,29 +7,6 @@ const MAX_ATTEMPTS = 3
 const MAX_MESSAGES = 40
 const MAX_MESSAGE_LENGTH = 20_000
 const MAX_SOURCE_LENGTH = 200_000
-
-const FORMAT_GUIDE = `You write slide decks for Kiosk Slides, a tool for presenting one clear idea per slide on a TV, in a room, or on a call.
-
-Talk with the user about what they want. When you create or change a deck, reply with one or two short sentences about what you made, then the complete deck source inside <deck></deck> tags. Always return the whole deck, never a partial edit. If the user only asks a question, answer briefly without a deck.
-
-Deck format rules (a parser enforces these and rejects the deck otherwise):
-- Optional front matter at the top between --- lines with title, theme (room-dark or room-light) and autoplay settings, as in the example.
-- Slides are separated by a line containing only ---.
-- Every slide has exactly one "# " headline of at most 115 characters. Wrap the key phrase in ==double equals== to highlight it; highlights must be closed.
-- Start each slide with a :::meta block. Allowed fields: title, label, footer, layout (auto, stacked, or split-left), duration (like 12s). Close every directive with ::: on its own line.
-- A slide may have at most ONE supporting widget:
-  - :::before-after with before: and after: fields
-  - :::flow with starts: [A, B] (one or two starts) and up to four "- " step lines
-  - :::metric with value: and caption: fields
-  - a numbered list of at most five steps (1. 2. 3.)
-  - one fenced code block of at most 12 lines
-  - one image ![alt](https://... "caption") using an HTTPS URL
-- Body text outside widgets must stay under 320 characters. List items and flow steps stay under 95 characters. Widget fields stay under 450 characters.
-- At most 40 slides. Prefer 5 to 12.
-
-Write for the last row of the room: short headlines, one idea per slide, plain language.
-
-Here is an example deck that follows every rule:`
 
 export async function POST(request: Request) {
   const reason = checkLocalRequest(request, { mutating: true })
@@ -84,14 +60,6 @@ function toInput(history: ChatMessage[], source: string): ChatMessage[] {
     if (i < history.length - 1 || !source.trim()) return { role: message.role, content: message.content }
     return { role: 'user', content: `The deck currently open in the editor:\n<deck>\n${source.trim()}\n</deck>\n\n${message.content}` }
   })
-}
-
-let cachedPrompt: string | undefined
-async function systemPrompt() {
-  if (cachedPrompt) return cachedPrompt
-  const example = await readFile(path.join(process.cwd(), 'public/example.md'), 'utf8')
-  cachedPrompt = `${FORMAT_GUIDE}\n<example>\n${example.trim()}\n</example>`
-  return cachedPrompt
 }
 
 function validate(body: { messages?: ChatMessage[]; source?: string; model?: string }) {
