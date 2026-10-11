@@ -26,7 +26,8 @@ description: Render a Kiosk Slides Markdown presentation into one self-contained
    - `--transition gentle|fade|slide|none` picks the slide transition. The default, `gentle`, is a soft rise and fade. `none` cuts instantly.
    - `--share-safe` starts the presentation in screen-share safe mode: every transition becomes a quick flat fade that stays crisp in Google Meet and on meeting-room TVs. Pressing `S` in the exported presentation toggles it.
    - `--no-motion` is the same as `--transition none`.
-   - `--check` only validates and prints the slide list, without writing HTML.
+   - `--check` only validates and prints the slide list and any warnings, without writing HTML.
+   - `--format` tidies the Markdown file in place (aligned tables, consistent spacing) without changing what it shows.
 
 3. If it fails, the message starts with `Line N:` and names the rule. Fix the presentation (see the `kiosk-slides-deck` skill for the format) and run it again. An image error means a URL could not be fetched or a `/images/` file is missing; ask the user for the file or remove that slide's image.
 4. Give the user the HTML file and how to present it:

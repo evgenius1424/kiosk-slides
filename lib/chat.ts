@@ -17,7 +17,7 @@ export class RequestError extends Error {
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 export type ChatEvent =
   | { type: 'text'; text: string }
-  | { type: 'retry'; error: string }
+  | { type: 'retry'; error: string; polish?: boolean }
   | { type: 'deck'; source: string }
   | { type: 'done'; reply: string }
   | { type: 'error'; message: string }

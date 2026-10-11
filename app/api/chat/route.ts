@@ -1,7 +1,7 @@
 import { CLOSE_TAG, OPEN_TAG, type ChatEvent, type ChatMessage } from '@/lib/chat'
 import { systemPrompt } from '@/lib/chat-prompt'
 import { ChatGPTError, checkLocalRequest, streamResponse } from '@/lib/chatgpt'
-import { parseDeck } from '@/lib/deck'
+import { parseDeck, reviewDeck } from '@/lib/deck'
 import { serverT } from '@/i18n/server'
 
 const MAX_ATTEMPTS = 3
@@ -58,6 +58,11 @@ async function generate(
   send: (event: ChatEvent) => void,
   signal: AbortSignal,
 ) {
+  let fallback: { source: string; reply: string } | undefined
+  const finish = (source: string, reply: string) => {
+    send({ type: 'deck', source })
+    send({ type: 'done', reply })
+  }
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const reply = await streamResponse(
       { model, instructions, input },
@@ -66,15 +71,24 @@ async function generate(
     )
     const result = extractDeck(reply)
     if (result.kind === 'none') {
-      send({ type: 'done', reply })
+      if (fallback) finish(fallback.source, fallback.reply)
+      else send({ type: 'done', reply })
       return
     }
     if (result.kind === 'valid') {
-      send({ type: 'deck', source: result.source })
-      send({ type: 'done', reply })
-      return
+      if (fallback || attempt === MAX_ATTEMPTS || !result.problems.length)
+        return finish(result.source, reply)
+      fallback = { source: result.source, reply }
+      send({ type: 'retry', error: result.problems.join(' '), polish: true })
+      input.push({ role: 'assistant', content: reply })
+      input.push({
+        role: 'user',
+        content: `The presentation is valid, but it misses what makes slides work:\n${result.problems.map(p => `- ${p}`).join('\n')}\n\nFix these and return the complete presentation inside <presentation></presentation> tags.`,
+      })
+      continue
     }
     if (attempt === MAX_ATTEMPTS) {
+      if (fallback) return finish(fallback.source, fallback.reply)
       send({
         type: 'error',
         message: serverT('stillBroken', { attempts: MAX_ATTEMPTS, error: result.error }),
@@ -93,7 +107,10 @@ async function generate(
 
 function extractDeck(
   reply: string,
-): { kind: 'none' } | { kind: 'valid'; source: string } | { kind: 'invalid'; error: string } {
+):
+  | { kind: 'none' }
+  | { kind: 'valid'; source: string; problems: string[] }
+  | { kind: 'invalid'; error: string } {
   const open = reply.lastIndexOf(OPEN_TAG)
   if (open < 0) return { kind: 'none' }
   const close = reply.indexOf(CLOSE_TAG, open)
@@ -104,8 +121,7 @@ function extractDeck(
     }
   const source = reply.slice(open + OPEN_TAG.length, close).trim() + '\n'
   try {
-    parseDeck(source)
-    return { kind: 'valid', source }
+    return { kind: 'valid', source, problems: reviewDeck(parseDeck(source)) }
   } catch (err) {
     return { kind: 'invalid', error: (err as Error).message }
   }

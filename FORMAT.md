@@ -210,6 +210,38 @@ The first line is the bold value (`**…**` or `__…__`). The caption is on the
 - Labels must be non-empty and at most 40 characters.
 - URLs must start with `https://`. Links to other slides are not supported.
 
-## Writing well
+## Writing a good presentation
 
-Write for the last row of the room: short headlines, one idea per slide, plain language.
+The parser accepts a slide with no settings comment and no widget, but the result looks unfinished: every such slide shows the same placeholder title and label, no footer, and a wall of headings. Treat these rules as strictly as the grammar above.
+
+- **Front matter.** Always set `title:`. Set `brand:` to the organization, product or event in one or two words when you know it.
+- **Every slide starts with a settings comment holding `title`, `label` and `footer`.** No exceptions, the first and last slides included.
+  - `title` names the part of the talk in one to three words (`Problem`, `Plan`, `Results`), shown top left.
+  - `label` says what this slide shows in two to four words (`Three steps`, `Before / after`), shown top right.
+  - `footer` is one short sentence that adds a fact, a source or the takeaway. It never repeats the heading.
+- **Show, don't just say.** Pick each slide's widget from what its content is:
+
+  | The content is                  | Use                                     |
+  | ------------------------------- | --------------------------------------- |
+  | One statement                   | a message slide (heading and body only) |
+  | A sequence of actions           | steps                                   |
+  | A single striking number        | metric                                  |
+  | A change or comparison          | before-after                            |
+  | Several items with attributes   | table                                   |
+  | Numbers over categories or time | chart                                   |
+  | A process or pipeline           | flow                                    |
+  | Something to read or copy       | code                                    |
+  | A screenshot, logo, or photo    | image                                   |
+  | Where to go next                | buttons                                 |
+
+- **Few message slides.** At most a third of the slides (two in a short presentation) are message slides, usually the opening and the closing. Never put two message slides in a row. A presentation of six or more slides uses at least four different widgets.
+- **Headlines state the point**, not the topic ("Short presentations **hold attention**", not "Attention span"), with the key phrase in `**bold**`. Write for the last row of the room: plain words, one idea per slide, and no body text the heading or widget already says.
+- **Tidy Markdown.** A blank line between blocks (except under an annotation), `-` for bullets, and table columns padded so the pipes line up.
+
+### Check before you hand it over
+
+1. The front matter has a `title:`.
+2. Every slide opens with `<!--` and a `title:`, `label:` and `footer:` line, closed by `-->`.
+3. No more than a third of the slides are message slides, and no two are next to each other.
+4. Every annotation sits on the line directly above its block.
+5. Every slide has exactly one `#` heading with a bolded key phrase.

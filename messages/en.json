@@ -62,7 +62,7 @@
       "help": "Help",
       "update": "Update slides",
       "label": "Slide text",
-      "status": "Paste slides from any AI or fix a word, then press Update slides.",
+      "status": "Paste slides from any AI or fix a word, then press Update slides. Tables and spacing get tidied for you.",
       "discard": "You have edits you haven’t applied. Discard them?"
     },
     "tip": "Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<extra> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</extra>",
@@ -218,6 +218,10 @@
       "ends": {
         "name": "First / last slide",
         "keys": "Home / End"
+      },
+      "update": {
+        "name": "Tidy and update slides while editing",
+        "keys": "Ctrl / ⌘ S"
       }
     },
     "note": "Scroll over the canvas to move one slide at a time. Click the presentation or navigate to pause autoplay. Presentations are saved in this browser; switch or create them from the menu at the top.",
@@ -287,6 +291,7 @@
     },
     "progress": {
       "fixing": "Fixing a small formatting issue…",
+      "polishing": "Polishing the slides…",
       "writing": "Writing slides…",
       "thinking": "Thinking…",
       "saved": "Saved as “{name}”"

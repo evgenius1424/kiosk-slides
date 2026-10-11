@@ -4,9 +4,11 @@ import { parseArgs } from 'node:util'
 import {
   fontId,
   fonts,
+  formatDeck,
   isScale,
   isTheme,
   parseDeck,
+  reviewDeck,
   scales,
   themes,
   tones,
@@ -16,7 +18,7 @@ import { deckHtml, fetchAsDataUrl } from '@/components/slide/deck-html'
 import { DEFAULT_TRANSITION, isTransition, transitions } from '@/lib/transitions'
 
 const usage =
-  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--check]'
+  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--check] [--format]'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -32,6 +34,7 @@ const { values, positionals } = parseArgs({
     'share-safe': { type: 'boolean', default: false },
     'no-motion': { type: 'boolean', default: false },
     check: { type: 'boolean', default: false },
+    format: { type: 'boolean', default: false },
   },
 })
 
@@ -43,9 +46,12 @@ main().catch(err => {
 async function main() {
   const input = positionals[0]
   if (!input) throw new Error(usage)
-  const deck = withLook(parseDeck(await readFile(input, 'utf8')))
+  const source = await readFile(input, 'utf8')
+  const deck = withLook(parseDeck(source))
+  if (values.format) await writeFile(input, formatDeck(source))
   if (values.check) {
     console.log(summary(deck))
+    reviewDeck(deck).forEach(problem => console.log(`Warning: ${problem}`))
     return
   }
   const theme = values.theme ?? deck.theme
