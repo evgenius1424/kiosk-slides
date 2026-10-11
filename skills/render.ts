@@ -1,11 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
-import { isTheme, parseDeck, themes, tones, type Deck } from '@/lib/deck'
+import { fontId, fonts, isScale, isTheme, parseDeck, scales, themes, tones, type Deck } from '@/lib/deck'
 import { deckHtml, fetchAsDataUrl } from '@/components/slide/deck-html'
 import { DEFAULT_TRANSITION, isTransition, transitions } from '@/lib/transitions'
 
-const usage = 'Usage: render.mjs deck.md [-o deck.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--images dir] [--transition gentle|fade|slide|cinematic|none] [--share-safe] [--no-motion] [--check]'
+const usage = 'Usage: render.mjs deck.md [-o deck.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|cinematic|none] [--share-safe] [--no-motion] [--check]'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -13,6 +13,9 @@ const { values, positionals } = parseArgs({
     out: { type: 'string', short: 'o' },
     theme: { type: 'string' },
     tone: { type: 'string', default: 'graphite' },
+    font: { type: 'string' },
+    scale: { type: 'string' },
+    brand: { type: 'string' },
     images: { type: 'string' },
     transition: { type: 'string', default: DEFAULT_TRANSITION },
     'share-safe': { type: 'boolean', default: false },
@@ -26,7 +29,7 @@ main().catch(err => { console.error(err.message); process.exit(1) })
 async function main() {
   const input = positionals[0]
   if (!input) throw new Error(usage)
-  const deck = parseDeck(await readFile(input, 'utf8'))
+  const deck = withLook(parseDeck(await readFile(input, 'utf8')))
   if (values.check) { console.log(summary(deck)); return }
   const theme = values.theme ?? deck.theme
   if (!isTheme(theme)) throw new Error(`Unknown theme “${theme}”. Use ${themes.join(' or ')}.`)
@@ -35,14 +38,23 @@ async function main() {
   const transition = values['no-motion'] ? 'none' : values.transition!
   if (!isTransition(transition)) throw new Error(`Unknown transition “${transition}”. Use ${transitions.map(t => t.id).join(', ')}.`)
   const imageDir = values.images ?? path.dirname(path.resolve(input))
-  const html = await deckHtml(deck, { theme, tone, transition, shareSafe: values['share-safe'], embedImage: src => embed(src, imageDir) })
+  const html = await deckHtml(deck, { theme, tone, transition, shareSafe: values['share-safe'], embedImage: src => embed(src, imageDir), embedFont })
   const out = values.out ?? input.replace(/\.(md|markdown)$/i, '') + '.html'
   await writeFile(out, html)
   console.log(`${summary(deck)}\nWrote ${out}`)
 }
 
+function withLook(deck: Deck): Deck {
+  const font = values.font ? fontId(values.font) : deck.font
+  if (!font) throw new Error(`Unknown font “${values.font}”. Use ${fonts.map(f => f.id).join(', ')}.`)
+  const scale = values.scale ?? deck.scale
+  if (!isScale(scale)) throw new Error(`Unknown scale “${scale}”. Use ${scales.join(', ')}.`)
+  const brand = values.brand === undefined ? deck.brand : values.brand === 'none' ? '' : values.brand
+  return { ...deck, font, scale, brand }
+}
+
 function summary(deck: Deck) {
-  const head = `“${deck.title}” · ${deck.theme} · ${deck.slides.length} slides · ${deck.duration}s${deck.loop ? ' · loop' : ''}`
+  const head = `“${deck.title}” · ${deck.theme} · ${deck.font} · ${deck.scale} · ${deck.slides.length} slides · ${deck.duration}s${deck.loop ? ' · loop' : ''}`
   return [head, ...deck.slides.map((s, i) => `${String(i + 1).padStart(2, '0')} ${s.kind.padEnd(12)} ${s.heading.map(p => p.text).join('')}`)].join('\n')
 }
 
@@ -52,4 +64,9 @@ async function embed(src: string, imageDir: string) {
   const data = await readFile(file).catch(() => { throw new Error(`Could not find ${src} at ${file}. Pass --images <dir> pointing at the folder that holds images/.`) })
   const ext = path.extname(file).slice(1).toLowerCase().replace('jpg', 'jpeg')
   return `data:image/${ext};base64,${data.toString('base64')}`
+}
+
+async function embedFont(file: string) {
+  const data = await readFile(new URL(`../assets/fonts/${file}`, import.meta.url))
+  return `data:font/woff2;base64,${data.toString('base64')}`
 }
