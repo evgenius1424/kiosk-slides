@@ -2,15 +2,16 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseDeck } from '@/lib/deck'
 import { slideStyles } from '@/lib/slide-styles'
+import type { Transition } from '@/lib/transitions'
 import { deckHtml } from './deck-html'
 
 const deck = parseDeck(readFileSync('public/example.md', 'utf8'))
-const render = (motion = true) => deckHtml(deck, { tone: '#669a98', motion, embedImage: async src => `data:image/png;base64,${src.length}` })
+const render = (transition: Transition = 'gentle', shareSafe = false) => deckHtml(deck, { tone: '#669a98', transition, shareSafe, embedImage: async src => `data:image/png;base64,${src.length}` })
 
 describe('deckHtml', () => {
   it('renders every slide into one self-contained page', async () => {
     const html = await render()
-    expect(html.match(/class="portable-slide /g)).toHaveLength(deck.slides.length)
+    expect(html.match(/class="portable-slide"/g)).toHaveLength(deck.slides.length)
     expect(html).toContain(slideStyles)
     expect(html).toContain('--slide-tone:#669a98')
     expect(html).toContain(`<title>${deck.title}</title>`)
@@ -22,9 +23,10 @@ describe('deckHtml', () => {
     expect(html).not.toContain('src="/images/')
   })
 
-  it('turns the transition off without motion', async () => {
-    expect(await render(true)).toContain('animation:slide-enter')
-    expect(await render(false)).toContain('.portable-slide.active .slide{animation:none}')
+  it('carries the chosen transition and screen-share safe flag into the player', async () => {
+    expect(await render('cinematic')).toContain('"transition":"cinematic","shareSafe":false')
+    expect(await render('none', true)).toContain('"transition":"none","shareSafe":true')
+    expect(await render()).toContain('[data-transition=gentle] .kt-enter')
   })
 
   it('ships swipe navigation and a full-screen toggle without pagination', async () => {
@@ -36,7 +38,7 @@ describe('deckHtml', () => {
 
   it('fills the space around a centered slide with the slide background', async () => {
     const html = await render()
-    expect(html).toContain('class="portable-slide slide-backdrop room-dark"')
+    expect(html).toContain('<body class="slide-backdrop room-dark" style="--slide-tone:#669a98">')
     expect(html).toContain('viewport-fit=cover')
   })
 })

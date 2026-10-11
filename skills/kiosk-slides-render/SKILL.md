@@ -20,7 +20,9 @@ description: Render a Kiosk Slides Markdown deck into one self-contained HTML fi
    - `--theme room-dark|room-light` overrides the deck's front-matter `theme:`.
    - `--tone graphite|plum|wine|teal|bronze` sets the background tone and the color of highlighted heading words. Any `#hex` color works too. The default is graphite.
    - `--images <dir>` is the folder that `/images/…` paths resolve against. The default is the deck's own folder, so `/images/logo.png` is read from `<deck folder>/images/logo.png`.
-   - `--no-motion` turns off the slide transition, for screen sharing or slow hardware.
+   - `--transition gentle|fade|slide|cinematic|none` picks the slide transition. The default, `gentle`, is a soft rise and fade. `cinematic` adds depth, blur and a light sweep and is meant for showcases on a strong GPU. `none` cuts instantly.
+   - `--share-safe` starts the deck in screen-share safe mode: every transition becomes a quick flat fade that stays crisp in Google Meet and on meeting-room TVs. Pressing `S` in the exported deck toggles it.
+   - `--no-motion` is the same as `--transition none`.
    - `--check` only validates and prints the slide list, without writing HTML.
 
 3. If it fails, the message starts with `Line N:` and names the rule. Fix the deck (see the `kiosk-slides-deck` skill for the format) and run it again. An image error means a URL could not be fetched or a `/images/` file is missing; ask the user for the file or remove that slide's image.
