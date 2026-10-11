@@ -5,7 +5,7 @@ import { fontId, fonts, isScale, isTheme, parseDeck, scales, themes, tones, type
 import { deckHtml, fetchAsDataUrl } from '@/components/slide/deck-html'
 import { DEFAULT_TRANSITION, isTransition, transitions } from '@/lib/transitions'
 
-const usage = 'Usage: render.mjs deck.md [-o deck.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|cinematic|none] [--share-safe] [--no-motion] [--check]'
+const usage = 'Usage: render.mjs deck.md [-o deck.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--check]'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,

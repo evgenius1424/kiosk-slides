@@ -23,7 +23,7 @@ description: Render a Kiosk Slides Markdown deck into one self-contained HTML fi
    - `--scale normal|large|kiosk` overrides the deck's `scale:`. `kiosk` makes headings as big as each one allows, for screens read from a distance.
    - `--brand <text>` replaces the `kiosk.` mark in the corner of every slide; `--brand none` hides it.
    - `--images <dir>` is the folder that `/images/…` paths resolve against. The default is the deck's own folder, so `/images/logo.png` is read from `<deck folder>/images/logo.png`.
-   - `--transition gentle|fade|slide|cinematic|none` picks the slide transition. The default, `gentle`, is a soft rise and fade. `cinematic` adds depth, blur and a light sweep and is meant for showcases on a strong GPU. `none` cuts instantly.
+   - `--transition gentle|fade|slide|none` picks the slide transition. The default, `gentle`, is a soft rise and fade. `none` cuts instantly.
    - `--share-safe` starts the deck in screen-share safe mode: every transition becomes a quick flat fade that stays crisp in Google Meet and on meeting-room TVs. Pressing `S` in the exported deck toggles it.
    - `--no-motion` is the same as `--transition none`.
    - `--check` only validates and prints the slide list, without writing HTML.

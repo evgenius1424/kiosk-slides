@@ -24,7 +24,7 @@ describe('deckHtml', () => {
   })
 
   it('carries the chosen transition and screen-share safe flag into the player', async () => {
-    expect(await render('cinematic')).toContain('"transition":"cinematic","shareSafe":false')
+    expect(await render('slide')).toContain('"transition":"slide","shareSafe":false')
     expect(await render('none', true)).toContain('"transition":"none","shareSafe":true')
     expect(await render()).toContain('[data-transition=gentle] .kt-enter')
   })
