@@ -8,9 +8,11 @@ import {
   PLAYER_WORDS,
   SWIPE,
   slideFromHash,
+  slideLabel,
   swipeDelta,
   type PlayerAction,
 } from '@/lib/player'
+import { slideStyles } from '@/lib/slide-styles'
 import messages from '@/messages/en.json'
 import { presentationHtml } from './presentation-html'
 
@@ -94,6 +96,15 @@ describe('exported presentation player', () => {
     expect(page.notice()).toBe(PLAYER_WORDS.shareSafe.on)
   })
 
+  it('announces each slide and hides the others from screen readers', async () => {
+    const page = await open()
+    expect(page.spoken()).toBe('')
+    page.press({ key: 'ArrowRight' })
+    expect(page.spoken()).toBe(slideLabel(presentation.slides[1], 1, presentation.slides.length))
+    expect(page.spoken()).toMatch(/^Slide 2 of \d+: \S/)
+    expect(page.hidden()).toEqual(presentation.slides.map((_, i) => i !== 1))
+  })
+
   it('keeps the screen awake only while autoplay runs', async () => {
     const page = await open()
     expect(page.wakeLock.request).not.toHaveBeenCalled()
@@ -111,7 +122,23 @@ describe('player words', () => {
       autoplay: { on: t('autoplay', { on: 'true' }), off: t('autoplay', { on: 'false' }) },
       shareSafe: { on: t('shareSafe', { on: 'true' }), off: t('shareSafe', { on: 'false' }) },
       end: t('end'),
+      slide: createTranslator({ locale: 'en', messages, namespace: 'Workspace.canvas' })('slide', {
+        number: '{number}',
+        count: '{count}',
+        title: '{title}',
+      }),
     }).toEqual(PLAYER_WORDS)
+  })
+})
+
+describe('reduced motion', () => {
+  it('swaps every transition for a short fade on the site and in downloads', () => {
+    const reduced = /@media\(prefers-reduced-motion:reduce\)\{(.*)\}/.exec(slideStyles)?.[1] ?? ''
+    expect(reduced).toContain(
+      '[data-transition] .kt-enter{animation:kt-fade-in .16s linear both!important}',
+    )
+    expect(reduced).toContain('[data-transition] .kt-leave{animation:none!important')
+    expect(reduced).not.toMatch(/kt-(rise|sink|slide)/)
   })
 })
 
@@ -153,6 +180,9 @@ async function open(hash = '') {
     history: () => window.history.length,
     active: () => slides.findIndex(s => s.classList.contains('active')),
     notice: () => document.querySelector('#notice')!.textContent,
+    spoken: () => document.querySelector('#spoken')!.textContent,
+    hidden: () =>
+      slides.map(s => (s as HTMLElement).inert && s.getAttribute('aria-hidden') === 'true'),
     press: (init: KeyboardEventInit) =>
       document.body.dispatchEvent(new window.KeyboardEvent('keydown', { bubbles: true, ...init })),
     swipe: (dx: number, dy: number) => {
