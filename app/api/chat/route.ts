@@ -1,4 +1,4 @@
-import type { ChatEvent, ChatMessage } from '@/lib/chat'
+import { CLOSE_TAG, OPEN_TAG, type ChatEvent, type ChatMessage } from '@/lib/chat'
 import { systemPrompt } from '@/lib/chat-prompt'
 import { ChatGPTError, checkLocalRequest, streamResponse } from '@/lib/chatgpt'
 import { parseDeck } from '@/lib/deck'
@@ -86,7 +86,7 @@ async function generate(
     input.push({ role: 'assistant', content: reply })
     input.push({
       role: 'user',
-      content: `The deck failed validation: ${result.error}\n\nFix that problem and return the complete corrected deck inside <deck></deck> tags.`,
+      content: `The presentation failed validation: ${result.error}\n\nFix that problem and return the complete corrected presentation inside <presentation></presentation> tags.`,
     })
   }
 }
@@ -94,12 +94,15 @@ async function generate(
 function extractDeck(
   reply: string,
 ): { kind: 'none' } | { kind: 'valid'; source: string } | { kind: 'invalid'; error: string } {
-  const open = reply.lastIndexOf('<deck>')
+  const open = reply.lastIndexOf(OPEN_TAG)
   if (open < 0) return { kind: 'none' }
-  const close = reply.indexOf('</deck>', open)
+  const close = reply.indexOf(CLOSE_TAG, open)
   if (close < 0)
-    return { kind: 'invalid', error: 'The deck was cut off before the closing </deck> tag.' }
-  const source = reply.slice(open + 6, close).trim() + '\n'
+    return {
+      kind: 'invalid',
+      error: `The presentation was cut off before the closing ${CLOSE_TAG} tag.`,
+    }
+  const source = reply.slice(open + OPEN_TAG.length, close).trim() + '\n'
   try {
     parseDeck(source)
     return { kind: 'valid', source }
@@ -114,7 +117,7 @@ function toInput(history: ChatMessage[], source: string): ChatMessage[] {
       return { role: message.role, content: message.content }
     return {
       role: 'user',
-      content: `The deck currently open in the editor:\n<deck>\n${source.trim()}\n</deck>\n\n${message.content}`,
+      content: `The presentation currently open in the editor:\n${OPEN_TAG}\n${source.trim()}\n${CLOSE_TAG}\n\n${message.content}`,
     }
   })
 }

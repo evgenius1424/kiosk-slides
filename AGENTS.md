@@ -1,6 +1,6 @@
 # Kiosk Slides
 
-A Next.js site where you write or chat a deck in Markdown and present it as HTML slides. Two Claude skills under `skills/` do the same without the site. Read [README.md](README.md) for the product and [FORMAT.md](FORMAT.md) for the deck format.
+A Next.js site where you write or chat a presentation in Markdown and present it as HTML slides. Two Claude skills under `skills/` do the same without the site. Read [README.md](README.md) for the product and [FORMAT.md](FORMAT.md) for the presentation format. Use the words in [GLOSSARY.md](GLOSSARY.md): "presentation" and "slide", never "deck", in anything a person or an AI reads.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
@@ -35,7 +35,7 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `app/`                | Next.js routes: the page, metadata, ChatGPT sign-in and chat API routes        |
 | `components/`         | Workspace UI (`kiosk-workspace.tsx`, `deck-chat.tsx`, `presentation-menu.tsx`) |
 | `components/slide/`   | Shared slide renderer and the exported single-file HTML (`deck-html.tsx`)      |
-| `lib/deck/`           | Markdown deck parser, widgets, themes, fonts and front matter                  |
+| `lib/deck/`           | Markdown presentation parser, widgets, themes, fonts and front matter          |
 | `lib/slide-styles.ts` | Slide CSS shared by the site, the export and the skills                        |
 | `lib/chat*.ts`        | AI prompt and the local ChatGPT plan-usage client                              |
 | `messages/en.json`    | Every UI string, read through next-intl                                        |
@@ -44,10 +44,10 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 
 ## Conventions
 
-- UI text goes in `messages/en.json` and is read with `useTranslations`. Deck parser errors, the AI prompt and the shared renderer stay English in code.
+- UI text goes in `messages/en.json` and is read with `useTranslations`. Parser errors, the AI prompt and the shared renderer stay English in code.
 - Site copy is plain and non-technical, with no product or brand names.
-- The site export and `skills/render.ts` share one renderer and must never drift. After touching `components/slide/`, `lib/deck/` or `lib/slide-styles.ts`, run `pnpm build:skills` and check a skill-rendered deck matches the site download.
-- Deck format changes update `FORMAT.md` and `public/example.md` together; tests read both.
+- The site export and `skills/render.ts` share one renderer and must never drift. After touching `components/slide/`, `lib/deck/` or `lib/slide-styles.ts`, run `pnpm build:skills` and check a skill-rendered presentation matches the site download.
+- Presentation format changes update `FORMAT.md` and `public/example.md` together; tests read both.
 - Keep comments to a minimum and skip doc comments on functions.
 - Public functions and constants go at the top of a file, helpers at the bottom.
 - Prettier owns formatting and Oxlint owns linting; don't hand-format or add disable comments without a reason.

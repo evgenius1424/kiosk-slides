@@ -1,8 +1,8 @@
-# Kiosk Slides deck format
+# Kiosk Slides presentation format
 
-A deck is one Markdown file. Plain Markdown carries the meaning, and a short HTML comment is used only where the Markdown alone is ambiguous. A deck that breaks a rule below is rejected with an error naming the line to fix.
+A presentation is one Markdown file. Plain Markdown carries the meaning, and a short HTML comment is used only where the Markdown alone is ambiguous. A presentation that breaks a rule below is rejected with an error naming the line to fix.
 
-## Deck structure
+## Presentation structure
 
 ````markdown
 ---
@@ -21,7 +21,7 @@ autoplay:
 ````
 
 - **Front matter** (optional) goes between `---` lines at the very top of the file:
-  - `title:` is the deck title (default `Untitled deck`).
+  - `title:` is the presentation title (default `Untitled presentation`).
   - `theme:` is `room-dark` or `room-light`.
   - `duration: Ns` is the autoplay time per slide in seconds. The default is 12, and it is clamped to 2–120.
   - `loop: false` stops autoplay at the end. Looping is on by default.
@@ -29,7 +29,7 @@ autoplay:
   - `scale:` is `normal` (default), `large`, or `kiosk`. `large` and `kiosk` size every heading to its length, so a one-word slide fills the screen and a long one still fits, and `kiosk` also enlarges the body for reading from across a room.
   - `brand:` is the word in the corner of every slide, at most 24 characters. The default is `kiosk`; `none` hides it.
 - **Slides** are separated by a line containing only `---`. A `---` line inside a ```` ``` ```` code fence does not split slides.
-- A deck has 1–40 slides. Prefer 5–12.
+- A presentation has 1–40 slides. Prefer 5–12.
 
 ## A slide
 
@@ -52,13 +52,13 @@ In order, a slide has:
 1. **Slide settings** (optional): one HTML comment that is the slide's first block, directly followed by the `#` heading. It has one `key: value` per line, and every key is optional:
    - `title`, `label`, `footer` are free text shown around the slide.
    - `layout` is `auto` (default), `stacked`, or `split-left`.
-   - `duration` overrides the deck's autoplay time for this slide, written like `20s`.
+   - `duration` overrides the presentation's autoplay time for this slide, written like `20s`.
    - Any other key is an error.
 2. **Exactly one `#` heading** of at most 115 characters. Wrap the key phrase in `**bold**` to highlight it. Headings may also use `*italic*`, `` `code` `` and `[links](https://...)`; nothing else, and the 115 characters count the visible text, not the markup. Other heading levels (`##` and deeper) are not supported.
 3. **Body paragraphs** (optional): plain paragraphs, with inline Markdown kept as written. All the body text together must be at most 320 characters.
 4. **At most one supporting widget** (optional). It can go before, between, or after the body paragraphs. A slide with no widget is a *message* slide.
 
-> **`-->` can't appear inside any HTML comment**, slide settings included. It closes the comment early. Write `->` or "to" instead (for example, `footer: Draft -> Deck`).
+> **`-->` can't appear inside any HTML comment**, slide settings included. It closes the comment early. Write `->` or "to" instead (for example, `footer: Draft -> Slides`).
 
 **Unsupported Markdown is an error, not ignored.** Blockquotes, `##` headings, bullet lists without an annotation, raw HTML, horizontal rules other than the slide separator, and anything else not listed here are rejected with `This slide has markdown the format doesn’t support (…)`.
 
@@ -101,7 +101,7 @@ A slide may have **one** of these widgets. A second one is an error (`Use one su
 # Go from source to story in **three steps**
 
 1. Gather the material and name the audience.
-2. Generate a short Markdown deck.
+2. Generate a short Markdown presentation.
 3. Validate, review, and present.
 ````
 
@@ -153,7 +153,7 @@ This is a single comparison. A second body row is an error, so use a plain table
 ### Chart
 
 ````markdown
-# Shorter decks get **more attention**
+# Shorter presentations get **more attention**
 
 <!-- chart: type=bar x=Slides y=Recall -->
 | Slides | Recall | Viewers |
@@ -172,7 +172,7 @@ This is a single comparison. A second body row is an error, so use a plain table
 ### Metric
 
 ````markdown
-# Short decks **hold attention**
+# Short presentations **hold attention**
 
 <!-- metric -->
 **3x**
@@ -184,15 +184,15 @@ The first line is the bold value (`**…**` or `__…__`). The caption is on the
 ### Flow
 
 ````markdown
-# Two inputs, **one deck**
+# Two inputs, **one presentation**
 
 <!-- flow -->
-- Notes -> Draft -> Deck
-- Data -> Deck
+- Notes -> Draft -> Slides
+- Data -> Slides
 ````
 
 - Each bullet is one chain of boxes joined by `->`, and every box needs text.
-- Each bullet is drawn as its own line. Boxes with exactly the same text are the same step, so the chains above meet at `Deck`: it appears on both lines, marked as shared. Bullets that share no text are drawn as two independent lines.
+- Each bullet is drawn as its own line. Boxes with exactly the same text are the same step, so the chains above meet at `Slides`: it appears on both lines, marked as shared. Bullets that share no text are drawn as two independent lines.
 - A flow can't loop. A box can't repeat within one bullet, and two bullets can't share boxes in opposite orders.
 
 ### Buttons

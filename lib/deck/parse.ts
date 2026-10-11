@@ -11,6 +11,8 @@ import { messages } from './components/shared'
 import type { Block } from './components/types'
 import type { Deck, MessageWidget, Slide } from './types'
 
+export const UNTITLED = 'Untitled presentation'
+
 const markdown = remark().use(remarkGfm)
 
 const unsupportedHints: Partial<Record<string, string>> = {
@@ -33,19 +35,18 @@ const failAt = (line: number, message: string): never => {
   throw new Error(`Line ${line}: ${message}`)
 }
 
-/** Parse a deck. Throws an `Error` whose message starts with `Line N:` when the source breaks a rule. */
 export function parseDeck(source: string): Deck {
   const lines = source.replace(/\r/g, '').split('\n')
   const { title, theme, duration, loop, start, look } = parseFrontMatter(lines)
   const chunks = splitSlides(lines, start).filter(c => c.text.trim())
   const slides = chunks.map(parseSlide)
   if (!slides.length) failAt(1, 'Add a slide with a # headline.')
-  if (slides.length > 40) failAt(chunks[40].line, 'Use at most 40 slides per deck.')
+  if (slides.length > 40) failAt(chunks[40].line, 'Use at most 40 slides per presentation.')
   return { title, theme, duration: Math.max(2, Math.min(120, duration)), loop, ...look, slides }
 }
 
 function parseFrontMatter(lines: string[]) {
-  let title = 'Untitled deck'
+  let title = UNTITLED
   let theme: Theme = 'room-dark'
   let duration = 12
   let loop = true

@@ -401,7 +401,9 @@ describe('parseDeck: errors', () => {
     const forty = Array.from({ length: 40 }, (_, i) => `# Slide ${i + 1}`).join('\n---\n')
     expect(error(forty)).toBe('no error')
     // Slide n (1-based) starts on line 2n - 1, so slide 41 starts on line 81.
-    expect(error(md(forty, '---', '# Slide 41'))).toBe('Line 81: Use at most 40 slides per deck.')
+    expect(error(md(forty, '---', '# Slide 41'))).toBe(
+      'Line 81: Use at most 40 slides per presentation.',
+    )
   })
 
   it('rejects an unknown font or scale on its front-matter line', () => {

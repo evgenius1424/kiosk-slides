@@ -1,4 +1,4 @@
-import { parseDeck } from './deck'
+import { parseDeck, UNTITLED } from './deck'
 
 export type Presentation = {
   id: string
@@ -62,7 +62,7 @@ export function uniqueName(name: string, existing: Presentation[], ignore?: stri
 export function deckName(source: string) {
   try {
     const deck = parseDeck(source)
-    if (deck.title !== 'Untitled deck') return deck.title.trim()
+    if (deck.title !== UNTITLED) return deck.title.trim()
     return deck.slides[0].heading
       .map(part => part.text)
       .join('')

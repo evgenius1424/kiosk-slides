@@ -2,6 +2,8 @@ import type { ChatGPTModel, ChatGPTStatus } from './chatgpt'
 
 export type { ChatGPTModel, ChatGPTStatus }
 export const MANAGE_USAGE_URL = 'https://chatgpt.com/#settings'
+export const OPEN_TAG = '<presentation>'
+export const CLOSE_TAG = '</presentation>'
 
 export class RequestError extends Error {
   constructor(
@@ -68,10 +70,10 @@ export async function streamChat(
 }
 
 export function visibleReply(text: string) {
-  const open = text.indexOf('<deck>')
+  const open = text.indexOf(OPEN_TAG)
   if (open < 0) return { text: text.trim(), writing: false }
-  const close = text.indexOf('</deck>', open)
-  const rest = close < 0 ? '' : text.slice(close + 7)
+  const close = text.indexOf(CLOSE_TAG, open)
+  const rest = close < 0 ? '' : text.slice(close + CLOSE_TAG.length)
   return { text: (text.slice(0, open) + rest).trim(), writing: close < 0 }
 }
 

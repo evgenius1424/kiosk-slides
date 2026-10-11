@@ -2,7 +2,7 @@
   "Metadata": {
     "title": "{name}: Slides made to be seen",
     "titleTemplate": "%s · {name}",
-    "description": "Describe your talk to AI and get a clean, finished deck in seconds. Big, readable slides built for screen sharing and meeting-room TVs, with no layout work.",
+    "description": "Describe your talk to AI and get a clean, finished presentation in seconds. Big, readable slides built for screen sharing and meeting-room TVs, with no layout work.",
     "keywords": [
       "AI slides",
       "AI presentation maker",
@@ -42,7 +42,7 @@
       "title": "Slides",
       "hide": "Hide slide list",
       "show": "Show slide list",
-      "list": "Deck slides",
+      "list": "Slides",
       "slide": "Slide {number}: {title}",
       "untitledSlide": "Slide {number}",
       "add": "Add a slide"
@@ -91,7 +91,7 @@
     }
   },
   "Settings": {
-    "title": "Deck settings",
+    "title": "Presentation settings",
     "appearance": "Appearance",
     "theme": "Theme",
     "tone": "Background tone",
@@ -147,7 +147,7 @@
     "clarityTitle": "Clarity comes first.",
     "clarityBody": "Your message stays readable,<br></br>even on a slow connection.",
     "status": {
-      "ready": "Deck is ready",
+      "ready": "Presentation is ready",
       "review": "Review layout",
       "count": "{count, plural, one {# slide} other {# slides}}",
       "checked": "Slides checked",
@@ -243,9 +243,9 @@
   },
   "Chat": {
     "suggestions": {
-      "pitch": "Make a 6-slide deck that pitches a four-day work week to leadership",
+      "pitch": "Make a 6-slide presentation that pitches a four-day work week to leadership",
       "onboarding": "Explain how our onboarding works in five steps for new hires",
-      "tighten": "Tighten the current deck and add a closing metric slide"
+      "tighten": "Tighten the current presentation and add a closing metric slide"
     },
     "connect": {
       "title": "Write slides with your ChatGPT plan.",
@@ -268,7 +268,7 @@
     },
     "composer": {
       "label": "Message ChatGPT",
-      "first": "What is your deck about, and who is it for?",
+      "first": "What is your presentation about, and who is it for?",
       "followUp": "Ask for a change…",
       "model": "ChatGPT model",
       "usingPlan": "Using ChatGPT plan · <link>Manage usage</link>",
@@ -308,7 +308,7 @@
     "tooLong": "This conversation is too long. Start a new chat.",
     "badMessage": "Each message needs a role and text under {max, number} characters.",
     "badOrder": "The conversation must start and end with a user message.",
-    "deckTooLarge": "The current deck is too large to send.",
+    "deckTooLarge": "The current presentation is too large to send.",
     "stillBroken": "The slides still have a problem after {attempts, plural, one {# try} other {# tries}}: {error}",
     "stopped": "Generation stopped.",
     "generic": "Something went wrong while writing your slides.",

@@ -26,7 +26,9 @@ describe('presentations', () => {
   })
 
   it('names a deck from its title, or its first heading', () => {
-    expect(deckName(readFileSync('public/example.md', 'utf8'))).toBe('Kiosk Slides — example deck')
+    expect(deckName(readFileSync('public/example.md', 'utf8'))).toBe(
+      'Kiosk Slides — example presentation',
+    )
     expect(deckName('# Ship **faster** with less\n')).toBe('Ship faster with less')
     expect(deckName('## not a deck')).toBe('')
   })
