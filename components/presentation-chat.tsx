@@ -13,6 +13,7 @@ import {
   Sparkles,
   Square,
   TriangleAlert,
+  WifiOff,
 } from 'lucide-react'
 import {
   type ChatGPTModel,
@@ -27,6 +28,7 @@ import {
   streamChat,
   visibleReply,
 } from '@/lib/chat'
+import { useOnline } from './use-online'
 
 type Entry = ChatMessage & { presentation?: string; notes?: string[]; error?: string }
 
@@ -57,6 +59,8 @@ export function PresentationChat({
   const [entries, setEntries] = useState<Entry[]>([])
   const [input, setInput] = useState('')
   const [live, setLive] = useState<{ text: string; notes: string[] } | null>(null)
+  const [unreachable, setUnreachable] = useState(false)
+  const online = useOnline()
   const abortRef = useRef<AbortController | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const busy = live !== null
@@ -65,8 +69,10 @@ export function PresentationChat({
   const refresh = useCallback(async () => {
     try {
       setStatus(await fetchStatus())
+      setUnreachable(false)
     } catch (err) {
-      setStatus({ available: false, reason: errorText(err, t) })
+      if (err instanceof TypeError) setUnreachable(true)
+      else setStatus({ available: false, reason: errorText(err, t) })
     }
   }, [t])
   useEffect(() => {
@@ -83,8 +89,10 @@ export function PresentationChat({
         `${window.location.pathname}${params.size ? `?${params}` : ''}`,
       )
     }
-    refresh()
-  }, [refresh])
+  }, [])
+  useEffect(() => {
+    if (online) refresh()
+  }, [online, refresh])
   useEffect(() => {
     if (!ready) return
     fetchModels()
@@ -178,6 +186,22 @@ export function PresentationChat({
     if (/sign-in|session|connect again/i.test(error)) refresh()
   }
 
+  if (!online || unreachable)
+    return (
+      <div className="chat-panel">
+        <div className="chat-empty">
+          <WifiOff size={20} />
+          <h2>{t('offline.title')}</h2>
+          <p>{t('offline.body')}</p>
+          {online && (
+            <button className="btn" onClick={refresh}>
+              <RotateCcw size={14} />
+              {t('offline.retry')}
+            </button>
+          )}
+        </div>
+      </div>
+    )
   if (!status)
     return (
       <div className="chat-panel">
@@ -437,6 +461,7 @@ function AssistantBubble({
 }
 
 function errorText(err: unknown, t: ReturnType<typeof useTranslations<'Chat'>>) {
+  if (err instanceof TypeError) return t('errors.offline')
   if (err instanceof RequestError)
     return err.message || t('errors.requestFailed', { status: err.status })
   return (err as Error).message

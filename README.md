@@ -40,6 +40,7 @@ Slides today are mostly seen through a video call or on a TV across a table. Kio
 - **Your brand** in the corner of every slide, or nothing at all.
 - **Present anywhere**, including from a phone held sideways, with swipe and tap.
 - **Many presentations**, saved in your browser and one click apart.
+- **Works offline and installs as an app.** After one visit the site opens, edits, presents and downloads with no connection. Only Ask AI needs the internet.
 - **One-file download.** Every presentation downloads as a single HTML file with its images and fonts inside. It opens in any browser, works offline, and needs nothing installed.
 
 ## Skill for your AI
