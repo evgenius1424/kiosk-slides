@@ -61,6 +61,14 @@ function splitSlides(lines: string[], start: number): Chunk[] {
   return chunks.map(c => ({ text: c.text.join('\n'), line: c.line }))
 }
 
+/** Reject annotation keys the widget doesn't declare, so a typo like `typ=bar` gets a pointed message. */
+function checkSettings({ type, args }: Annotation, { settings = [] }: { settings?: readonly string[] }, fail: (message: string) => never) {
+  const unknown = Object.keys(args).find(key => !settings.includes(key))
+  if (!unknown) return
+  const allowed = settings.length ? `Use one of: ${settings.join(', ')}.` : 'It takes no settings.'
+  fail(`<!-- ${type} --> has no setting “${unknown}”. ${allowed}`)
+}
+
 function parseSlide(chunk: Chunk): Slide {
   const lineOf = (position: Position) => chunk.line + (position?.start.line ?? 1) - 1
   const fail = (message: string, line = chunk.line): never => { throw new Error(`Line ${line}: ${message}`) }
@@ -90,6 +98,7 @@ function parseSlide(chunk: Chunk): Slide {
     let node = rest[i]
     let line = lineOf(node.position)
     let annotation: Annotation | undefined
+    const commentLine = line
     if (isComment(node)) {
       // An annotation applies to the block that starts on the very next line.
       const next = rest[i + 1]
@@ -98,11 +107,11 @@ function parseSlide(chunk: Chunk): Slide {
       annotation = parseAnnotation(node.value, message => fail(message, line), annotationTypes)
       node = next; line = nextLine; i++
     }
-    const at = line
-    const block: Block = { node, line, annotation, raw, fail: (message, where = at) => fail(message, where) }
+    const block: Block = { node, line, annotation, raw, fail: (message, where = line) => fail(message, where) }
     const component = annotation
       ? widgetComponents.find(c => c.annotation === annotation.type)
       : widgetComponents.find(c => !c.annotation && c.matches?.(block))
+    if (annotation && component) checkSettings(annotation, component, message => fail(message, commentLine))
     if (component) {
       if (widget.kind !== 'message') fail('Use one supporting widget per slide.', line)
       widget = component.parse(block)

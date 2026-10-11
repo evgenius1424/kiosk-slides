@@ -21,6 +21,7 @@ const toNumber = (cell: string) => /^-?[\d,]*\.?\d+$/.test(cell) ? Number(cell.r
 export const chart = defineWidget<ChartWidget>({
   kind: 'chart',
   annotation: 'chart',
+  settings: ['type', 'x', 'y'],
   parse: block => {
     const { node, annotation, fail, line } = block
     // The annotation sits on the line directly above the block.

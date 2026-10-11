@@ -185,6 +185,17 @@ describe('parseDeck: errors', () => {
     expect(error(md('# Hi', '', '<!-- sparkle -->', '- a'))).toMatch(/^Line 3: Unknown annotation “sparkle”\./)
   })
 
+  it('rejects an annotation setting the widget does not take, naming the allowed ones', () => {
+    expect(error(md('# Hi', '', '<!-- metric: foo=bar -->', '**3x**', 'faster')))
+      .toBe('Line 3: <!-- metric --> has no setting “foo”. It takes no settings.')
+    expect(error(md('# Hi', '', '<!-- flow: x=1 -->', '- A -> B')))
+      .toBe('Line 3: <!-- flow --> has no setting “x”. It takes no settings.')
+    expect(error(md('# Hi', '', '<!-- buttons: a=b -->', '- [Go](https://x.com)')))
+      .toBe('Line 3: <!-- buttons --> has no setting “a”. It takes no settings.')
+    expect(error(md('# Hi', '', '<!-- chart: typ=bar -->', '| Month | Visits |', '| --- | --- |', '| Jan | 1 |')))
+      .toBe('Line 3: <!-- chart --> has no setting “typ”. Use one of: type, x, y.')
+  })
+
   it('points slide settings placed after the heading back above it', () => {
     expect(error(md('# Hi', '<!-- title: Opening -->', 'Body.'))).toMatch(/^Line 2: Unknown annotation “title”\. Slide settings go in the comment above the # heading\./)
   })

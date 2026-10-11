@@ -26,6 +26,8 @@ export type Block = {
 export type WidgetComponent<W extends { kind: string }> = {
   kind: W['kind']
   annotation?: string
+  /** The `key=value` settings its annotation accepts. Any other key is an error. Defaults to none. */
+  settings?: readonly string[]
   matches?: (block: Block) => boolean
   parse: (block: Block) => W
 }
