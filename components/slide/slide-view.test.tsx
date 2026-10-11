@@ -40,6 +40,23 @@ describe('SlideView', () => {
     expect(article.querySelector('.slide-image figcaption')?.textContent).toBe('From the back')
   })
 
+  const chartData = { labels: ['Jan', 'Feb', 'Mar'], series: [{ name: 'Visits', values: [120, 300, 80] }, { name: 'Signups', values: [8, 12, 0] }] }
+
+  it('renders a bar chart with one bar per value, its labels, and a legend', () => {
+    const article = view({ ...chrome, kind: 'chart', type: 'bar', ...chartData })
+    expect(article.className).toContain('kind-chart')
+    expect(article.querySelectorAll('.slide-chart svg .chart-bar')).toHaveLength(6)
+    expect([...article.querySelectorAll('.slide-chart .chart-label')].map(l => l.textContent)).toEqual(['Jan', 'Feb', 'Mar'])
+    expect([...article.querySelectorAll('.slide-chart .chart-legend li')].map(l => l.textContent)).toEqual(['Visits', 'Signups'])
+  })
+
+  it('renders a line chart with one line per series and one point per value', () => {
+    const article = view({ ...chrome, kind: 'chart', type: 'line', ...chartData })
+    expect(article.querySelectorAll('.slide-chart svg .chart-line')).toHaveLength(2)
+    expect(article.querySelectorAll('.slide-chart svg .chart-point')).toHaveLength(6)
+    expect(article.querySelectorAll('.slide-chart svg .chart-bar')).toHaveLength(0)
+  })
+
   it('renders a metric value with its caption', () => {
     const article = view({ ...chrome, kind: 'metric', value: '3x', caption: 'more questions answered' })
     expect(article.className).toContain('kind-metric')

@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import type { SlideKind, SlideOfKind } from '@/lib/deck'
 import { BeforeAfterWidget } from './before-after'
+import { ChartWidget } from './chart'
 import { CodeWidget } from './code'
 import { FlowWidget } from './flow'
 import { ImageWidget } from './image'
@@ -20,4 +21,5 @@ export const widgets: { [K in SlideKind]: ComponentType<{ slide: SlideOfKind<K> 
   buttons: ButtonsWidget,
   metric: MetricWidget,
   flow: FlowWidget,
+  chart: ChartWidget,
 }

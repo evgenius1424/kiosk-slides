@@ -62,6 +62,24 @@ footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
 ---
 
 <!--
+title: The data
+label: Chart
+footer: A chart comment turns any small table into bars or a line.
+-->
+
+# Shorter decks get ==more attention==
+
+<!-- chart: type=bar x=Slides y=Recall -->
+| Slides | Recall | Viewers |
+| --- | --- | --- |
+| 5 | 82 | 140 |
+| 10 | 64 | 120 |
+| 20 | 41 | 95 |
+| 40 | 23 | 60 |
+
+---
+
+<!--
 title: Results
 label: Metric
 footer: One number, one caption, readable from across the room.
