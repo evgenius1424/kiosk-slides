@@ -30,7 +30,7 @@ pnpm dev
 | `pnpm lint:fix`     | Lint with Oxlint and apply safe fixes                                        |
 | `pnpm test`         | Run the Vitest suite                                                         |
 | `pnpm build`        | Production build of the site                                                 |
-| `pnpm build:skills` | Package the two agent skills from the shared renderer                        |
+| `pnpm build:skills` | Package the agent skill from the shared renderer                             |
 
 Open http://127.0.0.1:3000. Ask AI only works on 127.0.0.1, signed in with your own ChatGPT plan.
 

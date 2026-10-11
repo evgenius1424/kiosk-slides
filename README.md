@@ -42,18 +42,15 @@ Slides today are mostly seen through a video call or on a TV across a table. Kio
 - **Many presentations**, saved in your browser and one click apart.
 - **One-file download.** Every presentation downloads as a single HTML file with its images and fonts inside. It opens in any browser, works offline, and needs nothing installed.
 
-## Skills for your AI
+## Skill for your AI
 
-The same thing, without the website. Two skills in [`skills/`](skills) let an AI agent make and render presentations directly:
+The same thing, without the website. The **kiosk-slides** skill in [`skills/`](skills/kiosk-slides) lets an AI agent turn a conversation, notes or a document into a presentation, check it against the format, and render it to the same single-file HTML the site downloads. You get both files: the Markdown to edit, and the HTML to present. It also renders or re-themes a presentation you already have, with your choice of theme, tone, font, text size and transition.
 
-- **kiosk-slides-write** turns a conversation, notes or a document into a presentation, checks it against the format, and renders the HTML next to it. You get both files: the Markdown to edit, and the HTML to present.
-- **kiosk-slides-render** turns a presentation you already have into the same single-file HTML the site downloads, with your choice of theme, tone, font, text size and transition.
-
-Both share the site's own renderer, so a presentation looks exactly the same wherever it was made. They need Node 18 or later.
+It shares the site's own renderer, so a presentation looks exactly the same wherever it was made. It needs Node 18 or later.
 
 ### Install
 
-Plugins update themselves. The `npx skills` route copies the files into your project, and you update them by hand. Pick one per agent, or you get every skill twice.
+Plugins update themselves. The `npx skills` route copies the files into your project, and you update them by hand. Pick one per agent, or you get the skill twice.
 
 <details>
 <summary><strong>Claude Code</strong></summary>
@@ -68,7 +65,7 @@ Plugins update themselves. The `npx skills` route copies the files into your pro
 <details>
 <summary><strong>Claude app</strong> (claude.ai and desktop)</summary>
 
-Download `kiosk-slides-write.zip` and `kiosk-slides-render.zip` from the [latest release](https://github.com/evgenius1424/kiosk-slides/releases/latest), then add each one under **Settings → Capabilities → Skills**.
+Download `kiosk-slides.zip` from the [latest release](https://github.com/evgenius1424/kiosk-slides/releases/latest), then add it under **Settings → Capabilities → Skills**.
 
 </details>
 

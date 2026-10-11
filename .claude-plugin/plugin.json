@@ -10,5 +10,5 @@
   "repository": "https://github.com/evgenius1424/kiosk-slides",
   "license": "MIT",
   "keywords": ["presentation", "slides", "markdown", "html", "kiosk"],
-  "skills": ["./skills/kiosk-slides-write", "./skills/kiosk-slides-render"]
+  "skills": ["./skills/kiosk-slides"]
 }

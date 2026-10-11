@@ -12,13 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Zip each skill
+      - name: Zip the skill
         working-directory: skills
-        run: |
-          for skill in kiosk-slides-write kiosk-slides-render; do
-            zip -qr "../$skill.zip" "$skill"
-          done
+        run: zip -qr ../kiosk-slides.zip kiosk-slides
       - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" kiosk-slides-*.zip --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" kiosk-slides.zip --clobber
