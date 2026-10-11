@@ -19,5 +19,14 @@ export {
   type PresentationLook,
   type Scale,
 } from './look'
-export { isTheme, setPresentationTheme, themes, tones, type Theme } from './theme'
+export {
+  DEFAULT_TONE,
+  isTheme,
+  setPresentationTheme,
+  themes,
+  toneColor,
+  toneHint,
+  tones,
+  type Theme,
+} from './theme'
 export type { Presentation, Slide, SlideChrome, SlideKind, SlideOfKind } from './types'

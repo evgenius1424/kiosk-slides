@@ -35,6 +35,15 @@ describe('presentationHtml', () => {
     expect(html).toContain(`<title>${presentation.title}</title>`)
   })
 
+  it('takes the tone, transition and screen-share safe flag from the front matter', async () => {
+    const html = await presentationHtml(
+      parsePresentation('---\ntone: wine\ntransition: fade\nshare-safe: true\n---\n# Hi'),
+      { embedImage: async src => src, embedFont: async file => file },
+    )
+    expect(html).toContain('--slide-tone:#a16b7b')
+    expect(html).toContain('"transition":"fade","shareSafe":true')
+  })
+
   it('embeds images through the given function', async () => {
     const html = await render()
     expect(html).toContain('src="data:image/png;base64,')
