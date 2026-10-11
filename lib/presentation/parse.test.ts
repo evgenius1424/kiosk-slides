@@ -23,6 +23,9 @@ describe('parsePresentation: presentation and message slides', () => {
     expect(presentation).toEqual({
       title: 'Demo presentation',
       theme: 'room-light',
+      tone: '#74747e',
+      transition: 'gentle',
+      shareSafe: false,
       duration: 20,
       loop: false,
       font: 'classic',
@@ -52,6 +55,18 @@ describe('parsePresentation: presentation and message slides', () => {
       'ZEOS',
     ])
     expect(parsePresentation(md('---', 'brand: none', '---', '# Hi')).brand).toBe('')
+  })
+
+  it('reads the tone, transition and screen-share safe flag', () => {
+    const presentation = parsePresentation(
+      md('---', 'tone: Wine', 'transition: Slide', 'share-safe: true', '---', '# Hi'),
+    )
+    expect([presentation.tone, presentation.transition, presentation.shareSafe]).toEqual([
+      '#a16b7b',
+      'slide',
+      true,
+    ])
+    expect(parsePresentation(md('---', 'tone: #123abc', '---', '# Hi')).tone).toBe('#123abc')
   })
 
   it('defaults the theme to room-dark', () => {
@@ -421,6 +436,18 @@ describe('parsePresentation: errors', () => {
     )
     expect(error(md('---', `brand: ${'x'.repeat(25)}`, '---', '# Hi'))).toBe(
       'Line 2: Keep the brand to 24 characters.',
+    )
+  })
+
+  it('rejects an unknown tone, transition or share-safe value on its front-matter line', () => {
+    expect(error(md('---', 'title: T', 'tone: neon', '---', '# Hi'))).toBe(
+      'Line 3: Unknown tone “neon”. Use graphite, plum, wine, teal, bronze or a #hex color.',
+    )
+    expect(error(md('---', 'transition: spin', '---', '# Hi'))).toBe(
+      'Line 2: Unknown transition “spin”. Use gentle, fade, slide, none.',
+    )
+    expect(error(md('---', 'share-safe: yes', '---', '# Hi'))).toBe(
+      'Line 2: Set share-safe to true or false, not “yes”.',
     )
   })
 
@@ -882,5 +909,31 @@ describe('setFrontMatter', () => {
       md('---', 'title: T', '---', '# Hi'),
     )
     expect(setFrontMatter(md('# Hi'), 'scale')).toBe('# Hi')
+  })
+
+  it('edits autoplay settings inside the autoplay block', () => {
+    const source = md(
+      '---',
+      'title: T',
+      'autoplay:',
+      '  duration: 12s',
+      '  loop: true',
+      '---',
+      '# Hi',
+    )
+    const longer = setFrontMatter(source, 'duration', '20s')
+    expect(longer).toBe(
+      md('---', 'title: T', 'autoplay:', '  duration: 20s', '  loop: true', '---', '# Hi'),
+    )
+    expect(parsePresentation(longer).duration).toBe(20)
+    expect(setFrontMatter(setFrontMatter(source, 'loop'), 'duration')).toBe(
+      md('---', 'title: T', '---', '# Hi'),
+    )
+  })
+
+  it('keeps settings apart between presentations', () => {
+    const teal = setFrontMatter(md('---', 'title: A', '---', '# Hi'), 'tone', 'teal')
+    expect(parsePresentation(teal).tone).toBe('#669a98')
+    expect(parsePresentation(md('---', 'title: B', '---', '# Hi')).tone).toBe('#74747e')
   })
 })

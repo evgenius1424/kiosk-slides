@@ -44,20 +44,20 @@ node scripts/render.mjs slides.md -o slides.html
 Options:
 
 - `--theme room-dark|room-light` overrides the presentation's front-matter `theme:`.
-- `--tone graphite|plum|wine|teal|bronze` sets the background tone and the color of highlighted heading words. Any `#hex` color works too. The default is graphite.
+- `--tone graphite|plum|wine|teal|bronze` overrides the presentation's `tone:`, the background tone and the color of highlighted heading words. Any `#hex` color works too.
 - `--font classic|inter|figtree|bricolage-grotesque|space-grotesk|archivo-expanded` overrides the presentation's `font:`. The chosen font is embedded, so the file still works offline.
 - `--scale normal|large|kiosk` overrides the presentation's `scale:`. `kiosk` makes headings as big as each one allows, for screens read from a distance.
 - `--brand <text>` replaces the `kiosk.` mark in the corner of every slide; `--brand none` hides it.
 - `--images <dir>` is the folder that `/images/…` paths resolve against. The default is the presentation's own folder, so `/images/logo.png` is read from `<presentation folder>/images/logo.png`.
-- `--transition gentle|fade|slide|none` picks the slide transition. The default, `gentle`, is a soft rise and fade. `none` cuts instantly.
-- `--share-safe` starts the presentation in screen-share safe mode: every transition becomes a quick flat fade that stays crisp on video calls and meeting-room TVs. Pressing `S` in the exported presentation toggles it.
+- `--transition gentle|fade|slide|none` overrides the presentation's `transition:`. `gentle` is a soft rise and fade; `none` cuts instantly.
+- `--share-safe` (or `share-safe: true` in the front matter) starts the presentation in screen-share safe mode: every transition becomes a quick flat fade that stays crisp on video calls and meeting-room TVs. Pressing `S` in the exported presentation toggles it.
 - `--no-motion` is the same as `--transition none`.
 - `--check` only validates and prints the slide list and any warnings, without writing HTML.
 - `--format` tidies the Markdown file in place without changing what it shows.
 
 If it fails, the message starts with `Line N:` and names the rule; fix the Markdown and run it again. An image error means a URL could not be fetched or a `/images/` file is missing; ask the user for the file or remove that slide's image.
 
-Use `room-dark` for screens in dim rooms, TVs, and kiosks, and `room-light` for bright rooms and projectors that wash out dark backgrounds. Keep graphite unless the user asks for color or names a brand color; then pass that color with `--tone`. For an unattended screen or a big room, pass `--scale kiosk`.
+Use `room-dark` for screens in dim rooms, TVs, and kiosks, and `room-light` for bright rooms and projectors that wash out dark backgrounds. Keep graphite unless the user asks for color or names a brand color; then set it with `tone:` in the front matter or `--tone`. For an unattended screen or a big room, pass `--scale kiosk`.
 
 When you hand over the HTML, say how to present it:
 

@@ -22,8 +22,8 @@ import { SlideView } from '.'
 
 export type PresentationHtmlOptions = {
   theme?: Theme
-  tone: string
-  transition: Transition
+  tone?: string
+  transition?: Transition
   shareSafe?: boolean
   embedImage: (src: string) => Promise<string>
   embedFont: (file: string) => Promise<string>
@@ -33,9 +33,9 @@ export async function presentationHtml(
   presentation: Presentation,
   {
     theme = presentation.theme,
-    tone,
-    transition,
-    shareSafe = false,
+    tone = presentation.tone,
+    transition = presentation.transition,
+    shareSafe = presentation.shareSafe,
     embedImage,
     embedFont,
   }: PresentationHtmlOptions,
