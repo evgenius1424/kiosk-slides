@@ -9,6 +9,6 @@ describe('public/example.md', () => {
   it('parses and shows every supported slide kind', () => {
     const kinds = new Set(parseDeck(example).slides.map(s => s.kind))
     // Each component ticket adds its kind here along with a slide in the example.
-    expect([...kinds].sort()).toEqual(['chart', 'code', 'image', 'message', 'steps'])
+    expect([...kinds].sort()).toEqual(['buttons', 'chart', 'code', 'image', 'message', 'metric', 'steps'])
   })
 })

@@ -106,6 +106,34 @@ describe('parseDeck: widgets', () => {
   })
 })
 
+describe('parseDeck: metric', () => {
+  const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
+
+  it('turns an annotated bold value and caption line into a metric', () => {
+    const [slide] = parseDeck(md(
+      '# Short decks ==land==',
+      '',
+      '<!-- metric -->',
+      '**3x**',
+      'more questions answered at the booth',
+    )).slides
+    expect(slide).toEqual({
+      kind: 'metric', title: '', label: '', footer: '', layout: 'auto',
+      heading: 'Short decks ==land==', body: '',
+      value: '3x', caption: 'more questions answered at the booth',
+    })
+  })
+
+  it('requires a bold value line', () => {
+    expect(error(md('# M', '', '<!-- metric -->', '3x', 'caption'))).toBe('Line 4: A metric starts with a bold value line, such as **3x**.')
+    expect(error(md('# M', '', '<!-- metric -->', '- a'))).toBe('Line 4: A metric starts with a bold value line, such as **3x**.')
+  })
+
+  it('requires a caption line right after the value', () => {
+    expect(error(md('# M', '', '<!-- metric -->', '**3x**'))).toBe('Line 4: Add a caption line directly below the metric’s bold value.')
+  })
+})
+
 describe('parseDeck: errors', () => {
   const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
 
@@ -248,5 +276,47 @@ describe('parseDeck: chart', () => {
   it('rejects a data cell that is not a number', () => {
     expect(error(md('# C', '', '<!-- chart: type=bar -->', '| Month | Visits |', '| --- | --- |', '| Jan | 1 |', '| Feb | lots |')))
       .toBe('Line 7: “lots” in the Visits column isn’t a number.')
+  })
+})
+
+describe('parseDeck: buttons', () => {
+  const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
+
+  it('turns an annotated bullet list of links into buttons', () => {
+    const [slide] = parseDeck(md(
+      '# Try it ==yourself==',
+      '',
+      '<!-- buttons -->',
+      '- [View the repo](https://github.com/example/repo)',
+      '- [See the product](https://example.com)',
+    )).slides
+    expect(slide).toEqual({
+      kind: 'buttons', title: '', label: '', footer: '', layout: 'auto',
+      heading: 'Try it ==yourself==', body: '',
+      buttons: [
+        { label: 'View the repo', url: 'https://github.com/example/repo' },
+        { label: 'See the product', url: 'https://example.com' },
+      ],
+    })
+  })
+
+  it('caps buttons at three', () => {
+    const links = ['a', 'b', 'c', 'd'].map(x => `- [${x}](https://example.com/${x})`)
+    expect(error(md('# Go', '', '<!-- buttons -->', ...links))).toBe('Line 4: Use at most 3 buttons.')
+  })
+
+  it('rejects a button link that is not https://', () => {
+    expect(error(md('# Go', '', '<!-- buttons -->', '- [Repo](https://example.com)', '- [Docs](http://example.com)')))
+      .toBe('Line 5: Button links must be https:// URLs.')
+  })
+
+  it('rejects a bullet that is not a single link', () => {
+    expect(error(md('# Go', '', '<!-- buttons -->', '- [Repo](https://example.com)', '- just text')))
+      .toBe('Line 5: Each button must be a single [Label](https://...) link.')
+  })
+
+  it('rejects a buttons annotation above something other than a bullet list', () => {
+    expect(error(md('# Go', '', '<!-- buttons -->', '1. [Repo](https://example.com)')))
+      .toBe('Line 4: Buttons must be a bullet list of [Label](https://...) links.')
   })
 })

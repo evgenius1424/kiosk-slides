@@ -62,7 +62,7 @@ footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
 ---
 
 <!--
-title: Results
+title: The data
 label: Chart
 footer: A chart comment turns any small table into bars or a line.
 -->
@@ -76,6 +76,34 @@ footer: A chart comment turns any small table into bars or a line.
 | 10 | 64 | 120 |
 | 20 | 41 | 95 |
 | 40 | 23 | 60 |
+
+---
+
+<!--
+title: Results
+label: Metric
+footer: One number, one caption, readable from across the room.
+-->
+
+# Short decks ==hold attention==
+
+<!-- metric -->
+**3x**
+more visitors stayed for the whole loop
+
+---
+
+<!--
+title: Next steps
+label: Buttons
+footer: Up to three https:// links, each opening in a new tab.
+-->
+
+# Take it ==further==
+
+<!-- buttons -->
+- [View the source](https://github.com/evgenius1424/kiosk-slides)
+- [Read the format guide](https://github.com/evgenius1424/kiosk-slides#readme)
 
 ---
 
