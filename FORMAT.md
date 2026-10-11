@@ -1,6 +1,6 @@
 # Kiosk Slides deck format
 
-A deck is one Markdown file (GitHub-flavored). Plain Markdown carries the meaning. A short HTML comment is used only where the Markdown shape alone is ambiguous. A parser (`parseDeck` in `lib/deck/`) enforces every rule below. It rejects a deck that breaks one, and most errors start with `Line N:`. `public/example.md` is a complete deck that uses every slide kind.
+A deck is one Markdown file (GitHub-flavored). Plain Markdown carries the meaning. A short HTML comment is used only where the Markdown shape alone is ambiguous. A parser (`parseDeck` in `lib/deck/`) enforces every rule below. It rejects a deck that breaks one, and every error starts with `Line N:` pointing at the offending line. `public/example.md` is a complete deck that uses every slide kind.
 
 ## Deck structure
 
@@ -71,9 +71,10 @@ Some widgets are written as ordinary Markdown with one annotation comment on the
 - `type` is one of `flow`, `metric`, `chart`, `buttons`. Any other type is an error.
 - Settings are space-separated `key=value` pairs, and values can't contain spaces.
 - A comment that isn't directly above a block, or that is directly above another comment, is an error. The one exception is the slide-settings comment above the `#` heading.
+- Each annotation accepts only its own settings. `chart` takes `type`, `x`, and `y`; `flow`, `metric`, and `buttons` take none. Any other key is an error that names the allowed keys, so a typo like `typ=bar` is caught.
 - `-->` can't appear inside an annotation either.
 
-Tables, before/after, steps, code, and images are never annotated. They are detected from their Markdown shape.
+Tables, before/after, steps, code, and images are never annotated. They are detected from their Markdown shape. An annotation always wins over shape detection: `<!-- chart -->` above a `Before | After` table makes a chart, not a before/after.
 
 ## Widgets
 
@@ -84,9 +85,9 @@ A slide may have **one** of these widgets. A second one is an error (`Use one su
 | steps | `1.` `2.` `3.` numbered list | an ordered list | 5 items, 95 characters each, no nested lists |
 | code | a fenced ```` ``` ```` block | a code fence (the info string is the language) | 12 lines, 450 characters |
 | image | `![alt](src "caption")` on its own line | a paragraph holding only one image | `src` is `https://…`, `/images/…`, or `data:image/(png\|jpeg\|webp);base64,…`. Alt and caption are each 450 characters or fewer |
-| table | a GFM table | any table not headed `Before \| After` and not under `<!-- chart -->` | 5 columns, 6 body rows |
+| table | a GFM table | any table not headed `Before \| After` and not under `<!-- chart -->` | 5 columns, 1–6 body rows |
 | before-after | a table headed `Before \| After` | a 2-column table whose header is exactly Before, After (any case) | exactly 1 body row |
-| chart | `<!-- chart: type=bar -->` above a table | the `chart` annotation | `type` is `bar` or `line`; 5 columns, 6 body rows; number cells only |
+| chart | `<!-- chart: type=bar -->` above a table | the `chart` annotation | `type` is `bar` or `line`; 5 columns, 1–6 body rows; every row labelled; number cells only |
 | metric | `<!-- metric -->` above `**value**` and a caption line | the `metric` annotation | a bold value line and a non-empty caption |
 | flow | `<!-- flow -->` above `- A -> B -> C` bullets | the `flow` annotation | 2 bullets, 4 boxes each, no loops, no nested lists |
 | buttons | `<!-- buttons -->` above `- [Label](https://…)` bullets | the `buttons` annotation | 3 buttons, `https://` only, labels of 1–40 characters |
@@ -162,6 +163,7 @@ This is a single comparison. A second body row is an error, so use a plain table
 - `x=<column>` names the label column. The default is the first column.
 - `y=<column>` names the one number column to plot. By default, every column except `x` is a separate series.
 - Column names must match the header text exactly.
+- Every row needs a non-empty label in the `x` column.
 - Every plotted cell must be a number such as `82`, `-3`, `12.5`, or `1,450`. Commas are allowed as thousands separators. Units and `%` are not allowed.
 
 ### Metric
@@ -201,6 +203,7 @@ The first line is the bold value (`**…**` or `__…__`). The caption is on the
 ````
 
 - Each bullet is exactly one `[Label](https://…)` link.
+- The label is the link's plain text: formatting such as `*Go* now` is flattened to `Go now`.
 - Labels must be non-empty and at most 40 characters.
 - URLs must start with `https://`. Links to other slides are not supported.
 

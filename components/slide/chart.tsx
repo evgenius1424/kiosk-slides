@@ -4,7 +4,10 @@ import type { SlideOfKind } from '@/lib/deck'
 const width = 600, height = 300, left = 8, right = 8, top = 12, bottom = 40
 const plotWidth = width - left - right, plotHeight = height - top - bottom
 
-/** A small inline SVG bar or line chart: ≤6 labels, ≤4 series, values scaled from zero. */
+/**
+ * A small inline SVG bar or line chart, values scaled from zero. The parser caps a chart at 6 body rows
+ * (≤6 labels) and 5 columns, one of which is the label column, so there are at most 4 series.
+ */
 export function ChartWidget({ slide }: { slide: SlideOfKind<'chart'> }) {
   const { type, labels, series } = slide
   const values = series.flatMap(s => s.values)

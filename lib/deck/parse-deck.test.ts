@@ -356,6 +356,11 @@ describe('parseDeck: chart', () => {
     expect(error(md('# C', '', '<!-- chart: type=bar -->', '| Month |', '| --- |', '| Jan |'))).toBe('Line 4: A chart needs a label column and at least one number column.')
   })
 
+  it('lets the annotation win over shape detection for a Before | After table', () => {
+    const [slide] = parseDeck(md('# C', '', '<!-- chart: type=bar -->', '| Before | After |', '| --- | --- |', '| x | 3 |')).slides
+    expect(slide).toMatchObject({ kind: 'chart', labels: ['x'], series: [{ name: 'After', values: [3] }] })
+  })
+
   it('rejects a chart with only a header row', () => {
     expect(error(md('# C', '', '<!-- chart: type=bar -->', '| Month | Visits |', '| --- | --- |')))
       .toBe('Line 4: Add at least one row of data under the chart’s header.')
