@@ -1,6 +1,6 @@
 # 01 — Foundation: vitest, remark-based parseDeck, typed Slide union
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: (none)
 Spec: ../spec.md
 
