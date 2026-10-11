@@ -14,9 +14,8 @@ export const chart = defineWidget<ChartWidget>({
   annotation: 'chart',
   settings: ['type', 'x', 'y'],
   parse: block => {
-    const { annotation, fail, line } = block
-    // The annotation sits on the line directly above the block.
-    const failAnnotation = (message: string) => fail(message, line - 1)
+    const { annotation, fail } = block
+    const failAnnotation = (message: string) => fail(message, annotation?.line)
     const { type, x, y } = annotation?.args ?? {}
     if (type !== 'bar' && type !== 'line') return failAnnotation('A chart needs type=bar or type=line.')
     const [{ cells: header }, ...body] = tableRows(block) ?? fail('Put a table directly under <!-- chart -->.')

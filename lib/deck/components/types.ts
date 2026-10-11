@@ -4,8 +4,8 @@ import type { Annotation } from '../annotation'
 /** One top-level markdown block of a slide (after the heading/chrome are taken out). */
 export type Block = {
   node: RootContent
-  /** The `<!-- type: k=v -->` comment directly above this block, if any. */
-  annotation?: Annotation
+  /** The `<!-- type: k=v -->` comment directly above this block, if any, with the comment's first line. */
+  annotation?: Annotation & { line: number }
   /** Absolute 1-based line number of the block in the deck source. */
   line: number
   /** Absolute 1-based line number of any node inside this block, e.g. a table row or list item. */

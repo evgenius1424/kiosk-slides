@@ -102,21 +102,20 @@ function parseSlide(chunk: Chunk): Slide {
   for (let i = 0; i < rest.length; i++) {
     let node = rest[i]
     let line = lineOf(node.position)
-    let annotation: Annotation | undefined
-    const commentLine = line
+    let annotation: Block['annotation']
     if (isComment(node)) {
       // An annotation applies to the block that starts on the very next line.
       const next = rest[i + 1]
       const nextLine = next && lineOf(next.position)
       if (!next || isComment(next) || nextLine !== chunk.line + node.position!.end.line) fail(misplacedAnnotation, line)
-      annotation = parseAnnotation(node.value, message => fail(message, line), annotationTypes)
+      annotation = { ...parseAnnotation(node.value, message => fail(message, line), annotationTypes), line }
       node = next; line = nextLine; i++
     }
     const block: Block = { node, line, lineOf: target => lineOf(target.position), annotation, raw, fail: (message, where = line) => fail(message, where) }
     const component = annotation
       ? widgetComponents.find(c => c.annotation === annotation.type)
       : widgetComponents.find(c => !c.annotation && c.matches?.(block))
-    if (annotation && component) checkSettings(annotation, component, message => fail(message, commentLine))
+    if (annotation && component) checkSettings(annotation, component, message => fail(message, annotation.line))
     if (component) {
       if (widget.kind !== 'message') fail('Use one supporting widget per slide.', line)
       widget = component.parse(block)

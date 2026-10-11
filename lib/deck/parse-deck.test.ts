@@ -385,6 +385,11 @@ describe('parseDeck: chart', () => {
     expect(error(md('# C', '', '<!-- chart: type=bar x=Day -->', ...table))).toBe('Line 3: The table has no “Day” column. Use one of: Month, Visits.')
   })
 
+  it('points annotation errors at the first line of a multi-line chart comment', () => {
+    expect(error(md('# C', '', '<!-- chart:', '  type=pie', '-->', ...table))).toBe('Line 3: A chart needs type=bar or type=line.')
+    expect(error(md('# C', '', '<!-- chart:', '  type=bar', '  y=Sales -->', ...table))).toBe('Line 3: The table has no “Sales” column. Use one of: Month, Visits.')
+  })
+
   it('needs at least one data column', () => {
     expect(error(md('# C', '', '<!-- chart: type=bar -->', '| Month |', '| --- |', '| Jan |'))).toBe('Line 4: A chart needs a label column and at least one number column.')
   })
