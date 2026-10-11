@@ -29,7 +29,7 @@ export default async function Page() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
       <style>{fonts.map(f => fontFace(f, `/fonts/${f.file}`)).join('') + slideStyles}</style>
-      <KioskWorkspace example={example} prompt={prompt} />
+      <KioskWorkspace example={example} prompt={prompt} site={SITE_URL} />
     </>
   )
 }

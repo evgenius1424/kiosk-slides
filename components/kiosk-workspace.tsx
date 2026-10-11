@@ -24,6 +24,7 @@ import {
   Plus,
   RotateCcw,
   Settings2,
+  Share2,
   ShieldCheck,
   Sparkles,
   X,
@@ -67,9 +68,11 @@ import {
   uniqueName,
   type Library,
 } from '@/lib/presentations'
+import { decodeShare, readShareHash, shareSlideHash } from '@/lib/share'
 import { PresentationChat } from './presentation-chat'
 import { downloadFile } from './download'
 import { PresentationMenu } from './presentation-menu'
+import { SharePanel } from './share-panel'
 import { SlideView } from './slide'
 import { useWakeLock } from './use-wake-lock'
 
@@ -109,7 +112,15 @@ function Toggle({
   )
 }
 
-export function KioskWorkspace({ example, prompt }: { example: string; prompt: string }) {
+export function KioskWorkspace({
+  example,
+  prompt,
+  site,
+}: {
+  example: string
+  prompt: string
+  site: string
+}) {
   const t = useTranslations('Workspace')
   const ts = useTranslations('Settings')
   const th = useTranslations('Help')
@@ -148,6 +159,9 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const [fit, setFit] = useState(true)
   const [idle, setIdle] = useState(false)
   const [brandDraft, setBrandDraft] = useState<string | null>(null)
+  const [shared, setShared] = useState<string | null>(null)
+  const [broken, setBroken] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const slides = presentation.slides
@@ -213,33 +227,52 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   useEffect(() => {
     const next = loadLibrary(example, untitled)
     setLibrary(next)
-    show(next.items.find(p => p.id === next.current)!.source, location.hash)
-    setLoaded(true)
+    const link = readShareHash(location.hash)
+    if (!link) {
+      show(next.items.find(p => p.id === next.current)!.source, location.hash)
+      setLoaded(true)
+      return
+    }
+    decodeShare(link.payload)
+      .then(value => {
+        parsePresentation(value)
+        const known = next.items.find(p => p.source === value)
+        if (known) setLibrary({ ...next, current: known.id })
+        else setShared(link.payload)
+        show(value, link.slide)
+      })
+      .catch(() => setBroken(true))
+      .finally(() => setLoaded(true))
   }, [example, untitled])
   useEffect(() => {
-    if (loaded && location.hash !== slideHash(at)) history.replaceState(null, '', slideHash(at))
-  }, [at, loaded])
+    if (!loaded || broken) return
+    const hash = shared ? shareSlideHash(shared, at) : slideHash(at)
+    if (location.hash !== hash) history.replaceState(null, '', hash)
+  }, [at, loaded, shared, broken])
   useEffect(() => {
     const follow = () => {
-      const target = slideFromHash(location.hash, slides.length)
+      const link = readShareHash(location.hash)
+      if (link && link.payload !== shared) return location.reload()
+      const target = slideFromHash(link?.slide ?? location.hash, slides.length)
       if (target === undefined) return
       setPlaying(false)
       setIndex(target)
     }
     window.addEventListener('hashchange', follow)
     return () => window.removeEventListener('hashchange', follow)
-  }, [slides.length])
+  }, [slides.length, shared])
   useEffect(() => {
     if (loaded) saveLibrary(library)
   }, [library, loaded])
   useEffect(() => {
+    if (shared) return
     setLibrary(l => ({
       ...l,
       items: l.items.map(p =>
         p.id === l.current && p.source !== source ? { ...p, source, updatedAt: Date.now() } : p,
       ),
     }))
-  }, [source])
+  }, [source, shared])
   useEffect(() => {
     if (!toast) return
     const timer = setTimeout(() => setToast(''), 2600)
@@ -472,6 +505,15 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     notice(t('toast.loaded', { name: target.name, count: next.slides.length }))
     return target.name
   }
+  const keepCopy = () => {
+    const known = library.items.find(p => p.source === source)
+    const kept =
+      known ?? createPresentation(presentationName(source) || untitled, source, library.items)
+    setLibrary(l => ({ current: kept.id, items: known ? l.items : [...l.items, kept] }))
+    setShared(null)
+    setChatKey(k => k + 1)
+    notice(t('toast.kept', { name: kept.name }))
+  }
   const copyPrompt = async () => {
     try {
       await navigator.clipboard.writeText(prompt)
@@ -504,6 +546,15 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
       setExporting(false)
     }
   }
+  if (broken)
+    return (
+      <main className="shared-broken">
+        <p role="alert">{t('shared.broken')}</p>
+        <a className="btn primary" href="/">
+          {t('shared.home')}
+        </a>
+      </main>
+    )
   return (
     <main
       className={`workspace ${presenting ? 'is-presenting' : ''} ${presenting && idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}
@@ -519,38 +570,63 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           <span className="beta">{t('beta')}</span>
         </a>
         <div className="header-divider" />
-        <PresentationMenu
-          items={library.items}
-          current={current}
-          onOpen={openPresentation}
-          onCreate={newPresentation}
-          onRename={renamePresentation}
-          onDelete={deletePresentation}
-        />
-        <span className="local-label">
-          <span />
-          {t('savedHere')}
-        </span>
+        {shared ? (
+          <div className="shared-bar">
+            <span>{t('shared.label')}</span>
+            <button className="btn" title={t('shared.keepHint')} onClick={keepCopy}>
+              <Plus size={15} />
+              {t('shared.keep')}
+            </button>
+          </div>
+        ) : (
+          <>
+            <PresentationMenu
+              items={library.items}
+              current={current}
+              onOpen={openPresentation}
+              onCreate={newPresentation}
+              onRename={renamePresentation}
+              onDelete={deletePresentation}
+            />
+            <span className="local-label">
+              <span />
+              {t('savedHere')}
+            </span>
+          </>
+        )}
         <div className="header-actions">
-          <button
-            className="btn"
-            aria-label={t('settings')}
-            aria-expanded={settingsOpen}
-            aria-controls="presentation-settings"
-            onClick={() => setSettingsOpen(!settingsOpen)}
-          >
-            <Settings2 size={16} />
-            <span>{t('settings')}</span>
-          </button>
-          <button
-            className="btn export-btn"
-            title={t('downloadHint')}
-            onClick={exportHTML}
-            disabled={exporting}
-          >
-            <ArrowDownToLine size={15} />
-            {exporting ? t('preparing') : t('download')}
-          </button>
+          {!shared && (
+            <>
+              <button
+                className="btn"
+                aria-label={t('settings')}
+                aria-expanded={settingsOpen}
+                aria-controls="presentation-settings"
+                onClick={() => setSettingsOpen(!settingsOpen)}
+              >
+                <Settings2 size={16} />
+                <span>{t('settings')}</span>
+              </button>
+              <button
+                className="btn"
+                aria-label={t('share')}
+                title={t('shareHint')}
+                onClick={() => setSharing(true)}
+              >
+                <Share2 size={15} />
+                <span>{t('share')}</span>
+              </button>
+              <button
+                className="btn export-btn"
+                title={t('downloadHint')}
+                onClick={exportHTML}
+                disabled={exporting}
+              >
+                <ArrowDownToLine size={15} />
+                {exporting ? t('preparing') : t('download')}
+              </button>
+            </>
+          )}
           <button className="btn primary" onClick={present}>
             <Play size={14} fill="currentColor" />
             <span>{t('present')}</span>
@@ -594,6 +670,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         </nav>
         <button
           className="add-slide"
+          hidden={!!shared}
           onClick={() => {
             setDraft(`${source}\n\n---\n\n# ${t('newSlide.heading')}\n\n${t('newSlide.body')}\n`)
             setTab('markdown')
@@ -620,17 +697,21 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
               <Monitor size={14} />
               {t('tabs.preview')}
             </button>
-            <button
-              className={tab === 'markdown' ? 'active' : ''}
-              onClick={() => setTab('markdown')}
-            >
-              <Code2 size={15} />
-              {t('tabs.edit')}
-            </button>
-            <button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}>
-              <Sparkles size={14} />
-              {t('tabs.ask')}
-            </button>
+            {!shared && (
+              <>
+                <button
+                  className={tab === 'markdown' ? 'active' : ''}
+                  onClick={() => setTab('markdown')}
+                >
+                  <Code2 size={15} />
+                  {t('tabs.edit')}
+                </button>
+                <button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}>
+                  <Sparkles size={14} />
+                  {t('tabs.ask')}
+                </button>
+              </>
+            )}
           </div>
           <span className="ready-label">
             <CheckCheck size={14} />
@@ -769,7 +850,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           <span>{t('footer.quiet')}</span>
         </footer>
       </section>
-      <aside id="presentation-settings" className="inspector" hidden={!settingsOpen}>
+      <aside id="presentation-settings" className="inspector" hidden={!settingsOpen || !!shared}>
         <div className="inspector-heading">
           <Settings2 size={15} />
           <h2>{ts('title')}</h2>
@@ -973,6 +1054,17 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           {toast}
         </div>
       )}
+      <SharePanel
+        open={sharing}
+        source={source}
+        site={site}
+        onClose={() => setSharing(false)}
+        onCopied={() => notice(t('toast.linkCopied'))}
+        onDownload={() => {
+          setSharing(false)
+          exportHTML()
+        }}
+      />
       <dialog
         ref={dialogRef}
         className={`workspace-dialog ${modal === 'format' ? 'wide' : ''}`}

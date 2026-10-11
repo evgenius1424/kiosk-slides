@@ -41,6 +41,7 @@ Slides today are mostly seen through a video call or on a TV across a table. Kio
 - **Present anywhere**, including from a phone held sideways, with swipe and tap.
 - **Many presentations**, saved in your browser and one click apart.
 - **One-file download.** Every presentation downloads as a single HTML file with its images and fonts inside. It opens in any browser, works offline, and needs nothing installed.
+- **Share by link.** The link carries the whole presentation, with a code to scan on a phone. Nothing is uploaded: the slides live in the link itself.
 
 ## Skill for your AI
 
