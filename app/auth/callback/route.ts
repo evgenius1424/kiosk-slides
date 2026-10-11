@@ -1,4 +1,5 @@
 import { ChatGPTError, checkLocalRequest, finishSignIn } from '@/lib/chatgpt'
+import { serverT } from '@/i18n/server'
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
     return Response.redirect(returnTo, 303)
   } catch (err) {
     const home = new URL('/', url)
-    home.searchParams.set('chatgpt_error', err instanceof ChatGPTError ? err.message : 'ChatGPT sign-in failed. Try again.')
+    home.searchParams.set('chatgpt_error', err instanceof ChatGPTError ? err.message : serverT('signIn.failed'))
     return Response.redirect(home, 303)
   }
 }

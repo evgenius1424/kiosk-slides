@@ -1,0 +1,336 @@
+{
+  "Metadata": {
+    "title": "Kiosk Slides — The art of being seen",
+    "description": "Clear slides in a minute. Describe your talk, let AI write it, and present anywhere."
+  },
+  "Workspace": {
+    "home": "Kiosk Slides home",
+    "beta": "Beta",
+    "savedHere": "Saved in this browser",
+    "settings": "Settings",
+    "download": "Download",
+    "downloadHint": "Download as one file that opens in any browser",
+    "preparing": "Preparing…",
+    "present": "Present",
+    "tabs": {
+      "preview": "Preview",
+      "edit": "Edit",
+      "ask": "Ask AI"
+    },
+    "fit": {
+      "ready": "Ready for the room",
+      "check": "Check slide fit"
+    },
+    "sidebar": {
+      "title": "Slides",
+      "hide": "Hide slide list",
+      "show": "Show slide list",
+      "list": "Deck slides",
+      "slide": "Slide {number}: {title}",
+      "untitledSlide": "Slide {number}",
+      "add": "Add a slide"
+    },
+    "newSlide": {
+      "heading": "Make your next **great point**",
+      "body": "Keep it short. Make it matter."
+    },
+    "canvas": {
+      "presenting": "Presentation",
+      "previous": "Previous slide",
+      "next": "Next slide",
+      "enter": "Enter presentation mode",
+      "leave": "Leave presentation"
+    },
+    "editor": {
+      "help": "Help",
+      "update": "Update slides",
+      "label": "Slide text",
+      "status": "Paste slides from any AI or fix a word, then press Update slides.",
+      "discard": "You have edits you haven’t applied. Discard them?"
+    },
+    "tip": "Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<extra> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</extra>",
+    "allShortcuts": "All shortcuts",
+    "footer": {
+      "tagline": "Made for the room. And everyone on the call.",
+      "quiet": "Quiet by design."
+    },
+    "themes": {
+      "room-dark": "Dark",
+      "room-light": "Light"
+    },
+    "toast": {
+      "swipe": "Swipe to change slides",
+      "keys": "Esc to exit · P to autoplay",
+      "autoplay": "{on, select, true {Autoplay on} other {Autoplay off}}",
+      "shareSafe": "{on, select, true {Screen-share safe on · quick flat fades} other {Screen-share safe off}}",
+      "end": "End of presentation",
+      "created": "{name} created · write, paste, or ask AI",
+      "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
+      "slideAdded": "New slide added at the end. Edit it, then update your slides.",
+      "updated": "Slides updated and saved",
+      "downloaded": "Downloaded · opens in any browser, even offline",
+      "promptCopied": "Prompt copied · paste it into any AI chat",
+      "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there."
+    }
+  },
+  "Settings": {
+    "title": "Deck settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "tone": "Background tone",
+    "toneOption": "{name} background",
+    "toneHelp": "Quiet color in the background, and on highlighted heading words.",
+    "tones": {
+      "Graphite": "Graphite",
+      "Plum": "Plum",
+      "Wine": "Wine",
+      "Teal": "Teal",
+      "Bronze": "Bronze"
+    },
+    "font": "Font",
+    "textSize": "Text size",
+    "sizes": {
+      "normal": "Normal",
+      "large": "Large",
+      "kiosk": "Extra large · read from across the room"
+    },
+    "brand": "Brand",
+    "showBrand": "Show brand",
+    "brandHelp": "Shown in the corner of every slide.",
+    "playback": "Playback",
+    "autoplay": "Autoplay",
+    "autoplayHelp": "Let your story tell itself.",
+    "duration": "Slide duration",
+    "seconds": "sec",
+    "loop": "Loop presentation",
+    "startsPaused": "Starts paused. Always in your control.",
+    "motion": "Motion",
+    "transition": "Slide transition",
+    "transitions": {
+      "gentle": {
+        "name": "Gentle",
+        "help": "A soft rise and fade. Calm enough for any room."
+      },
+      "fade": {
+        "name": "Crossfade",
+        "help": "A clean crossfade. Smooth when screen sharing on a good connection."
+      },
+      "slide": {
+        "name": "Slide",
+        "help": "Slides glide sideways in the direction you move."
+      },
+      "none": {
+        "name": "None · instant cut",
+        "help": "Instant cuts. Nothing moves."
+      }
+    },
+    "shareSafeActive": "Screen-share safe is on, so every transition becomes a quick flat fade.",
+    "shareSafe": "Screen-share safe",
+    "shareSafeHelp": "Quick flat fades with no movement, blur or glow. Stays crisp when screen sharing and on meeting-room TVs.",
+    "clarityTitle": "Clarity comes first.",
+    "clarityBody": "Your message stays readable,<br></br>even on a slow connection.",
+    "status": {
+      "ready": "Deck is ready",
+      "review": "Review layout",
+      "count": "{count, plural, one {# slide} other {# slides}}",
+      "checked": "Slides checked",
+      "fits": "Current slide fits the canvas",
+      "overflows": "Content may overflow"
+    },
+    "help": "A little help goes a long way"
+  },
+  "Help": {
+    "title": "Getting your slides in",
+    "intro": "The quickest way is to let AI write your slides. Use Ask AI here, or any AI chat you like.",
+    "promptTitle": "Use any AI chat",
+    "promptBody": "Copy this prompt into your AI chat and say what your talk is about. Paste its answer here and press Update slides.",
+    "copyPrompt": "Copy prompt",
+    "basicsTitle": "For quick fixes",
+    "basics": {
+      "newSlide": {
+        "term": "---",
+        "rule": "Starts a new slide."
+      },
+      "heading": {
+        "term": "# Heading",
+        "rule": "The big line on each slide. One per slide, kept short."
+      },
+      "highlight": {
+        "term": "**words**",
+        "rule": "Highlights the key words in a heading."
+      },
+      "text": {
+        "term": "Text",
+        "rule": "A sentence or two under the heading."
+      },
+      "extras": {
+        "term": "Extras",
+        "rule": "A list, table, picture, chart or number. One per slide. AI adds these for you."
+      }
+    },
+    "showPrompt": "Show the prompt"
+  },
+  "Shortcuts": {
+    "title": "Make yourself at home.",
+    "intro": "Everything you need. Nothing in the way.",
+    "items": {
+      "next": {
+        "name": "Next slide",
+        "keys": "↓ / → / Page Down"
+      },
+      "previous": {
+        "name": "Previous slide",
+        "keys": "↑ / ← / Page Up"
+      },
+      "autoplay": {
+        "name": "Toggle autoplay",
+        "keys": "P"
+      },
+      "present": {
+        "name": "Presentation mode",
+        "keys": "F"
+      },
+      "shareSafe": {
+        "name": "Screen-share safe",
+        "keys": "S"
+      },
+      "leave": {
+        "name": "Leave presentation",
+        "keys": "Esc"
+      },
+      "ends": {
+        "name": "First / last slide",
+        "keys": "Home / End"
+      }
+    },
+    "note": "Scroll over the canvas to move one slide at a time. Click the presentation or navigate to pause autoplay. Presentations are saved in this browser; switch or create them from the menu at the top.",
+    "close": "Close dialog"
+  },
+  "PresentationMenu": {
+    "title": "Presentations",
+    "savedHere": "Saved in this browser",
+    "rename": "Rename",
+    "renameItem": "Rename {name}",
+    "delete": "Delete",
+    "deleteItem": "Delete {name}",
+    "confirmDelete": "Delete “{name}”? This can’t be undone.",
+    "new": "New presentation",
+    "nameField": "Presentation name"
+  },
+  "Presentations": {
+    "untitled": "Untitled presentation",
+    "blank": {
+      "heading": "Start with **one clear idea**",
+      "body": "Paste slides from any AI, or press Ask AI."
+    }
+  },
+  "Chat": {
+    "suggestions": {
+      "pitch": "Make a 6-slide deck that pitches a four-day work week to leadership",
+      "onboarding": "Explain how our onboarding works in five steps for new hires",
+      "tighten": "Tighten the current deck and add a closing metric slide"
+    },
+    "connect": {
+      "title": "Write slides with your ChatGPT plan.",
+      "intro": "Describe your talk and ChatGPT writes the slides for you. Your sign-in stays on this computer.",
+      "noPlanUsage": "You’re signed in as {email}, but ChatGPT plan usage wasn’t allowed. Connect again and allow it to write slides.",
+      "button": "Continue with ChatGPT",
+      "opening": "Opening ChatGPT…",
+      "fineprint": "Eligible AI requests use your ChatGPT plan, not a Kiosk Slides subscription. Kiosk Slides doesn’t charge for them. You can manage usage in ChatGPT settings.",
+      "signOut": "Sign out of {email}"
+    },
+    "welcome": {
+      "title": "You’re connected to ChatGPT",
+      "body": "AI requests in Kiosk Slides now use your ChatGPT plan. Kiosk Slides doesn’t charge for them, and your plan’s usage limits apply.",
+      "manageUsage": "Manage usage",
+      "gotIt": "Got it"
+    },
+    "empty": {
+      "title": "What are you presenting?",
+      "body": "ChatGPT writes the slides and saves them as a presentation. Ask for changes any time."
+    },
+    "composer": {
+      "label": "Message ChatGPT",
+      "first": "What is your deck about, and who is it for?",
+      "followUp": "Ask for a change…",
+      "model": "ChatGPT model",
+      "usingPlan": "Using ChatGPT plan · <link>Manage usage</link>",
+      "signOut": "Sign out of ChatGPT ({email})",
+      "newChat": "New chat",
+      "stop": "Stop",
+      "send": "Send"
+    },
+    "local": {
+      "title": "Use any AI chat to write your slides.",
+      "body": "Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer into Edit and press Update slides.",
+      "copyPrompt": "Copy prompt",
+      "runHere": "Chat with your ChatGPT plan right here",
+      "privacy": "Your sign-in stays on your computer and never reaches this website.",
+      "then": "Then open <strong>{url}</strong> and choose Ask AI."
+    },
+    "progress": {
+      "fixing": "Fixing a small formatting issue…",
+      "writing": "Writing slides…",
+      "thinking": "Thinking…",
+      "saved": "Saved as “{name}”"
+    },
+    "errors": {
+      "noModels": "No ChatGPT models are available for this account.",
+      "signOutUnconfirmed": "Signed out here, but ChatGPT didn’t confirm it. You can also disconnect Kiosk Slides in ChatGPT settings.",
+      "stopped": "Generation stopped.",
+      "requestFailed": "The request failed ({status}). Try again."
+    }
+  },
+  "Server": {
+    "hostedOnly": "ChatGPT plan usage works only when you run Kiosk Slides on your own computer.",
+    "openLocally": "Open Kiosk Slides at http://127.0.0.1 on your own computer to use your ChatGPT plan.",
+    "wrongOrigin": "This request must come from the Kiosk Slides page.",
+    "jsonBody": "Send a JSON body.",
+    "chooseModel": "Choose a ChatGPT model.",
+    "noMessages": "Send at least one message.",
+    "tooLong": "This conversation is too long. Start a new chat.",
+    "badMessage": "Each message needs a role and text under {max, number} characters.",
+    "badOrder": "The conversation must start and end with a user message.",
+    "deckTooLarge": "The current deck is too large to send.",
+    "stillBroken": "The slides still have a problem after {attempts, plural, one {# try} other {# tries}}: {error}",
+    "stopped": "Generation stopped.",
+    "generic": "Something went wrong while writing your slides.",
+    "modelsFailed": "Could not load ChatGPT models.",
+    "signIn": {
+      "expired": "This sign-in link expired. Try connecting again.",
+      "cancelled": "ChatGPT sign-in was cancelled.",
+      "failed": "ChatGPT sign-in failed. Try again.",
+      "clientMismatch": "ChatGPT returned a different app registration. Try again.",
+      "registrationIncomplete": "ChatGPT did not finish registering Kiosk Slides. Try again.",
+      "missingCode": "ChatGPT sign-in returned no code. Try again.",
+      "notCompleted": "ChatGPT sign-in could not be completed. Try again.",
+      "invalidClient": "Kiosk Slides’ ChatGPT registration is invalid. Disconnect and connect again.",
+      "invalidToken": "ChatGPT sign-in could not be verified. Try again."
+    },
+    "session": {
+      "notConnected": "Connect ChatGPT to write slides.",
+      "planDisabled": "ChatGPT plan usage isn’t enabled for this sign-in. Disconnect and connect again to allow it.",
+      "expired": "Your ChatGPT session expired. Connect again."
+    },
+    "response": {
+      "incomplete": "The reply was cut off before it finished. Try a shorter request.",
+      "interrupted": "The connection to ChatGPT ended early. Try again.",
+      "unauthorized": "ChatGPT did not accept this sign-in. Disconnect and connect again.",
+      "forbidden": "ChatGPT blocked this request.",
+      "unavailable": "ChatGPT plan usage is unavailable right now. Try again shortly.",
+      "failed": "ChatGPT request failed ({status}).",
+      "unknown": "ChatGPT could not complete this request."
+    },
+    "codes": {
+      "subscription_sharing_user_not_eligible": "ChatGPT plan usage isn’t available for this account or workspace.",
+      "subscription_sharing_usage_limit_exceeded": "You’ve reached a ChatGPT plan usage limit. Check your usage in ChatGPT settings.",
+      "subscription_sharing_usage_unavailable": "ChatGPT usage couldn’t be checked right now. Try again shortly.",
+      "subscription_sharing_unsupported_capability": "This request uses a feature that isn’t supported with ChatGPT plan usage.",
+      "subscription_sharing_route_not_supported": "This request type isn’t supported with ChatGPT plan usage.",
+      "subscription_sharing_invalid_user": "Your ChatGPT sign-in needs to be renewed. Disconnect and connect again.",
+      "subscription_sharing_user_unavailable": "ChatGPT account information is temporarily unavailable. Try again shortly.",
+      "chatpass_v2_scope_not_authorized": "Kiosk Slides isn’t authorized for this operation.",
+      "chatpass_v2_invalid_authorization_context": "Kiosk Slides isn’t authorized for this operation."
+    }
+  }
+}

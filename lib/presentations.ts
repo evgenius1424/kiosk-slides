@@ -3,22 +3,16 @@ import { parseDeck } from './deck'
 export type Presentation = { id: string; name: string; source: string; userNamed: boolean; updatedAt: number }
 export type Library = { current: string; items: Presentation[] }
 
-export const DEFAULT_NAME = 'Untitled presentation'
-export const BLANK_DECK = `---
-theme: room-dark
----
-
-# Start with **one clear idea**
-
-Write your deck in Markdown, paste one from any AI, or ask ChatGPT.
-`
-
 const STORAGE_KEY = 'kiosk-presentations'
 
-export function loadLibrary(example: string): Library {
+export function blankDeck(heading: string, body: string) {
+  return `---\ntheme: room-dark\n---\n\n# ${heading}\n\n${body}\n`
+}
+
+export function loadLibrary(example: string, untitled: string): Library {
   const stored = read()
   if (stored?.items.length) return { current: stored.items.some(p => p.id === stored.current) ? stored.current : stored.items[0].id, items: stored.items }
-  const first = { ...createPresentation(deckName(example) || DEFAULT_NAME, example, []), userNamed: true }
+  const first = { ...createPresentation(deckName(example) || untitled, example, []), userNamed: true }
   return { current: first.id, items: [first] }
 }
 

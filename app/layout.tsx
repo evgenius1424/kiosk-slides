@@ -1,28 +1,30 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getTranslations } from 'next-intl/server'
 import './globals.css'
 
-export const metadata: Metadata = {
-  title: 'Kiosk Slides — The art of being seen',
-  description: 'Clear slides in a minute. Describe your talk, let AI write it, and present anywhere.',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
+const ICONS: Metadata['icons'] = {
+  icon: [
+    {
+      url: '/icon-light-32x32.png',
+      media: '(prefers-color-scheme: light)',
+    },
+    {
+      url: '/icon-dark-32x32.png',
+      media: '(prefers-color-scheme: dark)',
+    },
+    {
+      url: '/icon.svg',
+      type: 'image/svg+xml',
+    },
+  ],
+  apple: '/apple-icon.png',
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('Metadata')
+  return { title: t('title'), description: t('description'), generator: 'v0.app', icons: ICONS }
 }
 
 export const viewport: Viewport = {
@@ -30,15 +32,15 @@ export const viewport: Viewport = {
   themeColor: '#f5f6f3',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang={await getLocale()}>
       <body className="antialiased">
-        {children}
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

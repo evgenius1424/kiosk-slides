@@ -2,6 +2,7 @@ import type { ChatEvent, ChatMessage } from '@/lib/chat'
 import { systemPrompt } from '@/lib/chat-prompt'
 import { ChatGPTError, checkLocalRequest, streamResponse } from '@/lib/chatgpt'
 import { parseDeck } from '@/lib/deck'
+import { serverT } from '@/i18n/server'
 
 const MAX_ATTEMPTS = 3
 const MAX_MESSAGES = 40
@@ -11,9 +12,9 @@ const MAX_SOURCE_LENGTH = 200_000
 export async function POST(request: Request) {
   const reason = checkLocalRequest(request, { mutating: true })
   if (reason) return Response.json({ error: reason }, { status: 403 })
-  if (!request.headers.get('content-type')?.startsWith('application/json')) return Response.json({ error: 'Send a JSON body.' }, { status: 415 })
+  if (!request.headers.get('content-type')?.startsWith('application/json')) return Response.json({ error: serverT('jsonBody') }, { status: 415 })
   let body: { messages?: ChatMessage[]; source?: string; model?: string }
-  try { body = await request.json() } catch { return Response.json({ error: 'Send a JSON body.' }, { status: 400 }) }
+  try { body = await request.json() } catch { return Response.json({ error: serverT('jsonBody') }, { status: 400 }) }
   const problem = validate(body)
   if (problem) return Response.json({ error: problem }, { status: 400 })
 
@@ -38,7 +39,7 @@ async function generate(model: string, instructions: string, input: ChatMessage[
     const result = extractDeck(reply)
     if (result.kind === 'none') { send({ type: 'done', reply }); return }
     if (result.kind === 'valid') { send({ type: 'deck', source: result.source }); send({ type: 'done', reply }); return }
-    if (attempt === MAX_ATTEMPTS) { send({ type: 'error', message: `The deck still has a problem after ${MAX_ATTEMPTS} tries: ${result.error}` }); send({ type: 'done', reply }); return }
+    if (attempt === MAX_ATTEMPTS) { send({ type: 'error', message: serverT('stillBroken', { attempts: MAX_ATTEMPTS, error: result.error }) }); send({ type: 'done', reply }); return }
     send({ type: 'retry', error: result.error })
     input.push({ role: 'assistant', content: reply })
     input.push({ role: 'user', content: `The deck failed validation: ${result.error}\n\nFix that problem and return the complete corrected deck inside <deck></deck> tags.` })
@@ -64,17 +65,17 @@ function toInput(history: ChatMessage[], source: string): ChatMessage[] {
 
 function validate(body: { messages?: ChatMessage[]; source?: string; model?: string }) {
   const { messages, source, model } = body
-  if (typeof model !== 'string' || !/^[\w.:-]{1,100}$/.test(model)) return 'Choose a ChatGPT model.'
-  if (!Array.isArray(messages) || !messages.length) return 'Send at least one message.'
-  if (messages.length > MAX_MESSAGES) return 'This conversation is too long. Start a new chat.'
-  if (messages.some(m => (m?.role !== 'user' && m?.role !== 'assistant') || typeof m.content !== 'string' || !m.content.trim() || m.content.length > MAX_MESSAGE_LENGTH)) return 'Each message needs a role and text under 20,000 characters.'
-  if (messages[0].role !== 'user' || messages[messages.length - 1].role !== 'user') return 'The conversation must start and end with a user message.'
-  if (source !== undefined && (typeof source !== 'string' || source.length > MAX_SOURCE_LENGTH)) return 'The current deck is too large to send.'
+  if (typeof model !== 'string' || !/^[\w.:-]{1,100}$/.test(model)) return serverT('chooseModel')
+  if (!Array.isArray(messages) || !messages.length) return serverT('noMessages')
+  if (messages.length > MAX_MESSAGES) return serverT('tooLong')
+  if (messages.some(m => (m?.role !== 'user' && m?.role !== 'assistant') || typeof m.content !== 'string' || !m.content.trim() || m.content.length > MAX_MESSAGE_LENGTH)) return serverT('badMessage', { max: MAX_MESSAGE_LENGTH })
+  if (messages[0].role !== 'user' || messages[messages.length - 1].role !== 'user') return serverT('badOrder')
+  if (source !== undefined && (typeof source !== 'string' || source.length > MAX_SOURCE_LENGTH)) return serverT('deckTooLarge')
   return ''
 }
 
 function describeError(err: unknown, signal: AbortSignal) {
-  if (signal.aborted) return 'Generation stopped.'
+  if (signal.aborted) return serverT('stopped')
   if (err instanceof ChatGPTError) return err.message
-  return 'Something went wrong while generating the deck.'
+  return serverT('generic')
 }
