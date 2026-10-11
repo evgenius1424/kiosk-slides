@@ -1,6 +1,6 @@
 # 07 — FORMAT.md, final example.md, chat FORMAT_GUIDE, regression test
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 02, 03, 04, 05, 06
 Spec: ../spec.md
 
