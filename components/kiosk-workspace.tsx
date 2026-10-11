@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowDownToLine, ArrowRight, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Code2, Expand, FileText, Keyboard, Layers2, Monitor, PanelLeftClose, Play, Plus, Presentation, RotateCcw, Settings2, ShieldCheck, Upload, X } from 'lucide-react'
+import { ArrowDownToLine, ArrowRight, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Code2, Expand, FileText, Keyboard, Layers2, Monitor, PanelLeftClose, Play, Plus, Presentation, RotateCcw, Settings2, ShieldCheck, Sparkles, Upload, X } from 'lucide-react'
 import { downloadFile, exportDeck, parseDeck } from '@/lib/deck'
+import { DeckChat } from './deck-chat'
 import { SlideView } from './slide'
 import { slideStyles } from '@/lib/slide-styles'
 
@@ -15,7 +16,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
   const [draft, setDraft] = useState(initialSource)
   const deck = useMemo(() => parseDeck(source), [source])
   const [index, setIndex] = useState(0)
-  const [tab, setTab] = useState<'preview' | 'markdown'>('preview')
+  const [tab, setTab] = useState<'preview' | 'markdown' | 'chat'>('preview')
   const [theme, setTheme] = useState('room-dark')
   const [accent, setAccent] = useState('#74747e')
   const [motion, setMotion] = useState(true)
@@ -51,7 +52,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
     const handler = (event: KeyboardEvent) => {
       if (event.isComposing || event.keyCode === 229) return
       if (event.key === 'Escape') { setPresenting(false); setPlaying(false); setModal(null); return }
-      if ((event.target as HTMLElement).closest('input,textarea,select,button,dialog') || tab === 'markdown') return
+      if ((event.target as HTMLElement).closest('input,textarea,select,button,dialog') || tab !== 'preview') return
       if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); move(1) }
       if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) { event.preventDefault(); move(-1) }
       if (event.key.toLowerCase() === 'p') { setPlaying(p => !p); notice(playing ? 'Autoscroll off' : 'Autoscroll on') }
@@ -78,6 +79,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
     const observer = new ResizeObserver(check); observer.observe(target); check(); return () => observer.disconnect()
   }, [index, tab, presenting, slide])
   const apply = () => { try { const next = parseDeck(draft); setSource(draft); setIndex(0); setDuration(next.duration); setLoop(next.loop); setError(''); setTab('preview'); notice('Deck rebuilt successfully') } catch (err) { setError((err as Error).message) } }
+  const loadGenerated = (value: string) => { const next = parseDeck(value); setSource(value); setDraft(value); setIndex(0); setDuration(next.duration); setLoop(next.loop); setError(''); notice(`Deck generated · ${next.slides.length} ${next.slides.length === 1 ? 'slide' : 'slides'}`) }
   const exportHTML = async () => {
     if (!exportRef.current) return
     setExporting(true)
@@ -106,10 +108,11 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
       <div className="sidebar-bottom"><FileText size={14} /><span>example.md</span><button className="icon-btn" aria-label="Download Markdown source" onClick={() => downloadFile(source, 'example.md', 'text/markdown')}><ArrowDownToLine size={14} /></button></div>
     </aside>
     <section className="editor-main">
-      <div className="editor-toolbar"><div className="view-tabs">{!sidebar && <button className="icon-btn" aria-label="Show slide list" onClick={() => setSidebar(true)}><Layers2 size={16} /></button>}<button className={tab === 'preview' ? 'active' : ''} onClick={() => setTab('preview')}><Monitor size={14} />Preview</button><button className={tab === 'markdown' ? 'active' : ''} onClick={() => setTab('markdown')}><Code2 size={15} />Markdown</button></div><span className="ready-label"><CheckCheck size={14} />{fit ? 'Ready for the room' : 'Check slide fit'}</span></div>
-      <div className={`editor-body ${tab === 'markdown' ? 'markdown-body' : ''}`}>
-        {tab === 'preview' ? <><div ref={canvasRef} className={`canvas-shell ${motion && !safe ? 'with-motion' : ''}`} onClick={() => setPlaying(false)}><div key={`${index}-${theme}`} className="canvas-slide"><SlideView slide={slide} theme={theme} accent={accent} /></div></div><div className="canvas-controls"><span><span className="status-dot" />{presenting ? 'Presentation' : '16:9'}<span className="control-separator">/</span>{theme === 'room-dark' ? 'Room dark' : 'Room light'}</span><div className="slide-pagination"><button className="icon-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={17} /></button><span>{String(index + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span></span><button className="icon-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={17} /></button></div><button className="icon-btn" aria-label="Enter presentation mode" onClick={present}><Expand size={16} /></button></div></> : <div className="source-editor"><div className="source-header"><span><FileText size={14} />example.md</span><button className="btn primary" onClick={apply}><Check size={14} />Build deck</button></div><textarea aria-label="Deck Markdown source" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} /><div className={`source-status ${error ? 'error' : ''}`} role="status">{error || 'Edit your Markdown, then build. Your last valid deck stays intact.'}</div></div>}
-        <div className="presenter-tip" hidden={tab === 'markdown'}><Keyboard size={15} /><span>Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<span className="tip-extra"> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</span></span><button onClick={() => setModal('help')}>All shortcuts <span>↗</span></button></div>
+      <div className="editor-toolbar"><div className="view-tabs">{!sidebar && <button className="icon-btn" aria-label="Show slide list" onClick={() => setSidebar(true)}><Layers2 size={16} /></button>}<button className={tab === 'preview' ? 'active' : ''} onClick={() => setTab('preview')}><Monitor size={14} />Preview</button><button className={tab === 'markdown' ? 'active' : ''} onClick={() => setTab('markdown')}><Code2 size={15} />Markdown</button><button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}><Sparkles size={14} />Ask AI</button></div><span className="ready-label"><CheckCheck size={14} />{fit ? 'Ready for the room' : 'Check slide fit'}</span></div>
+      <div className={`editor-body ${tab !== 'preview' ? 'markdown-body' : ''}`}>
+        <div className="chat-host" hidden={tab !== 'chat'}><DeckChat source={source} onDeck={loadGenerated} onOpen={() => setTab('chat')} /></div>
+        {tab === 'chat' ? null : tab === 'preview' ? <><div ref={canvasRef} className={`canvas-shell ${motion && !safe ? 'with-motion' : ''}`} onClick={() => setPlaying(false)}><div key={`${index}-${theme}`} className="canvas-slide"><SlideView slide={slide} theme={theme} accent={accent} /></div></div><div className="canvas-controls"><span><span className="status-dot" />{presenting ? 'Presentation' : '16:9'}<span className="control-separator">/</span>{theme === 'room-dark' ? 'Room dark' : 'Room light'}</span><div className="slide-pagination"><button className="icon-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={17} /></button><span>{String(index + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span></span><button className="icon-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={17} /></button></div><button className="icon-btn" aria-label="Enter presentation mode" onClick={present}><Expand size={16} /></button></div></> : <div className="source-editor"><div className="source-header"><span><FileText size={14} />example.md</span><button className="btn primary" onClick={apply}><Check size={14} />Build deck</button></div><textarea aria-label="Deck Markdown source" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} /><div className={`source-status ${error ? 'error' : ''}`} role="status">{error || 'Edit your Markdown, then build. Your last valid deck stays intact.'}</div></div>}
+        <div className="presenter-tip" hidden={tab !== 'preview'}><Keyboard size={15} /><span>Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<span className="tip-extra"> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</span></span><button onClick={() => setModal('help')}>All shortcuts <span>↗</span></button></div>
 
       </div>
       <footer className="workspace-footer"><span><ShieldCheck size={13} />Made for the room. And everyone on the call.</span><span>Quiet by design.</span></footer>
