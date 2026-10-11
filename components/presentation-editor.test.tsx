@@ -74,7 +74,7 @@ describe('live editing', () => {
 function openEditor() {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <KioskWorkspace example={example} prompt="" />
+      <KioskWorkspace example={example} prompt="" site="https://example.com" />
     </NextIntlClientProvider>,
   )
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }))

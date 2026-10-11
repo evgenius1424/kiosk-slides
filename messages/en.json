@@ -27,6 +27,8 @@
     "settings": "Settings",
     "download": "Download",
     "downloadHint": "Download as one file that opens in any browser",
+    "share": "Share",
+    "shareHint": "Send these slides as a link",
     "preparing": "Preparing…",
     "present": "Present",
     "tabs": {
@@ -90,8 +92,29 @@
       "tidied": "Text cleaned up",
       "downloaded": "Downloaded · opens in any browser, even offline",
       "promptCopied": "Prompt copied · paste it into any AI chat",
-      "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there."
+      "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there.",
+      "linkCopied": "Link copied · anyone who opens it sees these slides",
+      "kept": "{name} added to your presentations"
+    },
+    "shared": {
+      "label": "Shared presentation",
+      "keep": "Keep a copy",
+      "keepHint": "Add it to your presentations so you can change it",
+      "broken": "This link is incomplete. Ask for it again.",
+      "home": "Go to my presentations"
     }
+  },
+  "Share": {
+    "title": "Share by link",
+    "close": "Close",
+    "making": "Making the link…",
+    "link": "Link to these slides",
+    "copy": "Copy link",
+    "code": "Code to open these slides on a phone",
+    "tooLongForCode": "Too long for a code; send the link instead.",
+    "private": "Anyone with the link can see these slides. Nothing is uploaded.",
+    "tooBig": "This presentation is too big to share by link. Download it and send the file instead.",
+    "download": "Download"
   },
   "Settings": {
     "title": "Presentation settings",
