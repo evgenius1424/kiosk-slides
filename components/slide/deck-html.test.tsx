@@ -10,7 +10,7 @@ const render = (motion = true) => deckHtml(deck, { tone: '#669a98', motion, embe
 describe('deckHtml', () => {
   it('renders every slide into one self-contained page', async () => {
     const html = await render()
-    expect(html.match(/class="portable-slide"/g)).toHaveLength(deck.slides.length)
+    expect(html.match(/class="portable-slide /g)).toHaveLength(deck.slides.length)
     expect(html).toContain(slideStyles)
     expect(html).toContain('--slide-tone:#669a98')
     expect(html).toContain(`<title>${deck.title}</title>`)
@@ -27,10 +27,16 @@ describe('deckHtml', () => {
     expect(await render(false)).toContain('.portable-slide.active .slide{animation:none}')
   })
 
-  it('ships touch controls and swipe navigation', async () => {
+  it('ships swipe navigation and a full-screen toggle without pagination', async () => {
     const html = await render()
-    expect(html).toContain('aria-label="Previous slide"')
-    expect(html).toContain('aria-label="Next slide"')
     expect(html).toContain("addEventListener('touchend'")
+    expect(html).toContain('aria-label="Toggle full screen"')
+    expect(html).not.toContain('aria-label="Next slide"')
+  })
+
+  it('fills the space around a centered slide with the slide background', async () => {
+    const html = await render()
+    expect(html).toContain('class="portable-slide slide-backdrop room-dark"')
+    expect(html).toContain('viewport-fit=cover')
   })
 })

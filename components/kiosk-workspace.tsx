@@ -80,7 +80,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
       total += event.deltaY * (event.deltaMode === 1 ? 16 : 1)
       if (Math.abs(total) > 65) { move(Math.sign(total)); total = 0; locked = true }
     }
-    const stopSwipe = onSwipe(target, move)
+    const stopSwipe = onSwipe(target, move, presenting)
     target.addEventListener('wheel', wheel, { passive: false }); return () => { target.removeEventListener('wheel', wheel); stopSwipe(); clearTimeout(timer) }
   }, [move, tab, presenting])
   useEffect(() => {
@@ -131,7 +131,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
       <div className="editor-toolbar"><div className="view-tabs">{!sidebar && <button className="icon-btn" aria-label="Show slide list" onClick={() => setSidebar(true)}><Layers2 size={16} /></button>}<button className={tab === 'preview' ? 'active' : ''} onClick={() => setTab('preview')}><Monitor size={14} />Preview</button><button className={tab === 'markdown' ? 'active' : ''} onClick={() => setTab('markdown')}><Code2 size={15} />Markdown</button><button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}><Sparkles size={14} />Ask AI</button></div><span className="ready-label"><CheckCheck size={14} />{fit ? 'Ready for the room' : 'Check slide fit'}</span></div>
       <div className={`editor-body ${tab !== 'preview' ? 'markdown-body' : ''}`}>
         <div className="chat-host" hidden={tab !== 'chat'}><DeckChat source={source} onDeck={loadGenerated} onOpen={() => setTab('chat')} /></div>
-        {tab === 'chat' ? null : tab === 'preview' ? <><div ref={canvasRef} className={`canvas-shell ${motion && !safe ? 'with-motion' : ''}`} onClick={() => setPlaying(false)}><div key={`${index}-${theme}`} className="canvas-slide"><SlideView slide={slide} theme={theme} accent={accent} /></div></div><div className="canvas-controls"><span><span className="status-dot" />{presenting ? 'Presentation' : '16:9'}<span className="control-separator">/</span>{theme === 'room-dark' ? 'Room dark' : 'Room light'}</span><div className="slide-pagination"><button className="icon-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={17} /></button><span>{String(index + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span></span><button className="icon-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={17} /></button></div><button className="icon-btn" aria-label="Enter presentation mode" onClick={present}><Expand size={16} /></button></div>{presenting && <div className="present-bar"><button className="present-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={22} /></button><span>{index + 1} / {slides.length}</span><button className="present-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={22} /></button><button className="present-btn present-exit" aria-label="Leave presentation" onClick={leave}><X size={22} /></button></div>}</> : <div className="source-editor"><div className="source-header"><span><FileText size={14} />example.md</span><button className="btn primary" onClick={apply}><Check size={14} />Build deck</button></div><textarea aria-label="Deck Markdown source" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} /><div className={`source-status ${error ? 'error' : ''}`} role="status">{error || 'Edit your Markdown, then build. Your last valid deck stays intact.'}</div></div>}
+        {tab === 'chat' ? null : tab === 'preview' ? <><div ref={canvasRef} className={`canvas-shell ${motion && !safe ? 'with-motion' : ''} ${presenting ? `slide-backdrop ${theme}` : ''}`} style={presenting ? { '--slide-tone': accent } as React.CSSProperties : undefined} onClick={() => setPlaying(false)}><div key={`${index}-${theme}`} className="canvas-slide"><SlideView slide={slide} theme={theme} accent={accent} /></div></div><div className="canvas-controls"><span><span className="status-dot" />{presenting ? 'Presentation' : '16:9'}<span className="control-separator">/</span>{theme === 'room-dark' ? 'Room dark' : 'Room light'}</span><div className="slide-pagination"><button className="icon-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={17} /></button><span>{String(index + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span></span><button className="icon-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={17} /></button></div><button className="icon-btn" aria-label="Enter presentation mode" onClick={present}><Expand size={16} /></button></div>{presenting && <button className="present-exit" aria-label="Leave presentation" onClick={leave}><X size={20} /></button>}</> : <div className="source-editor"><div className="source-header"><span><FileText size={14} />example.md</span><button className="btn primary" onClick={apply}><Check size={14} />Build deck</button></div><textarea aria-label="Deck Markdown source" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} /><div className={`source-status ${error ? 'error' : ''}`} role="status">{error || 'Edit your Markdown, then build. Your last valid deck stays intact.'}</div></div>}
         <div className="presenter-tip" hidden={tab !== 'preview'}><Keyboard size={15} /><span>Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<span className="tip-extra"> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</span></span><button onClick={() => setModal('help')}>All shortcuts <span>↗</span></button></div>
 
       </div>
@@ -147,7 +147,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
   </main>
 }
 
-function onSwipe(target: HTMLElement, move: (delta: number) => void) {
+function onSwipe(target: HTMLElement, move: (delta: number) => void, vertical: boolean) {
   let start: { x: number; y: number } | null = null
   const down = (event: TouchEvent) => { start = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null }
   const up = (event: TouchEvent) => {
@@ -155,7 +155,8 @@ function onSwipe(target: HTMLElement, move: (delta: number) => void) {
     const dx = event.changedTouches[0].clientX - start.x
     const dy = event.changedTouches[0].clientY - start.y
     start = null
-    if (Math.abs(dx) > SWIPE_DISTANCE && Math.abs(dx) > Math.abs(dy) * 1.2) move(dx < 0 ? 1 : -1)
+    const distance = vertical && Math.abs(dy) > Math.abs(dx) ? dy : Math.abs(dx) > Math.abs(dy) * 1.2 ? dx : 0
+    if (Math.abs(distance) > SWIPE_DISTANCE) move(distance < 0 ? 1 : -1)
   }
   target.addEventListener('touchstart', down, { passive: true }); target.addEventListener('touchend', up)
   return () => { target.removeEventListener('touchstart', down); target.removeEventListener('touchend', up) }
