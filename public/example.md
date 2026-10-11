@@ -22,21 +22,21 @@ Big type. One idea. No visual clutter.
 <!--
 title: How it works
 label: Three steps
-footer: Edit the source. Export HTML. Present anywhere.
+footer: Describe your talk. Review the slides. Present anywhere.
 -->
 
-# Go from source to story in **three steps**
+# Go from idea to slides in **three steps**
 
-1. Gather the material and name the audience.
-2. Generate a short Markdown deck.
-3. Validate, review, and present.
+1. Tell AI what your talk is about and who it is for.
+2. Review the slides and fix any words.
+3. Present, or download one file to share.
 
 ---
 
 <!--
-title: The format
-label: Editable
-footer: Export once. Open in any browser. No server required.
+title: Code
+label: When you need it
+footer: Code keeps its spacing, ready to read on screen.
 layout: split-left
 -->
 
@@ -52,7 +52,7 @@ layout: split-left
 <!--
 title: Branding
 label: Images
-footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
+footer: Add a picture by its web address.
 -->
 
 # Show it, **don't describe it**
@@ -64,7 +64,7 @@ footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
 <!--
 title: The data
 label: Chart
-footer: A chart comment turns any small table into bars or a line.
+footer: A small table can become a bar or line chart.
 -->
 
 # Shorter decks get **more attention**
@@ -96,14 +96,14 @@ more visitors stayed for the whole loop
 <!--
 title: Next steps
 label: Buttons
-footer: Up to three https:// links, each opening in a new tab.
+footer: Up to three links, each opening in a new tab.
 -->
 
 # Take it **further**
 
 <!-- buttons -->
-- [View the source](https://github.com/evgenius1424/kiosk-slides)
-- [Read the format guide](https://github.com/evgenius1424/kiosk-slides#readme)
+- [See the project](https://github.com/evgenius1424/kiosk-slides)
+- [Read the guide](https://github.com/evgenius1424/kiosk-slides#readme)
 
 ---
 
@@ -124,7 +124,7 @@ footer: A Before | After table becomes a side-by-side comparison.
 <!--
 title: Formats
 label: Tables
-footer: Any plain table renders as a table — up to 5 columns and 6 rows.
+footer: A plain table stays a table, up to 5 columns and 6 rows.
 -->
 
 # Pick the **right widget**
@@ -132,7 +132,7 @@ footer: Any plain table renders as a table — up to 5 columns and 6 rows.
 | You have | Write | You get |
 | --- | --- | --- |
 | A sequence | A numbered list | Steps |
-| Some code | A fenced block | Code |
+| Some code | A code block | Code |
 | A picture | An image | Image |
 
 ---
@@ -154,7 +154,7 @@ footer: A box named in both chains is marked as shared.
 <!--
 title: Closing
 label: Takeaway
-footer: Press P for unattended looping; any click or manual move pauses it.
+footer: Press P to play on a loop. Any click or move pauses it.
 -->
 
 # The message should be **seen and remembered**

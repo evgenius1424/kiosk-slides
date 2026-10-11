@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowUp, Check, ExternalLink, LogOut, MonitorDown, RotateCcw, Sparkles, Square, TriangleAlert } from 'lucide-react'
+import { ArrowUp, Check, Copy, ExternalLink, LogOut, MonitorDown, RotateCcw, Sparkles, Square, TriangleAlert } from 'lucide-react'
 import { type ChatGPTModel, type ChatGPTStatus, type ChatMessage, MANAGE_USAGE_URL, connectChatGPT, disconnectChatGPT, fetchModels, fetchStatus, streamChat, visibleReply } from '@/lib/chat'
 
 type Entry = ChatMessage & { deck?: string; notes?: string[]; error?: string }
@@ -15,7 +15,7 @@ const MODEL_KEY = 'kiosk-chatgpt-model'
 const WELCOME_KEY = 'kiosk-chatgpt-welcomed'
 const REPO_URL = 'https://github.com/evgenius1424/kiosk-slides'
 
-export function DeckChat({ source, onDeck, onOpen }: { source: string; onDeck: (source: string, fresh: boolean) => string; onOpen: () => void }) {
+export function DeckChat({ source, onDeck, onOpen, onCopyPrompt }: { source: string; onDeck: (source: string, fresh: boolean) => string; onOpen: () => void; onCopyPrompt: () => void }) {
   const [status, setStatus] = useState<ChatGPTStatus | null>(null)
   const [models, setModels] = useState<ChatGPTModel[]>([])
   const [model, setModel] = useState('')
@@ -78,7 +78,7 @@ export function DeckChat({ source, onDeck, onOpen }: { source: string; onDeck: (
     try {
       await streamChat(history.filter(e => e.content).map(({ role, content }) => ({ role, content })), source, model, event => {
         if (event.type === 'text') attempt += event.text
-        if (event.type === 'retry') { notes.push(`Fixing: ${event.error}`); attempt = '' }
+        if (event.type === 'retry') { notes.push('Fixing a small formatting issue…'); attempt = '' }
         if (event.type === 'deck') deck = onDeck(event.source, fresh && !deck)
         if (event.type === 'done') reply = event.reply
         if (event.type === 'error') error = event.message
@@ -93,11 +93,11 @@ export function DeckChat({ source, onDeck, onOpen }: { source: string; onDeck: (
   }
 
   if (!status) return <div className="chat-panel"><div className="chat-empty"><span className="chat-spinner" /></div></div>
-  if (!status.available) return <div className="chat-panel"><RunLocally reason={status.reason} /></div>
+  if (!status.available) return <div className="chat-panel"><RunLocally reason={status.reason} onCopyPrompt={onCopyPrompt} /></div>
   if (!status.connected || !status.planUsage) return <div className="chat-panel"><div className="chat-messages"><div className="chat-empty">
     <Sparkles size={20} />
-    <h2>Write decks with your ChatGPT plan.</h2>
-    <p>{status.connected ? `You’re signed in as ${status.email}, but ChatGPT plan usage wasn’t allowed. Connect again and allow it to generate decks.` : 'Describe your talk and ChatGPT writes the deck, checks it, and loads it into the editor. Your sign-in stays on this computer.'}</p>
+    <h2>Write slides with your ChatGPT plan.</h2>
+    <p>{status.connected ? `You’re signed in as ${status.email}, but ChatGPT plan usage wasn’t allowed. Connect again and allow it to write slides.` : 'Describe your talk and ChatGPT writes the slides for you. Your sign-in stays on this computer.'}</p>
     <button className="btn primary chatgpt-button" onClick={connect} disabled={connecting}>{connecting ? 'Opening ChatGPT…' : 'Continue with ChatGPT'}</button>
     <p className="chat-fineprint">Eligible AI requests use your ChatGPT plan, not a Kiosk Slides subscription. Kiosk Slides doesn’t charge for them. You can manage usage in ChatGPT settings.</p>
     {status.connected && <button className="link-button" onClick={disconnect}>Sign out of {status.email}</button>}
@@ -111,7 +111,7 @@ export function DeckChat({ source, onDeck, onOpen }: { source: string; onDeck: (
       <div className="chat-actions"><a className="btn" href={MANAGE_USAGE_URL} target="_blank" rel="noreferrer">Manage usage<ExternalLink size={13} /></a><button className="btn primary" onClick={dismissWelcome} autoFocus>Got it</button></div>
     </div></div>}
     <div className="chat-messages" ref={listRef} aria-live="polite">
-      {!entries.length && !busy && <div className="chat-empty"><Sparkles size={20} /><h2>Describe the deck you need.</h2><p>ChatGPT writes it in the deck format, checks it, and saves it as a presentation. Ask for changes any time.</p><div className="chat-suggestions">{SUGGESTIONS.map(s => <button key={s} onClick={() => send(s)} disabled={!model}>{s}</button>)}</div></div>}
+      {!entries.length && !busy && <div className="chat-empty"><Sparkles size={20} /><h2>What are you presenting?</h2><p>ChatGPT writes the slides and saves them as a presentation. Ask for changes any time.</p><div className="chat-suggestions">{SUGGESTIONS.map(s => <button key={s} onClick={() => send(s)} disabled={!model}>{s}</button>)}</div></div>}
       {entries.map((entry, i) => entry.role === 'user' ? <div key={i} className="chat-bubble user">{entry.content}</div> : <AssistantBubble key={i} text={entry.content} notes={entry.notes || []} deck={entry.deck} error={entry.error} />)}
       {live && <AssistantBubble text={live.text} notes={live.notes} pending />}
       {notice && <span className="chat-note error"><TriangleAlert size={12} />{notice}</span>}
@@ -131,13 +131,17 @@ export function DeckChat({ source, onDeck, onOpen }: { source: string; onDeck: (
   </div>
 }
 
-function RunLocally({ reason }: { reason: string }) {
+function RunLocally({ reason, onCopyPrompt }: { reason: string; onCopyPrompt: () => void }) {
   return <div className="chat-messages"><div className="chat-empty">
-    <MonitorDown size={20} />
-    <h2>Run Kiosk Slides on your computer to use your ChatGPT plan.</h2>
-    <p>{reason} Your ChatGPT sign-in is stored only on the computer running the app, so it never reaches this website.</p>
-    <pre className="chat-steps">{`git clone ${REPO_URL}\ncd kiosk-slides\npnpm install\npnpm dev`}</pre>
-    <p>Then open <strong>http://127.0.0.1:3000</strong> and choose Ask AI.</p>
+    <Sparkles size={20} />
+    <h2>Use any AI chat to write your slides.</h2>
+    <p>Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer into Edit and press Update slides.</p>
+    <button className="btn primary" onClick={onCopyPrompt}><Copy size={14} />Copy prompt</button>
+    <details className="chat-local"><summary><MonitorDown size={14} />Chat with your ChatGPT plan right here</summary>
+      <p>{reason} Your sign-in stays on your computer and never reaches this website.</p>
+      <pre className="chat-steps">{`git clone ${REPO_URL}\ncd kiosk-slides\npnpm install\npnpm dev`}</pre>
+      <p>Then open <strong>http://127.0.0.1:3000</strong> and choose Ask AI.</p>
+    </details>
   </div></div>
 }
 

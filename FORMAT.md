@@ -1,6 +1,6 @@
 # Kiosk Slides deck format
 
-A deck is one Markdown file (GitHub-flavored). Plain Markdown carries the meaning. A short HTML comment is used only where the Markdown shape alone is ambiguous. A parser (`parseDeck` in `lib/deck/`) enforces every rule below. It rejects a deck that breaks one, and every error starts with `Line N:` pointing at the offending line. `public/example.md` is a complete deck that uses every slide kind.
+A deck is one Markdown file. Plain Markdown carries the meaning, and a short HTML comment is used only where the Markdown alone is ambiguous. A deck that breaks a rule below is rejected with an error naming the line to fix.
 
 ## Deck structure
 

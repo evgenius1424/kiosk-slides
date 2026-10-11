@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Kiosk Slides — The art of being seen',
-  description: 'Room-ready presentations from simple Markdown. Big ideas, quiet motion, and portable slides that work offline.',
+  description: 'Clear slides in a minute. Describe your talk, let AI write it, and present anywhere.',
   generator: 'v0.app',
   icons: {
     icon: [
