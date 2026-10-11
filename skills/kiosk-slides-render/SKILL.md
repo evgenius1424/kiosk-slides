@@ -9,7 +9,7 @@ description: Render a Kiosk Slides Markdown presentation into one self-contained
 
 ## Workflow
 
-1. Get the presentation as a `.md` file. If the user only has notes or a conversation, write the presentation first with the `kiosk-slides-deck` skill.
+1. Get the presentation as a `.md` file. If the user only has notes or a conversation, use the `kiosk-slides-write` skill instead: it writes the presentation and renders it in one go.
 2. Render it:
 
    ```bash
@@ -29,7 +29,7 @@ description: Render a Kiosk Slides Markdown presentation into one self-contained
    - `--check` only validates and prints the slide list and any warnings, without writing HTML.
    - `--format` tidies the Markdown file in place (aligned tables, consistent spacing) without changing what it shows.
 
-3. If it fails, the message starts with `Line N:` and names the rule. Fix the presentation (see the `kiosk-slides-deck` skill for the format) and run it again. An image error means a URL could not be fetched or a `/images/` file is missing; ask the user for the file or remove that slide's image.
+3. If it fails, the message starts with `Line N:` and names the rule. Fix the presentation (see the `kiosk-slides-write` skill for the format) and run it again. An image error means a URL could not be fetched or a `/images/` file is missing; ask the user for the file or remove that slide's image.
 4. Give the user the HTML file and how to present it:
    - Open it in any browser and go full screen (F11, or Ctrl+Cmd+F on a Mac).
    - Arrow keys, Page Up/Down, Space, or the scroll wheel move between slides.

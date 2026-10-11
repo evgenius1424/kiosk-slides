@@ -1,6 +1,6 @@
 ---
-name: kiosk-slides-deck
-description: Turn a conversation, notes, or a document into a Kiosk Slides presentation, the Markdown format that presents one clear idea per slide on a TV, in a room, or on a call. Use when the user wants a presentation, slides, a deck, or a kiosk loop written or revised, and to check a presentation against the format.
+name: kiosk-slides-write
+description: Write a Kiosk Slides presentation from a conversation, notes, or a document, then render it to one self-contained HTML file. The Markdown presents one clear idea per slide on a TV, in a room, or on a call. Use when the user wants a presentation, slides, a deck, or a kiosk loop made or revised, and to check a presentation against the format.
 ---
 
 # Kiosk Slides presentation
@@ -21,9 +21,17 @@ A presentation is one Markdown file. The full grammar is in `references/FORMAT.m
 
    It prints one line per slide (number, kind, heading) or a `Line N:` error, then a `Warning:` line for each missing slide setting or for too many plain slides. `--format` also tidies the file (aligned tables, consistent spacing) without changing what it shows. Fix every error and every warning and run it again until it is clean. Never hand back a presentation that fails the check.
 
-6. Reply with one or two sentences about what you made, the slide list from the check, and the file. If the user wants HTML, hand the file to the `kiosk-slides-render` skill.
+6. Render the HTML next to it, unless the user asked for Markdown only:
 
-When the user asks for changes, edit the file in place and validate again. Keep slides they didn't mention as they were.
+   ```bash
+   node scripts/render.mjs slides.md -o slides.html
+   ```
+
+   This is the same renderer as the `kiosk-slides-render` skill. Pass its options (`--theme`, `--tone`, `--font`, `--scale`, `--brand`, `--transition`) when the user asked for a look. Running `node scripts/render.mjs` with no file prints every option.
+
+7. Reply with one or two sentences about what you made, the slide list from the check, and both files. Say the Markdown is the source: they can edit it and ask for the HTML again.
+
+When the user asks for changes, edit the Markdown in place, validate, and render again. Keep slides they didn't mention as they were.
 
 ## Rules that are easy to miss
 

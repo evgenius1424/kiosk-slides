@@ -1,0 +1,14 @@
+{
+  "name": "kiosk-slides",
+  "version": "0.1.0",
+  "description": "Write a presentation from a conversation, notes or a document, and render it to one self-contained HTML file that presents anywhere.",
+  "author": {
+    "name": "Evgenii",
+    "url": "https://github.com/evgenius1424"
+  },
+  "homepage": "https://github.com/evgenius1424/kiosk-slides",
+  "repository": "https://github.com/evgenius1424/kiosk-slides",
+  "license": "MIT",
+  "keywords": ["presentation", "slides", "markdown", "html", "kiosk"],
+  "skills": ["./skills/kiosk-slides-write", "./skills/kiosk-slides-render"]
+}

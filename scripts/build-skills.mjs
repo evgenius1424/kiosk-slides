@@ -1,7 +1,7 @@
 import { copyFile, mkdir, readdir } from 'node:fs/promises'
 import { build } from 'esbuild'
 
-const SKILLS = ['skills/kiosk-slides-deck', 'skills/kiosk-slides-render']
+const SKILLS = ['skills/kiosk-slides-write', 'skills/kiosk-slides-render']
 const REFERENCES = ['FORMAT.md', 'public/example.md']
 
 for (const skill of SKILLS) {
@@ -23,9 +23,9 @@ for (const skill of SKILLS) {
   })
 }
 
-await mkdir('skills/kiosk-slides-deck/references', { recursive: true })
+await mkdir('skills/kiosk-slides-write/references', { recursive: true })
 for (const file of REFERENCES)
-  await copyFile(file, `skills/kiosk-slides-deck/references/${file.split('/').pop()}`)
+  await copyFile(file, `skills/kiosk-slides-write/references/${file.split('/').pop()}`)
 
 const fonts = (await readdir('public/fonts')).filter(file => file.endsWith('.woff2'))
 for (const skill of SKILLS) {
