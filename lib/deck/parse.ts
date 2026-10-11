@@ -5,6 +5,7 @@ import { parseAnnotation, type Annotation } from './annotation'
 import { defaultChrome, parseChrome } from './chrome'
 import { widgetComponents, type Widget } from './components'
 import { headingLength, parseHeading } from './heading'
+import { isTheme, themes, type Theme } from './theme'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
 import type { Deck, MessageWidget, Slide } from './types'
@@ -28,29 +29,30 @@ const failAt = (line: number, message: string): never => { throw new Error(`Line
 /** Parse a deck. Throws an `Error` whose message starts with `Line N:` when the source breaks a rule. */
 export function parseDeck(source: string): Deck {
   const lines = source.replace(/\r/g, '').split('\n')
-  const { title, duration, loop, start } = parseFrontMatter(lines)
+  const { title, theme, duration, loop, start } = parseFrontMatter(lines)
   const chunks = splitSlides(lines, start).filter(c => c.text.trim())
   const slides = chunks.map(parseSlide)
   if (!slides.length) failAt(1, 'Add a slide with a # headline.')
   if (slides.length > 40) failAt(chunks[40].line, 'Use at most 40 slides per deck.')
-  return { title, duration: Math.max(2, Math.min(120, duration)), loop, slides }
+  return { title, theme, duration: Math.max(2, Math.min(120, duration)), loop, slides }
 }
 
 function parseFrontMatter(lines: string[]) {
-  let title = 'Untitled deck'; let duration = 12; let loop = true; let start = 0
+  let title = 'Untitled deck'; let theme: Theme = 'room-dark'; let duration = 12; let loop = true; let start = 0
   if (lines[0]?.trim() === '---') {
     const end = lines.findIndex((l, i) => i > 0 && l.trim() === '---')
     if (end < 0) failAt(1, 'close the front matter with ---')
     const front = lines.slice(1, end).join('\n')
     title = front.match(/^title:\s*(.+)$/m)?.[1] || title
     const themeIndex = lines.findIndex((l, i) => i > 0 && i < end && /^theme:/.test(l))
-    const theme = lines[themeIndex]?.match(/^theme:\s*(.+)$/)?.[1]
-    if (theme && !['room-dark', 'room-light'].includes(theme)) failAt(themeIndex + 1, `Unknown theme “${theme}”. Use room-dark or room-light.`)
+    const value = lines[themeIndex]?.match(/^theme:\s*(.+)$/)?.[1]
+    if (isTheme(value)) theme = value
+    else if (value) failAt(themeIndex + 1, `Unknown theme “${value}”. Use ${themes.join(' or ')}.`)
     duration = Number(front.match(/duration:\s*(\d+)s/)?.[1] || 12)
     loop = !/loop:\s*false/.test(front)
     start = end + 1
   }
-  return { title, duration, loop, start }
+  return { title, theme, duration, loop, start }
 }
 
 /** Split on bare `---` lines outside code fences. Each chunk remembers its first absolute line. */

@@ -1,5 +1,6 @@
 import type { Widget } from './components'
 import type { HeadingPart } from './heading'
+import type { Theme } from './theme'
 
 export type Layout = 'auto' | 'stacked' | 'split-left'
 
@@ -21,4 +22,4 @@ export type Slide = SlideChrome & (MessageWidget | Widget)
 export type SlideKind = Slide['kind']
 export type SlideOfKind<K extends SlideKind> = Extract<Slide, { kind: K }>
 
-export type Deck = { title: string; duration: number; loop: boolean; slides: Slide[] }
+export type Deck = { title: string; theme: Theme; duration: number; loop: boolean; slides: Slide[] }

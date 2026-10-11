@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowDownToLine, ArrowRight, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Code2, Expand, FileText, Keyboard, Layers2, Monitor, PanelLeftClose, Play, Plus, Presentation, RotateCcw, Settings2, ShieldCheck, Sparkles, Upload, X } from 'lucide-react'
-import { downloadFile, exportDeck, parseDeck } from '@/lib/deck'
+import { downloadFile, exportDeck, parseDeck, setDeckTheme, type Theme } from '@/lib/deck'
 import { DeckChat } from './deck-chat'
 import { SlideView } from './slide'
 import { slideStyles } from '@/lib/slide-styles'
@@ -17,7 +17,6 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
   const deck = useMemo(() => parseDeck(source), [source])
   const [index, setIndex] = useState(0)
   const [tab, setTab] = useState<'preview' | 'markdown' | 'chat'>('preview')
-  const [theme, setTheme] = useState('room-dark')
   const [accent, setAccent] = useState('#74747e')
   const [motion, setMotion] = useState(true)
   const [safe, setSafe] = useState(false)
@@ -37,6 +36,9 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
   const fileRef = useRef<HTMLInputElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const slides = deck.slides
+  const theme = deck.theme
+  // The deck's front matter owns the theme, so the dropdown rewrites it in the source and the unbuilt draft.
+  const setTheme = (next: Theme) => { setSource(s => setDeckTheme(s, next)); setDraft(d => setDeckTheme(d, next)) }
   const slide = slides[Math.min(index, slides.length - 1)]
   const notice = useCallback((message: string) => setToast(message), [])
   const move = useCallback((delta: number) => { setPlaying(false); setIndex(i => Math.max(0, Math.min(slides.length - 1, i + delta))) }, [slides.length])
@@ -117,7 +119,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
       </div>
       <footer className="workspace-footer"><span><ShieldCheck size={13} />Made for the room. And everyone on the call.</span><span>Quiet by design.</span></footer>
     </section>
-    <aside id="deck-settings" className="inspector" hidden={!settingsOpen}><div className="inspector-heading"><Settings2 size={15} /><h2>Deck settings</h2></div><section className="settings-section"><h3>APPEARANCE</h3><label className="field-label" htmlFor="theme">Theme</label><div className="select-wrap"><span className={`theme-swatch ${theme}`} /><select id="theme" value={theme} onChange={e => setTheme(e.target.value)}><option value="room-dark">Room dark</option><option value="room-light">Room light</option></select><ChevronDown size={13} /></div><div className="setting-label">Background tone</div><div className="color-options">{[{ name: 'Graphite', color: '#74747e' }, { name: 'Plum', color: '#9676ac' }, { name: 'Wine', color: '#a16b7b' }, { name: 'Teal', color: '#669a98' }, { name: 'Bronze', color: '#ac9167' }].map(({ name, color }) => <button key={color} className={`color-choice ${accent === color ? 'chosen' : ''}`} style={{ background: color }} title={name} aria-label={`${name} background`} aria-pressed={accent === color} onClick={() => setAccent(color)}>{accent === color && <Check size={14} />}</button>)}</div><p className="setting-help">Quiet color in the background, and on highlighted heading words.</p></section>
+    <aside id="deck-settings" className="inspector" hidden={!settingsOpen}><div className="inspector-heading"><Settings2 size={15} /><h2>Deck settings</h2></div><section className="settings-section"><h3>APPEARANCE</h3><label className="field-label" htmlFor="theme">Theme</label><div className="select-wrap"><span className={`theme-swatch ${theme}`} /><select id="theme" value={theme} onChange={e => setTheme(e.target.value as Theme)}><option value="room-dark">Room dark</option><option value="room-light">Room light</option></select><ChevronDown size={13} /></div><div className="setting-label">Background tone</div><div className="color-options">{[{ name: 'Graphite', color: '#74747e' }, { name: 'Plum', color: '#9676ac' }, { name: 'Wine', color: '#a16b7b' }, { name: 'Teal', color: '#669a98' }, { name: 'Bronze', color: '#ac9167' }].map(({ name, color }) => <button key={color} className={`color-choice ${accent === color ? 'chosen' : ''}`} style={{ background: color }} title={name} aria-label={`${name} background`} aria-pressed={accent === color} onClick={() => setAccent(color)}>{accent === color && <Check size={14} />}</button>)}</div><p className="setting-help">Quiet color in the background, and on highlighted heading words.</p></section>
       <section className="settings-section"><h3>PLAYBACK</h3><div className="setting-row"><span>Autoplay</span><Toggle checked={playing} onChange={() => { setPlaying(!playing); notice(playing ? 'Autoscroll off' : 'Autoscroll on') }} label="Autoplay" /></div><p className="setting-help">Let your story tell itself.</p><div className="setting-row duration-row"><label htmlFor="duration">Slide duration</label><div className="duration-input"><input id="duration" type="number" min="2" max="120" value={duration} onChange={e => setDuration(Math.max(2, Math.min(120, Number(e.target.value) || 2)))} /><span>sec</span></div></div><div className="setting-row"><span>Loop presentation</span><Toggle checked={loop} onChange={() => setLoop(!loop)} label="Loop presentation" /></div><div className="mini-note"><RotateCcw size={12} /><span>Starts paused. Always in your control.</span></div></section>
       <section className="settings-section"><h3>MOTION & PERFORMANCE</h3><label className="field-label" htmlFor="transition">Slide transition</label><div className="select-wrap"><select id="transition" value={motion ? 'gentle' : 'none'} disabled={safe} onChange={e => setMotion(e.target.value === 'gentle')}><option value="gentle">Gentle fade</option><option value="none">None · instant</option></select><ChevronDown size={13} /></div><div className="setting-row safe-row"><span>Screen-share safe</span><Toggle checked={safe} onChange={() => { setSafe(!safe); notice(!safe ? 'Screen-share safe · motion disabled' : 'Screen-share safe off') }} label="Screen-share safe" /></div><p className="setting-help">Still visuals. No transitions.<br />Less work for your GPU.</p><div className="performance-note"><ShieldCheck size={16} /><div><strong>Clarity comes first.</strong><p>Your message stays readable,<br />even when frames get dropped.</p></div></div></section>
       <div className="build-panel"><div><span className="status-dot" /><strong>{fit ? 'Deck is ready' : 'Review layout'}</strong><span>{slides.length} slides</span></div><p><Check size={12} />Markdown validated</p><p><Check size={12} />{fit ? 'Current slide fits the canvas' : 'Content may overflow'}</p><p><Check size={12} />No live GPU simulation</p></div><button className="shortcuts-button" onClick={() => setModal('help')}><CircleHelp size={15} />A little help goes a long way<ArrowRight size={13} /></button>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseDeck } from '@/lib/deck'
+import { parseDeck, setDeckTheme } from '@/lib/deck'
 
 const md = (...lines: string[]) => lines.join('\n')
 
@@ -19,12 +19,17 @@ describe('parseDeck: deck and message slides', () => {
       'Big type. One idea.',
     ))
     expect(deck).toEqual({
-      title: 'Demo deck', duration: 20, loop: false,
+      title: 'Demo deck', theme: 'room-light', duration: 20, loop: false,
       slides: [{
         kind: 'message', title: '', label: '', footer: '', layout: 'auto',
         heading: [{ text: 'Make your point ' }, { text: 'impossible to miss', highlight: true }], body: 'Big type. One idea.',
       }],
     })
+  })
+
+  it('defaults the theme to room-dark', () => {
+    expect(parseDeck('# Hi').theme).toBe('room-dark')
+    expect(parseDeck(md('---', 'title: T', '---', '# Hi')).theme).toBe('room-dark')
   })
 
   it('reads slide chrome from the comment after the separator', () => {
@@ -490,5 +495,28 @@ describe('parseDeck: flow', () => {
     const message = 'Line 4: A flow can’t loop back to an earlier box. Give the boxes different text.'
     expect(error(flow('- A -> B -> A'))).toBe(message)
     expect(error(flow('- A -> B', '- B -> A'))).toBe(message)
+  })
+})
+
+describe('setDeckTheme', () => {
+  it('replaces the theme line in the front matter', () => {
+    expect(setDeckTheme(md('---', 'title: T', 'theme: room-dark', '---', '# Hi'), 'room-light'))
+      .toBe(md('---', 'title: T', 'theme: room-light', '---', '# Hi'))
+  })
+
+  it('adds a theme line to front matter that has none', () => {
+    expect(setDeckTheme(md('---', 'title: T', '---', '# Hi'), 'room-light'))
+      .toBe(md('---', 'title: T', 'theme: room-light', '---', '# Hi'))
+  })
+
+  it('adds front matter to a deck that has none', () => {
+    const next = setDeckTheme(md('# Hi', '', 'Body.'), 'room-light')
+    expect(next).toBe(md('---', 'theme: room-light', '---', '', '# Hi', '', 'Body.'))
+    expect(parseDeck(next).theme).toBe('room-light')
+  })
+
+  it('leaves an indented theme key alone', () => {
+    expect(setDeckTheme(md('---', 'x:', '  theme: y', 'theme: room-dark', '---', '# Hi'), 'room-light'))
+      .toBe(md('---', 'x:', '  theme: y', 'theme: room-light', '---', '# Hi'))
   })
 })
