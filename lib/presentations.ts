@@ -1,4 +1,4 @@
-import { parsePresentation, UNTITLED } from './presentation'
+import { formatPresentation, parsePresentation, UNTITLED } from './presentation'
 
 export type SavedPresentation = {
   id: string
@@ -10,6 +10,9 @@ export type SavedPresentation = {
 export type Library = { current: string; items: SavedPresentation[] }
 
 const STORAGE_KEY = 'kiosk-presentations'
+const FRONT_MATTER = /^---\n[\s\S]*?\n---(\n|$)/
+const HEADING = /^# \S/m
+const OUTER_FENCE = /^(`{3,}|~{3,})[^\n]*\n([\s\S]*?)\n\1\s*$/
 
 export function blankPresentation(heading: string, body: string) {
   return `---\ntheme: room-dark\n---\n\n# ${heading}\n\n${body}\n`
@@ -70,6 +73,16 @@ export function presentationName(source: string) {
   } catch {
     return ''
   }
+}
+
+export function pastedPresentation(text: string) {
+  const source = unfence(text.replace(/\r\n?/g, '\n').trim())
+  if (!FRONT_MATTER.test(source) && !HEADING.test(source)) return null
+  return formatPresentation(`${source}\n`)
+}
+
+function unfence(text: string) {
+  return text.match(OUTER_FENCE)?.[2].trim() ?? text
 }
 
 function newId() {

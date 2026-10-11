@@ -642,6 +642,17 @@ kbd {
   z-index: 30;
   font-size: 14px;
 }
+.toast-action {
+  margin-left: 6px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: #ffffff1f;
+  color: inherit;
+  font-weight: 600;
+}
+.toast-action:hover {
+  background: #ffffff33;
+}
 .workspace-dialog {
   position: fixed;
   inset: 0;
