@@ -62,7 +62,7 @@ export function KioskWorkspace({ example, help }: { example: string; help: { gui
   const present = useCallback(() => {
     setTab('preview'); setPresenting(true); setPlaying(false); (document.activeElement as HTMLElement)?.blur()
     enterFullscreen()
-    notice(matchMedia('(hover: none)').matches ? 'Presenting · Swipe to move · Tap ✕ to return' : 'Presenting · Esc to return · P to autoplay')
+    notice(matchMedia('(hover: none)').matches ? 'Swipe to change slides' : 'Esc to exit · P to autoplay')
   }, [notice])
   const leave = useCallback(() => { setPresenting(false); setPlaying(false); if (fullscreenElement()) exitFullscreen() }, [])
   useEffect(() => { const next = loadLibrary(example); setLibrary(next); show(next.items.find(p => p.id === next.current)!.source); setLoaded(true) }, [example])

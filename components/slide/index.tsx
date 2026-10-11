@@ -23,6 +23,6 @@ export function SlideView({ slide, theme = 'room-dark', accent = '#74747e', look
       <div className="slide-message"><h2><HeadingText parts={slide.heading} /></h2>{slide.body && <p className="slide-body">{slide.body}</p>}</div>
       {Widget && <Widget slide={slide} />}
     </div>
-    <footer className="slide-footer"><span>{slide.footer}</span>{look.brand && <span className="slide-brand">{look.brand === DEFAULT_BRAND ? <>kiosk<span className="brand-period">.</span></> : look.brand}</span>}</footer>
+    <footer className="slide-footer"><span>{slide.footer}</span>{look.brand && <span className={`slide-brand ${look.brand === DEFAULT_BRAND ? '' : 'custom'}`}>{look.brand === DEFAULT_BRAND ? <>kiosk<span className="brand-period">.</span></> : look.brand}</span>}</footer>
   </article>
 }
