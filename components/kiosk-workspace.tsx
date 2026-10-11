@@ -30,7 +30,7 @@ import {
 } from 'lucide-react'
 import {
   DEFAULT_BRAND,
-  downloadFile,
+  deckLook,
   fonts,
   formatDeck,
   parseDeck,
@@ -43,12 +43,18 @@ import {
 } from '@/lib/deck'
 import {
   DEFAULT_TRANSITION,
+  IDLE_MS,
+  SWIPE,
   TRANSITION_MS,
+  WHEEL,
   activeTransition,
+  playerAction,
+  slideSeconds,
+  swipeDelta,
   transitions,
   type ActiveTransition,
   type Transition,
-} from '@/lib/transitions'
+} from '@/lib/player'
 import {
   blankDeck,
   createPresentation,
@@ -59,10 +65,10 @@ import {
   type Library,
 } from '@/lib/presentations'
 import { DeckChat } from './deck-chat'
+import { downloadFile } from './download'
 import { PresentationMenu } from './presentation-menu'
 import { SlideView } from './slide'
 
-const SWIPE_DISTANCE = 45
 const BASICS = ['newSlide', 'heading', 'highlight', 'text', 'extras'] as const
 const SHORTCUTS = [
   'next',
@@ -147,7 +153,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const slides = deck.slides
   const current = library.items.find(p => p.id === library.current) ?? library.items[0]
   const theme = deck.theme
-  const look = { font: deck.font, scale: deck.scale, brand: deck.brand }
+  const look = deckLook(deck)
   // The deck's front matter owns these settings, so the controls rewrite them in the source and the unbuilt draft.
   const setFront = (key: string, value?: string) => {
     setSource(s => setFrontMatter(s, key, value))
@@ -223,10 +229,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         }
         setIndex(i => (i + 1) % slides.length)
       },
-      (slide.duration || duration) * 1000,
+      slideSeconds(slide, duration) * 1000,
     )
     return () => clearTimeout(timer)
-  }, [playing, index, slides.length, loop, duration, slide.duration, notice, t])
+  }, [playing, index, slides.length, loop, duration, slide, notice, t])
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.isComposing || event.keyCode === 229) return
@@ -240,31 +246,24 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         tab !== 'preview'
       )
         return
-      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(event.key)) {
-        event.preventDefault()
-        move(1)
+      const action = playerAction(event)
+      if (!action) return
+      event.preventDefault()
+      if (action === 'next') move(1)
+      if (action === 'previous') move(-1)
+      if (action === 'first' || action === 'last') {
+        setIndex(action === 'first' ? 0 : slides.length - 1)
+        setPlaying(false)
       }
-      if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) {
-        event.preventDefault()
-        move(-1)
-      }
-      if (event.key.toLowerCase() === 'p') {
+      if (action === 'autoplay') {
         setPlaying(p => !p)
         notice(t('toast.autoplay', { on: String(!playing) }))
       }
-      if (event.key.toLowerCase() === 'f') {
+      if (action === 'fullscreen') {
         if (presenting) leave()
         else present()
       }
-      if (event.key.toLowerCase() === 's') toggleSafe()
-      if (event.key === 'Home') {
-        setIndex(0)
-        setPlaying(false)
-      }
-      if (event.key === 'End') {
-        setIndex(slides.length - 1)
-        setPlaying(false)
-      }
+      if (action === 'shareSafe') toggleSafe()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -281,10 +280,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
       timer = setTimeout(() => {
         locked = false
         total = 0
-      }, 240)
+      }, WHEEL.settleMs)
       if (locked) return
-      total += event.deltaY * (event.deltaMode === 1 ? 16 : 1)
-      if (Math.abs(total) > 65) {
+      total += event.deltaY * (event.deltaMode === 1 ? WHEEL.lineHeight : 1)
+      if (Math.abs(total) > WHEEL.distance) {
         move(Math.sign(total))
         total = 0
         locked = true
@@ -318,7 +317,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     const wake = () => {
       setIdle(false)
       clearTimeout(timer)
-      timer = setTimeout(() => setIdle(true), 2600)
+      timer = setTimeout(() => setIdle(true), IDLE_MS)
     }
     wake()
     window.addEventListener('pointermove', wake)
@@ -1036,9 +1035,8 @@ function onSwipe(target: HTMLElement, move: (delta: number) => void, vertical: b
     const dx = event.changedTouches[0].clientX - start.x
     const dy = event.changedTouches[0].clientY - start.y
     start = null
-    const distance =
-      vertical && Math.abs(dy) > Math.abs(dx) ? dy : Math.abs(dx) > Math.abs(dy) * 1.2 ? dx : 0
-    if (Math.abs(distance) > SWIPE_DISTANCE) move(distance < 0 ? 1 : -1)
+    const distance = swipeDelta(dx, dy, vertical)
+    if (Math.abs(distance) > SWIPE.distance) move(distance < 0 ? 1 : -1)
   }
   target.addEventListener('touchstart', down, { passive: true })
   target.addEventListener('touchend', up)

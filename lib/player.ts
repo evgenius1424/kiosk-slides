@@ -1,7 +1,11 @@
+import type { Slide } from './deck/types'
+
 export const transitions = ['gentle', 'fade', 'slide', 'none'] as const
 
 export type Transition = (typeof transitions)[number]
 export type ActiveTransition = Transition | 'share'
+export type PlayerAction =
+  'next' | 'previous' | 'first' | 'last' | 'autoplay' | 'fullscreen' | 'shareSafe'
 
 export const DEFAULT_TRANSITION: Transition = 'gentle'
 
@@ -13,12 +17,46 @@ export const TRANSITION_MS: Record<ActiveTransition, number> = {
   none: 0,
 }
 
+export const PLAYER_KEYS: Record<string, PlayerAction> = {
+  ArrowRight: 'next',
+  ArrowDown: 'next',
+  PageDown: 'next',
+  ' ': 'next',
+  ArrowLeft: 'previous',
+  ArrowUp: 'previous',
+  PageUp: 'previous',
+  Home: 'first',
+  End: 'last',
+  p: 'autoplay',
+  f: 'fullscreen',
+  s: 'shareSafe',
+}
+
+export const SWIPE = { distance: 45, ratio: 1.2 }
+export const WHEEL = { distance: 65, settleMs: 240, lineHeight: 16 }
+export const IDLE_MS = 2600
+
 export function isTransition(value: string): value is Transition {
   return transitions.includes(value as Transition)
 }
 
 export function activeTransition(transition: Transition, shareSafe: boolean): ActiveTransition {
   return shareSafe && transition !== 'none' ? 'share' : transition
+}
+
+export function playerAction(event: KeyboardEvent): PlayerAction | undefined {
+  if (event.isComposing || event.keyCode === 229 || event.ctrlKey || event.metaKey || event.altKey)
+    return
+  return PLAYER_KEYS[event.key.length === 1 ? event.key.toLowerCase() : event.key]
+}
+
+export function slideSeconds(slide: Slide, duration: number) {
+  return slide.duration || duration
+}
+
+export function swipeDelta(dx: number, dy: number, vertical: boolean) {
+  if (vertical && Math.abs(dy) > Math.abs(dx)) return dy
+  return Math.abs(dx) > Math.abs(dy) * SWIPE.ratio ? dx : 0
 }
 
 export const transitionStyles = `

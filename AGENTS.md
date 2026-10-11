@@ -37,10 +37,21 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `components/slide/`   | Shared slide renderer and the exported single-file HTML (`deck-html.tsx`)      |
 | `lib/deck/`           | Markdown presentation parser, widgets, themes, fonts and front matter          |
 | `lib/slide-styles.ts` | Slide CSS shared by the site, the export and the skills                        |
+| `lib/player.ts`       | Transitions, keys, swipe and wheel rules shared by every player                |
 | `lib/chat*.ts`        | AI prompt and the local ChatGPT plan-usage client                              |
 | `messages/en.json`    | Every UI string, read through next-intl                                        |
 | `skills/`             | The two Claude skills; `scripts/`, `references/` and `assets/` are generated   |
 | `.scratch/`           | Specs and issues as Markdown (see Agent skills below)                          |
+
+## Rendering architecture
+
+One core turns Markdown into slides for the site preview, presenting mode, thumbnails, the HTML download and the skills:
+
+1. **Parse**: `lib/deck` turns Markdown into a `Deck` (slides, look, theme, timing).
+2. **Render**: `components/slide` turns each slide into markup with `SlideView`, styled by `lib/slide-styles.ts`. `deck-html.tsx` wraps those slides into the single-file presentation.
+3. **Play**: `lib/player.ts` holds the transitions and navigation rules. The site's React player and the export's inline script both read them.
+
+Everything else is a thin adapter: `app/` and `components/kiosk-workspace.tsx` for the site, `skills/render.ts` for the command line, and `scripts/bundle-renderer.mjs` for the skills' esbuild bundle. The core imports only itself, React and remark, with no Next.js, Node or browser-only code, so changing the site's compiler or bundler never touches it. Tests hold this in place: `lib/core.test.ts` checks the core's imports, `components/slide/parity.test.tsx` checks the preview and thumbnails match the export, `components/slide/player.test.ts` checks the export player follows the shared rules, and `skills/render.test.ts` checks the esbuild-built skill writes the same file as the site.
 
 ## Conventions
 

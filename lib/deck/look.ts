@@ -1,4 +1,4 @@
-import type { Slide } from './types'
+import type { Deck, Slide } from './types'
 
 export const scales = ['normal', 'large', 'kiosk'] as const
 export type Scale = (typeof scales)[number]
@@ -64,6 +64,8 @@ export const defaultLook = (): DeckLook => ({
   scale: 'normal',
   brand: DEFAULT_BRAND,
 })
+
+export const deckLook = ({ font, scale, brand }: Deck): DeckLook => ({ font, scale, brand })
 
 export const isScale = (value: string | undefined): value is Scale =>
   scales.includes(value as Scale)

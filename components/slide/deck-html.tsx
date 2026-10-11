@@ -1,7 +1,15 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { findFont, fontFace, type Deck, type Theme } from '@/lib/deck'
+import { deckLook, findFont, fontFace, type Deck, type Theme } from '@/lib/deck'
 import { slideStyles } from '@/lib/slide-styles'
-import { TRANSITION_MS, type Transition } from '@/lib/transitions'
+import {
+  IDLE_MS,
+  PLAYER_KEYS,
+  SWIPE,
+  TRANSITION_MS,
+  WHEEL,
+  slideSeconds,
+  type Transition,
+} from '@/lib/player'
 import { SlideView } from '.'
 
 export type DeckHtmlOptions = {
@@ -24,7 +32,7 @@ export async function deckHtml(
     embedFont,
   }: DeckHtmlOptions,
 ): Promise<string> {
-  const look = { font: deck.font, scale: deck.scale, brand: deck.brand }
+  const look = deckLook(deck)
   const font = findFont(deck.font)
   const face = font.file ? fontFace(font, await embedFont(font.file)) : ''
   const slides = await Promise.all(
@@ -37,10 +45,14 @@ export async function deckHtml(
   const config = JSON.stringify({
     duration: deck.duration,
     loop: deck.loop,
-    durations: deck.slides.map(s => s.duration || deck.duration),
+    durations: deck.slides.map(s => slideSeconds(s, deck.duration)),
     transition,
     shareSafe,
     ms: TRANSITION_MS,
+    keys: PLAYER_KEYS,
+    swipe: SWIPE,
+    wheel: WHEEL,
+    idle: IDLE_MS,
   })
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${deck.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}</script></body></html>`
 }
@@ -66,26 +78,28 @@ const controls = `<button id="full" type="button" aria-label="Toggle full screen
 
 const player = `const slides=[...document.querySelectorAll('.portable-slide')],full=document.querySelector('#full');
 const root=document.documentElement,canFull=!!(root.requestFullscreen||root.webkitRequestFullscreen);
-let index=0,shown=0,timer,leaving,idle,playing=false,safe=config.shareSafe,last=0,total=0,gesture,start=null;
+let index=0,shown=0,timer,leaving,idle,playing=false,safe=config.shareSafe,locked=false,total=0,gesture,start=null;
 const fullElement=()=>document.fullscreenElement||document.webkitFullscreenElement;
 const mode=()=>safe&&config.transition!=='none'?'share':config.transition;
 const show=()=>{const from=shown,t=mode();shown=index;root.dataset.transition=t;if(from!==index)root.style.setProperty('--kt-dir',index<from?-1:1);slides.forEach(s=>s.classList.remove('kt-enter','kt-leave'));void root.offsetWidth;slides.forEach((s,i)=>s.classList.toggle('active',i===index));clearTimeout(leaving);if(from!==index&&t!=='none'){slides[index].classList.add('kt-enter');slides[from].classList.add('kt-leave');leaving=setTimeout(()=>slides.forEach(s=>s.classList.remove('kt-enter','kt-leave')),config.ms[t])}schedule()};
 const say=m=>{const n=document.querySelector('#notice');n.textContent=m;clearTimeout(say.t);say.t=setTimeout(()=>n.textContent='',1800)};
 const pause=()=>{playing=false;clearTimeout(timer)};
 const schedule=()=>{clearTimeout(timer);if(playing)timer=setTimeout(()=>{if(index===slides.length-1&&!config.loop){pause();return}index=(index+1)%slides.length;show()},config.durations[index]*1000)};
-const move=d=>{pause();index=Math.max(0,Math.min(slides.length-1,index+d));show()};
-const wake=()=>{full.classList.remove('idle');clearTimeout(idle);idle=setTimeout(()=>full.classList.add('idle'),2600)};
+const go=i=>{pause();index=Math.max(0,Math.min(slides.length-1,i));show()};
+const move=d=>go(index+d);
+const wake=()=>{full.classList.remove('idle');clearTimeout(idle);idle=setTimeout(()=>full.classList.add('idle'),config.idle)};
 const toggleFull=()=>{if(fullElement())(document.exitFullscreen||document.webkitExitFullscreen).call(document);else{const r=(root.requestFullscreen||root.webkitRequestFullscreen).call(root);if(r&&r.catch)r.catch(()=>{})}};
 const syncFull=()=>root.classList.toggle('fullscreen',!!fullElement());
+const actions={next:()=>move(1),previous:()=>move(-1),first:()=>go(0),last:()=>go(slides.length-1),fullscreen:()=>{if(canFull)toggleFull()},autoplay:()=>{playing=!playing;schedule();say(playing?'Autoscroll on':'Autoscroll off')},shareSafe:()=>{safe=!safe;root.dataset.transition=mode();say(safe?'Screen-share safe on':'Screen-share safe off')}};
 full.hidden=!canFull;
 full.addEventListener('click',e=>{e.stopPropagation();toggleFull();wake()});
 document.addEventListener('fullscreenchange',syncFull);document.addEventListener('webkitfullscreenchange',syncFull);
-document.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229||e.target.closest('input,textarea,button'))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();move(1)}if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();move(-1)}if(e.key.toLowerCase()==='f'&&canFull)toggleFull();if(e.key.toLowerCase()==='p'){playing=!playing;schedule();say(playing?'Autoscroll on':'Autoscroll off')}if(e.key.toLowerCase()==='s'){safe=!safe;root.dataset.transition=mode();say(safe?'Screen-share safe on':'Screen-share safe off')}});
+document.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,button'))return;const a=config.keys[e.key.length===1?e.key.toLowerCase():e.key];if(!a)return;e.preventDefault();actions[a]()});
 document.addEventListener('click',pause);
 document.addEventListener('pointermove',wake);document.addEventListener('pointerdown',wake);
 document.addEventListener('touchstart',e=>{start=e.touches.length===1?{x:e.touches[0].clientX,y:e.touches[0].clientY}:null},{passive:true});
-document.addEventListener('touchend',e=>{if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y,d=Math.abs(dx)>Math.abs(dy)?dx:dy;start=null;if(Math.abs(d)>45)move(d<0?1:-1)});
-document.addEventListener('wheel',e=>{e.preventDefault();clearTimeout(gesture);gesture=setTimeout(()=>{last=0;total=0},220);if(last)return;total+=e.deltaY;if(Math.abs(total)>60){move(Math.sign(total));last=Date.now();total=0}},{passive:false});
+document.addEventListener('touchend',e=>{if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y,d=Math.abs(dy)>Math.abs(dx)?dy:Math.abs(dx)>Math.abs(dy)*config.swipe.ratio?dx:0;start=null;if(Math.abs(d)>config.swipe.distance)move(d<0?1:-1)});
+document.addEventListener('wheel',e=>{e.preventDefault();clearTimeout(gesture);gesture=setTimeout(()=>{locked=false;total=0},config.wheel.settleMs);if(locked)return;total+=e.deltaY*(e.deltaMode===1?config.wheel.lineHeight:1);if(Math.abs(total)>config.wheel.distance){move(Math.sign(total));locked=true;total=0}},{passive:false});
 show();wake();`
 
 function base64(bytes: Uint8Array) {

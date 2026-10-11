@@ -575,11 +575,6 @@ kbd {
 .source-status.error {
   color: #a12626;
 }
-.portable-slide {
-  width: 1600px;
-  height: 900px;
-  container-type: inline-size;
-}
 .toast {
   position: fixed;
   bottom: 24px;

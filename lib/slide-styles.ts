@@ -1,4 +1,4 @@
-import { transitionStyles } from './transitions'
+import { transitionStyles } from './player'
 
 export const slideStyles =
   `

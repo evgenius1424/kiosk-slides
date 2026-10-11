@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseDeck } from '@/lib/deck'
 import { slideStyles } from '@/lib/slide-styles'
-import type { Transition } from '@/lib/transitions'
+import type { Transition } from '@/lib/player'
 import { deckHtml } from './deck-html'
 
 const deck = parseDeck(readFileSync('public/example.md', 'utf8'))
