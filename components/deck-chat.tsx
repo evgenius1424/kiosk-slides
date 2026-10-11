@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowUp, Check, ExternalLink, LogOut, MonitorDown, RotateCcw, Sparkles, Square, TriangleAlert } from 'lucide-react'
 import { type ChatGPTModel, type ChatGPTStatus, type ChatMessage, MANAGE_USAGE_URL, connectChatGPT, disconnectChatGPT, fetchModels, fetchStatus, streamChat, visibleReply } from '@/lib/chat'
 
-type Entry = ChatMessage & { deck?: boolean; notes?: string[]; error?: string }
+type Entry = ChatMessage & { deck?: string; notes?: string[]; error?: string }
 
 const SUGGESTIONS = [
   'Make a 6-slide deck that pitches a four-day work week to leadership',
@@ -15,7 +15,7 @@ const MODEL_KEY = 'kiosk-chatgpt-model'
 const WELCOME_KEY = 'kiosk-chatgpt-welcomed'
 const REPO_URL = 'https://github.com/evgenius1424/kiosk-slides'
 
-export function DeckChat({ source, onDeck, onOpen }: { source: string; onDeck: (source: string) => void; onOpen: () => void }) {
+export function DeckChat({ source, onDeck, onOpen }: { source: string; onDeck: (source: string, fresh: boolean) => string; onOpen: () => void }) {
   const [status, setStatus] = useState<ChatGPTStatus | null>(null)
   const [models, setModels] = useState<ChatGPTModel[]>([])
   const [model, setModel] = useState('')
@@ -73,13 +73,13 @@ export function DeckChat({ source, onDeck, onOpen }: { source: string; onDeck: (
     const history = [...entries, { role: 'user' as const, content }]
     setEntries(history); setInput('')
     const controller = new AbortController(); abortRef.current = controller
-    let attempt = ''; const notes: string[] = []; let deck = false; let reply = ''; let error = ''
+    let attempt = ''; const notes: string[] = []; let deck = ''; const fresh = !entries.some(e => e.deck); let reply = ''; let error = ''
     setLive({ text: '', notes: [] })
     try {
       await streamChat(history.filter(e => e.content).map(({ role, content }) => ({ role, content })), source, model, event => {
         if (event.type === 'text') attempt += event.text
         if (event.type === 'retry') { notes.push(`Fixing: ${event.error}`); attempt = '' }
-        if (event.type === 'deck') { deck = true; onDeck(event.source) }
+        if (event.type === 'deck') deck = onDeck(event.source, fresh && !deck)
         if (event.type === 'done') reply = event.reply
         if (event.type === 'error') error = event.message
         setLive({ text: attempt, notes: [...notes] })
@@ -111,7 +111,7 @@ export function DeckChat({ source, onDeck, onOpen }: { source: string; onDeck: (
       <div className="chat-actions"><a className="btn" href={MANAGE_USAGE_URL} target="_blank" rel="noreferrer">Manage usage<ExternalLink size={13} /></a><button className="btn primary" onClick={dismissWelcome} autoFocus>Got it</button></div>
     </div></div>}
     <div className="chat-messages" ref={listRef} aria-live="polite">
-      {!entries.length && !busy && <div className="chat-empty"><Sparkles size={20} /><h2>Describe the deck you need.</h2><p>ChatGPT writes it in the deck format, checks it, and loads it into the editor. Ask for changes any time.</p><div className="chat-suggestions">{SUGGESTIONS.map(s => <button key={s} onClick={() => send(s)} disabled={!model}>{s}</button>)}</div></div>}
+      {!entries.length && !busy && <div className="chat-empty"><Sparkles size={20} /><h2>Describe the deck you need.</h2><p>ChatGPT writes it in the deck format, checks it, and saves it as a presentation. Ask for changes any time.</p><div className="chat-suggestions">{SUGGESTIONS.map(s => <button key={s} onClick={() => send(s)} disabled={!model}>{s}</button>)}</div></div>}
       {entries.map((entry, i) => entry.role === 'user' ? <div key={i} className="chat-bubble user">{entry.content}</div> : <AssistantBubble key={i} text={entry.content} notes={entry.notes || []} deck={entry.deck} error={entry.error} />)}
       {live && <AssistantBubble text={live.text} notes={live.notes} pending />}
       {notice && <span className="chat-note error"><TriangleAlert size={12} />{notice}</span>}
@@ -141,13 +141,13 @@ function RunLocally({ reason }: { reason: string }) {
   </div></div>
 }
 
-function AssistantBubble({ text, notes, deck, error, pending }: { text: string; notes: string[]; deck?: boolean; error?: string; pending?: boolean }) {
+function AssistantBubble({ text, notes, deck, error, pending }: { text: string; notes: string[]; deck?: string; error?: string; pending?: boolean }) {
   const reply = visibleReply(text)
   return <div className="chat-bubble assistant">
     {notes.map((note, i) => <span key={i} className="chat-note"><RotateCcw size={12} />{note}</span>)}
     {reply.text && <p>{reply.text}</p>}
     {pending && <span className="chat-note"><span className="chat-spinner" />{reply.writing ? 'Writing slides…' : 'Thinking…'}</span>}
-    {deck && <span className="chat-note success"><Check size={12} />Deck loaded into the editor</span>}
+    {deck && <span className="chat-note success"><Check size={12} />Saved as “{deck}”</span>}
     {error && <span className="chat-note error"><TriangleAlert size={12} />{error}</span>}
   </div>
 }

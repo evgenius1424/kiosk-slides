@@ -9,6 +9,7 @@ const nextConfig = {
   },
   // lib/chat-prompt.ts reads these at runtime, which file tracing can't see.
   outputFileTracingIncludes: {
+    '/': ['./FORMAT.md', './public/example.md'],
     '/api/chat': ['./FORMAT.md', './public/example.md'],
   },
   images: {

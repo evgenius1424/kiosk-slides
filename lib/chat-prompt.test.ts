@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { systemPrompt } from '@/lib/chat-prompt'
+import { copyPrompt, systemPrompt } from '@/lib/chat-prompt'
 
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), 'utf8').trim()
 
@@ -15,5 +15,15 @@ describe('chat system prompt', () => {
 
   it('has no leftover colon-fence directive syntax', async () => {
     expect(await systemPrompt()).not.toContain(':'.repeat(3))
+  })
+})
+
+describe('copyable prompt', () => {
+  it('carries the same format and example as the chat, asking for a pasteable code block', async () => {
+    const prompt = await copyPrompt()
+    expect(prompt).toContain(read('FORMAT.md'))
+    expect(prompt).toContain(read('public/example.md'))
+    expect(prompt).toContain('```markdown')
+    expect(prompt).not.toContain('<deck>')
   })
 })
