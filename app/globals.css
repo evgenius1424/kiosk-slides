@@ -528,12 +528,28 @@ kbd {
 .markdown-body .presenter-tip {
   display: none;
 }
+.source-layout {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+.source-preview {
+  display: none;
+}
+.source-slide {
+  aspect-ratio: 16/9;
+  container-type: inline-size;
+  overflow: hidden;
+  border-radius: 7px;
+  background: #18181b;
+}
 .source-editor {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  width: 100%;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 7px;
   overflow: hidden;
@@ -567,6 +583,10 @@ kbd {
   background: #fafafa;
 }
 .source-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   flex-shrink: 0;
   padding: 8px 12px;
   font-size: 13px;
@@ -574,6 +594,37 @@ kbd {
 }
 .source-status.error {
   color: #a12626;
+}
+.source-editor.has-error {
+  border-color: #e7b4b4;
+}
+.go-to-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  padding: 4px 8px;
+  background: none;
+  color: inherit;
+  font-size: 13px;
+}
+.canvas-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  color: #a1a1aa;
+}
+@media (min-width: 1200px) {
+  .source-preview {
+    display: block;
+    width: 40%;
+    flex-shrink: 0;
+  }
 }
 .toast {
   position: fixed;
@@ -635,6 +686,61 @@ kbd {
   line-height: 1.7;
   color: var(--muted-foreground);
   margin-top: 22px;
+}
+.share-link {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0 16px;
+}
+.share-link input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+}
+.share-link .btn {
+  flex-shrink: 0;
+}
+.share-code {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+.workspace-dialog .share-note {
+  font-size: 14px;
+  text-align: center;
+  margin: 14px 0 0;
+}
+.shared-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  font-weight: 600;
+}
+.shared-bar span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shared-bar .btn {
+  padding: 8px 12px;
+}
+.shared-broken {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  min-height: 100dvh;
+  padding: 16px;
+  text-align: center;
+  font-size: 18px;
 }
 .is-presenting {
   display: block;
@@ -1284,6 +1390,9 @@ html:has(.is-presenting .room-light) {
   .export-btn {
     font-size: 0;
     gap: 0;
+  }
+  .shared-bar > span {
+    display: none;
   }
   .export-btn svg {
     width: 18px;

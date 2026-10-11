@@ -1,6 +1,6 @@
 # Spec: fonts for Cyrillic text
 
-Status: ready-for-agent
+Status: done
 Blocked by: (none)
 Track: C (independent)
 
@@ -31,3 +31,7 @@ All five bundled fonts in `public/fonts/` are Latin-only subsets; none contains 
 ## Out of scope
 
 A Russian UI translation (a later `messages/ru.json`), and right-to-left scripts.
+
+## Comments
+
+- 2026-10-11: Yandex's typefaces (Yandex Sans, YS Text, YS Display) have no open license. Yandex has said the font is the voice of its brand, kept for its own products, and has had copies taken down from font sites, so they can't ship in an MIT project. Used the OFL fonts above instead, taken from Google Fonts' subsets: Inter, Golos Text, Onest and Unbounded Cyrillic, plus Golos Text as a sixth font choice. Each font's Cyrillic width drives heading fit when a heading is mostly Cyrillic.

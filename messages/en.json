@@ -33,6 +33,8 @@
       "pdf": "PDF",
       "pdfHint": "One page per slide, for email and chat"
     },
+    "share": "Share",
+    "shareHint": "Send these slides as a link",
     "preparing": "Preparing…",
     "present": "Present",
     "tabs": {
@@ -49,7 +51,7 @@
       "hide": "Hide slide list",
       "show": "Show slide list",
       "list": "Slides",
-      "slide": "Slide {number}: {title}",
+      "slide": "Slide {number}: ",
       "untitledSlide": "Slide {number}",
       "add": "Add a slide"
     },
@@ -62,14 +64,17 @@
       "previous": "Previous slide",
       "next": "Next slide",
       "enter": "Enter presentation mode",
-      "leave": "Leave presentation"
+      "leave": "Leave presentation",
+      "slide": "Slide {number} of {count}: {title}",
+      "empty": "Fix the text in Edit to see your slides."
     },
     "editor": {
       "help": "Help",
-      "update": "Update slides",
+      "tidy": "Clean up",
+      "tidyHint": "Lines up tables and spacing in your text",
       "label": "Slide text",
-      "status": "Paste slides from any AI or fix a word, then press Update slides. Tables and spacing get tidied for you.",
-      "discard": "You have edits you haven’t applied. Discard them?"
+      "status": "Slides follow your text as you type. Clean up lines up tables and spacing.",
+      "goToLine": "Go to line"
     },
     "tip": "Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<extra> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</extra>",
     "allShortcuts": "All shortcuts",
@@ -89,13 +94,34 @@
       "end": "End of presentation",
       "created": "{name} created · write, paste, or ask AI",
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
-      "slideAdded": "New slide added at the end. Edit it, then update your slides.",
-      "updated": "Slides updated and saved",
+      "slideAdded": "New slide added at the end",
+      "tidied": "Text cleaned up",
       "downloaded": "Downloaded · opens in any browser, even offline",
-      "printing": "Choose Save as PDF in the print dialog",
+      "pdfDownloaded": "PDF downloaded · one page per slide",
       "promptCopied": "Prompt copied · paste it into any AI chat",
-      "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there."
+      "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there.",
+      "linkCopied": "Link copied · anyone who opens it sees these slides",
+      "kept": "{name} added to your presentations"
+    },
+    "shared": {
+      "label": "Shared presentation",
+      "keep": "Keep a copy",
+      "keepHint": "Add it to your presentations so you can change it",
+      "broken": "This link is incomplete. Ask for it again.",
+      "home": "Go to my presentations"
     }
+  },
+  "Share": {
+    "title": "Share by link",
+    "close": "Close",
+    "making": "Making the link…",
+    "link": "Link to these slides",
+    "copy": "Copy link",
+    "code": "Code to open these slides on a phone",
+    "tooLongForCode": "Too long for a code; send the link instead.",
+    "private": "Anyone with the link can see these slides. Nothing is uploaded.",
+    "tooBig": "This presentation is too big to share by link. Download it and send the file instead.",
+    "download": "Download"
   },
   "Settings": {
     "title": "Presentation settings",
@@ -167,7 +193,7 @@
     "title": "Getting your slides in",
     "intro": "The quickest way is to let AI write your slides. Use Ask AI here, or any AI chat you like.",
     "promptTitle": "Use any AI chat",
-    "promptBody": "Copy this prompt into your AI chat and say what your talk is about. Paste its answer here and press Update slides.",
+    "promptBody": "Copy this prompt into your AI chat and say what your talk is about. Paste its answer in Edit.",
     "copyPrompt": "Copy prompt",
     "basicsTitle": "For quick fixes",
     "basics": {
@@ -226,8 +252,8 @@
         "name": "First / last slide",
         "keys": "Home / End"
       },
-      "update": {
-        "name": "Tidy and update slides while editing",
+      "tidy": {
+        "name": "Clean up the text while editing",
         "keys": "Ctrl / ⌘ S"
       }
     },
@@ -290,11 +316,16 @@
     },
     "local": {
       "title": "Use any AI chat to write your slides.",
-      "body": "Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer into Edit and press Update slides.",
+      "body": "Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer in Edit.",
       "copyPrompt": "Copy prompt",
       "runHere": "Chat with your ChatGPT plan right here",
       "privacy": "Your sign-in stays on your computer and never reaches this website.",
       "then": "Then open <strong>{url}</strong> and choose Ask AI."
+    },
+    "offline": {
+      "title": "Ask AI needs a connection",
+      "body": "Everything else works offline: your presentations are saved on this device, and you can edit, present and download them.",
+      "retry": "Try again"
     },
     "progress": {
       "fixing": "Fixing a small formatting issue…",
@@ -307,7 +338,8 @@
       "noModels": "No ChatGPT models are available for this account.",
       "signOutUnconfirmed": "Signed out here, but ChatGPT didn’t confirm it. You can also disconnect Kiosk Slides in ChatGPT settings.",
       "stopped": "Generation stopped.",
-      "requestFailed": "The request failed ({status}). Try again."
+      "requestFailed": "The request failed ({status}). Try again.",
+      "offline": "Ask AI needs a connection. Check the internet and try again."
     }
   },
   "Server": {

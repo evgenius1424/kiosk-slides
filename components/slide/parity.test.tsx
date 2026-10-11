@@ -37,7 +37,7 @@ describe('site preview and exported presentation', () => {
   it('render the same slide markup', async () => {
     const { container } = render(
       <NextIntlClientProvider locale="en" messages={messages}>
-        <KioskWorkspace example={example} prompt="" />
+        <KioskWorkspace example={example} prompt="" site="https://example.com" />
       </NextIntlClientProvider>,
     )
     const exported = await exportedSlides()

@@ -1,6 +1,6 @@
 # Spec: installable and offline
 
-Status: ready-for-agent
+Status: done
 Blocked by: (none). Ideally lands after cyrillic-fonts so new font files are cached from the start, but a build-time asset list makes the order not matter.
 Track: C (independent)
 
@@ -21,7 +21,7 @@ Everything except Ask AI already runs in the browser, but the site needs a conne
 
 ## Acceptance
 
-- [ ] After one visit, with the network off (DevTools Offline), the site loads, presents and downloads.
-- [ ] Chrome offers Install, and the installed app opens to the last presentation.
-- [ ] Ask AI offline shows the message, not a broken spinner.
-- [ ] `/api/chat` is never served from cache.
+- [x] After one visit, with the network off (DevTools Offline), the site loads, presents and downloads.
+- [x] Chrome offers Install, and the installed app opens to the last presentation.
+- [x] Ask AI offline shows the message, not a broken spinner.
+- [x] `/api/chat` is never served from cache.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { headingSize, type HeadingPart } from '@/lib/presentation'
+import { fonts, headingSize, type HeadingPart } from '@/lib/presentation'
 
 const slide = (text: string, kind: 'message' | 'steps' = 'message', body = '') => ({
   kind,
@@ -39,5 +39,19 @@ describe('headingSize', () => {
     expect(headingSize(slide(text), { scale: 'kiosk', font: 'archivo-expanded' })).toBeLessThan(
       headingSize(slide(text), { scale: 'kiosk', font: 'inter' })!,
     )
+  })
+  it('measures a mostly Cyrillic heading with the Cyrillic face', () => {
+    const latin = 'Two inputs become one confident presentation for everyone'
+    const russian = 'Два источника становятся одной уверенной презентацией для всех'
+    for (const font of fonts.map(f => f.id)) {
+      expect(headingSize(slide(russian), { scale: 'kiosk', font })).toBeLessThanOrEqual(
+        headingSize(slide(latin), { scale: 'kiosk', font })!,
+      )
+    }
+  })
+
+  it('gives every bundled font a Cyrillic face', () => {
+    for (const font of fonts.filter(f => f.files.length))
+      expect(font.files.some(f => f.script === 'cyrillic')).toBe(true)
   })
 })

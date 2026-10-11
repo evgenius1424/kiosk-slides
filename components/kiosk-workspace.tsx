@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   ArrowRight,
-  BookOpen,
   Check,
   CheckCheck,
   ChevronDown,
@@ -14,7 +13,6 @@ import {
   Code2,
   Copy,
   Expand,
-  FileText,
   Keyboard,
   Layers2,
   Monitor,
@@ -23,6 +21,7 @@ import {
   Plus,
   RotateCcw,
   Settings2,
+  Share2,
   ShieldCheck,
   Sparkles,
   X,
@@ -52,6 +51,7 @@ import {
   slideFromHash,
   slideHash,
   slideSeconds,
+  slideTitle,
   swipeDelta,
   transitions,
   type ActiveTransition,
@@ -66,10 +66,13 @@ import {
   uniqueName,
   type Library,
 } from '@/lib/presentations'
+import { decodeShare, readShareHash, shareSlideHash } from '@/lib/share'
 import { PresentationChat } from './presentation-chat'
-import { downloadFile, printHtml } from './download'
+import { downloadFile } from './download'
 import { DownloadMenu, type DownloadFormat } from './download-menu'
+import { PresentationEditor, selectSlide, useLiveSource } from './presentation-editor'
 import { PresentationMenu } from './presentation-menu'
+import { SharePanel } from './share-panel'
 import { SlideView } from './slide'
 import { useWakeLock } from './use-wake-lock'
 
@@ -82,7 +85,7 @@ const SHORTCUTS = [
   'shareSafe',
   'leave',
   'ends',
-  'update',
+  'tidy',
 ] as const
 const SCALES: Scale[] = ['normal', 'large', 'kiosk']
 
@@ -109,7 +112,15 @@ function Toggle({
   )
 }
 
-export function KioskWorkspace({ example, prompt }: { example: string; prompt: string }) {
+export function KioskWorkspace({
+  example,
+  prompt,
+  site,
+}: {
+  example: string
+  prompt: string
+  site: string
+}) {
   const t = useTranslations('Workspace')
   const ts = useTranslations('Settings')
   const th = useTranslations('Help')
@@ -131,9 +142,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   }))
   const [loaded, setLoaded] = useState(false)
   const [chatKey, setChatKey] = useState(0)
-  const [source, setSource] = useState(example)
-  const [draft, setDraft] = useState(example)
-  const presentation = useMemo(() => parsePresentation(source), [source])
+  const live = useLiveSource(example)
+  const { source, error } = live
+  const empty = useMemo(() => ({ ...parsePresentation(blank), slides: [] }), [blank])
+  const presentation = live.presentation ?? empty
   const [index, setIndex] = useState(0)
   const [tab, setTab] = useState<'preview' | 'markdown' | 'chat'>('preview')
   const [safeKey, setSafeKey] = useState<boolean | null>(null)
@@ -141,24 +153,25 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const [presenting, setPresenting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [toast, setToast] = useState('')
-  const [error, setError] = useState('')
   const [exporting, setExporting] = useState(false)
   const [sidebar, setSidebar] = useState(true)
   const [modal, setModal] = useState<'help' | 'format' | null>(null)
   const [fit, setFit] = useState(true)
   const [idle, setIdle] = useState(false)
   const [brandDraft, setBrandDraft] = useState<string | null>(null)
+  const [shared, setShared] = useState<string | null>(null)
+  const [broken, setBroken] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const settingsRef = useRef<HTMLElement>(null)
+  const settingsButtonRef = useRef<HTMLButtonElement>(null)
   const slides = presentation.slides
   const current = library.items.find(p => p.id === library.current) ?? library.items[0]
   const theme = presentation.theme
   const look = presentationLook(presentation)
-  // The presentation's front matter owns these settings, so the controls rewrite them in the source and the unbuilt draft.
-  const setFront = (key: string, value?: string) => {
-    setSource(s => setFrontMatter(s, key, value))
-    setDraft(d => setFrontMatter(d, key, value))
-  }
+  const setFront = (key: string, value?: string) => live.replace(setFrontMatter(source, key, value))
   const setTheme = (next: Theme) => setFront('theme', next)
   const { tone: accent, transition, duration, loop } = presentation
   const safe = safeKey ?? presentation.shareSafe
@@ -176,10 +189,12 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const setDuration = (seconds: number) =>
     setFront('duration', seconds === 12 ? undefined : `${seconds}s`)
   const setLoop = (next: boolean) => setFront('loop', next ? undefined : 'false')
-  const at = Math.min(index, slides.length - 1)
-  const slide = slides[at]
+  const at = Math.max(0, Math.min(index, slides.length - 1))
+  const slide = slides[at] as Slide | undefined
   const motion = activeTransition(transition, safe)
   const change = useSlideChange(index, slide, motion)
+  const slideName =
+    slide && t('canvas.slide', { number: at + 1, count: slides.length, title: slideTitle(slide) })
   const notice = useCallback((message: string) => setToast(message), [])
   useWakeLock(presenting || playing)
   const toggleSafe = useCallback(() => {
@@ -196,7 +211,12 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const select = (i: number) => {
     setPlaying(false)
     setIndex(i)
+    if (tab === 'markdown' && textareaRef.current) selectSlide(textareaRef.current, source, i)
   }
+  const focusSlide = (text: string, i: number) =>
+    requestAnimationFrame(() => {
+      if (textareaRef.current) selectSlide(textareaRef.current, text, i)
+    })
   const present = useCallback(() => {
     setTab('preview')
     setPresenting(true)
@@ -213,33 +233,52 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   useEffect(() => {
     const next = loadLibrary(example, untitled)
     setLibrary(next)
-    show(next.items.find(p => p.id === next.current)!.source, location.hash)
-    setLoaded(true)
+    const link = readShareHash(location.hash)
+    if (!link) {
+      show(next.items.find(p => p.id === next.current)!.source, location.hash)
+      setLoaded(true)
+      return
+    }
+    decodeShare(link.payload)
+      .then(value => {
+        parsePresentation(value)
+        const known = next.items.find(p => p.source === value)
+        if (known) setLibrary({ ...next, current: known.id })
+        else setShared(link.payload)
+        show(value, link.slide)
+      })
+      .catch(() => setBroken(true))
+      .finally(() => setLoaded(true))
   }, [example, untitled])
   useEffect(() => {
-    if (loaded && location.hash !== slideHash(at)) history.replaceState(null, '', slideHash(at))
-  }, [at, loaded])
+    if (!loaded || broken) return
+    const hash = shared ? shareSlideHash(shared, at) : slideHash(at)
+    if (location.hash !== hash) history.replaceState(null, '', hash)
+  }, [at, loaded, shared, broken])
   useEffect(() => {
     const follow = () => {
-      const target = slideFromHash(location.hash, slides.length)
+      const link = readShareHash(location.hash)
+      if (link && link.payload !== shared) return location.reload()
+      const target = slideFromHash(link?.slide ?? location.hash, slides.length)
       if (target === undefined) return
       setPlaying(false)
       setIndex(target)
     }
     window.addEventListener('hashchange', follow)
     return () => window.removeEventListener('hashchange', follow)
-  }, [slides.length])
+  }, [slides.length, shared])
   useEffect(() => {
     if (loaded) saveLibrary(library)
   }, [library, loaded])
   useEffect(() => {
+    if (shared) return
     setLibrary(l => ({
       ...l,
       items: l.items.map(p =>
         p.id === l.current && p.source !== source ? { ...p, source, updatedAt: Date.now() } : p,
       ),
     }))
-  }, [source])
+  }, [source, shared])
   useEffect(() => {
     if (!toast) return
     const timer = setTimeout(() => setToast(''), 2600)
@@ -250,7 +289,22 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     else dialogRef.current?.close()
   }, [modal])
   useEffect(() => {
-    if (!playing) return
+    if (!settingsOpen) return
+    settingsRef.current?.querySelector<HTMLElement>('select,input,button')?.focus()
+    const outside = (event: PointerEvent) => {
+      const target = event.target as Element
+      if (
+        !settingsRef.current?.contains(target) &&
+        !settingsButtonRef.current?.contains(target) &&
+        !target.closest('dialog')
+      )
+        setSettingsOpen(false)
+    }
+    document.addEventListener('pointerdown', outside)
+    return () => document.removeEventListener('pointerdown', outside)
+  }, [settingsOpen])
+  useEffect(() => {
+    if (!playing || !slide) return
     const timer = setTimeout(
       () => {
         if (index === slides.length - 1 && !loop) {
@@ -268,6 +322,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     const handler = (event: KeyboardEvent) => {
       if (event.isComposing || event.keyCode === 229) return
       if (event.key === 'Escape') {
+        if (settingsOpen && !modal) {
+          setSettingsOpen(false)
+          settingsButtonRef.current?.focus()
+        }
         leave()
         setModal(null)
         return
@@ -298,7 +356,20 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [move, playing, tab, notice, slides.length, presenting, present, leave, toggleSafe, t])
+  }, [
+    move,
+    playing,
+    tab,
+    notice,
+    slides.length,
+    presenting,
+    present,
+    leave,
+    toggleSafe,
+    t,
+    settingsOpen,
+    modal,
+  ])
   useEffect(() => {
     const target = canvasRef.current
     if (!target) return
@@ -373,32 +444,20 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     return () => observer.disconnect()
   }, [index, tab, presenting, slide])
   function show(value: string, hash = '') {
-    try {
-      const next = parsePresentation(value)
-      setSource(value)
-      setDraft(value)
-      setError('')
-      setIndex(slideFromHash(hash, next.slides.length) ?? 0)
-    } catch (err) {
-      setSource(blank)
-      setDraft(value)
-      setTab('markdown')
-      setError((err as Error).message)
-      setIndex(0)
-    }
+    const next = live.load(value)
+    if (next.error) setTab('markdown')
+    setIndex(next.error ? 0 : (slideFromHash(hash, next.presentation!.slides.length) ?? 0))
     setPlaying(false)
     setSafeKey(null)
   }
-  const keepsDraft = () => draft === source || confirm(t('editor.discard'))
   const openPresentation = (id: string) => {
     const target = library.items.find(p => p.id === id)
-    if (!target || id === current.id || !keepsDraft()) return
+    if (!target || id === current.id) return
     setLibrary(l => ({ ...l, current: id }))
     show(target.source)
     setChatKey(k => k + 1)
   }
   const newPresentation = () => {
-    if (!keepsDraft()) return
     const created = createPresentation(untitled, blank, library.items)
     setLibrary(l => ({ current: created.id, items: [...l.items, created] }))
     show(blank)
@@ -425,19 +484,13 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     show(next.source)
     setChatKey(k => k + 1)
   }
-  const apply = () => {
-    try {
-      parsePresentation(draft)
-      const formatted = formatPresentation(draft)
-      setSource(formatted)
-      setDraft(formatted)
-      setIndex(0)
-      setError('')
-      setTab('preview')
-      notice(t('toast.updated'))
-    } catch (err) {
-      setError((err as Error).message)
+  const tidy = () => {
+    const formatted = formatPresentation(source)
+    if (formatted !== source) {
+      live.replace(formatted)
+      focusSlide(formatted, index)
     }
+    notice(t('toast.tidied'))
   }
   const loadGenerated = (generated: string, fresh: boolean) => {
     const value = formatPresentation(generated)
@@ -464,13 +517,19 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           )
         : [...l.items, target],
     }))
-    const next = parsePresentation(value)
-    setSource(value)
-    setDraft(value)
+    const next = live.load(value)
     setIndex(0)
-    setError('')
-    notice(t('toast.loaded', { name: target.name, count: next.slides.length }))
+    notice(t('toast.loaded', { name: target.name, count: next.presentation?.slides.length ?? 0 }))
     return target.name
+  }
+  const keepCopy = () => {
+    const known = library.items.find(p => p.source === source)
+    const kept =
+      known ?? createPresentation(presentationName(source) || untitled, source, library.items)
+    setLibrary(l => ({ current: kept.id, items: known ? l.items : [...l.items, kept] }))
+    setShared(null)
+    setChatKey(k => k + 1)
+    notice(t('toast.kept', { name: kept.name }))
   }
   const copyPrompt = async () => {
     try {
@@ -494,8 +553,9 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         },
       )
       if (format === 'pdf') {
-        notice(t('toast.printing'))
-        await printHtml(html)
+        const { presentationPdf } = await import('./presentation-pdf')
+        downloadFile(await presentationPdf(html, current.name), `${fileName(current.name)}.pdf`)
+        notice(t('toast.pdfDownloaded'))
       } else {
         downloadFile(html, `${fileName(current.name)}.html`, 'text/html')
         notice(t('toast.downloaded'))
@@ -506,46 +566,87 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
       setExporting(false)
     }
   }
+  if (broken)
+    return (
+      <main className="shared-broken">
+        <p role="alert">{t('shared.broken')}</p>
+        <a className="btn primary" href="/">
+          {t('shared.home')}
+        </a>
+      </main>
+    )
   return (
     <main
       className={`workspace ${presenting ? 'is-presenting' : ''} ${presenting && idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}
     >
       <header className="app-header">
-        <a href="/" className="brand" aria-label={t('home')}>
+        <a href="/" className="brand">
           <span className="brand-icon">
             <Layers2 size={19} strokeWidth={2.2} />
           </span>
-          <span>
+          <span aria-hidden="true">
             Kiosk<span className="brand-light">Slides</span>
           </span>
+          <span className="sr-only">{t('home')}</span>
           <span className="beta">{t('beta')}</span>
         </a>
         <div className="header-divider" />
-        <PresentationMenu
-          items={library.items}
-          current={current}
-          onOpen={openPresentation}
-          onCreate={newPresentation}
-          onRename={renamePresentation}
-          onDelete={deletePresentation}
-        />
-        <span className="local-label">
-          <span />
-          {t('savedHere')}
-        </span>
+        {shared ? (
+          <div className="shared-bar">
+            <span>{t('shared.label')}</span>
+            <button className="btn" title={t('shared.keepHint')} onClick={keepCopy}>
+              <Plus size={15} />
+              {t('shared.keep')}
+            </button>
+          </div>
+        ) : (
+          <>
+            <PresentationMenu
+              items={library.items}
+              current={current}
+              onOpen={openPresentation}
+              onCreate={newPresentation}
+              onRename={renamePresentation}
+              onDelete={deletePresentation}
+            />
+            <span className="local-label">
+              <span />
+              {t('savedHere')}
+            </span>
+          </>
+        )}
         <div className="header-actions">
-          <button
-            className="btn"
-            aria-label={t('settings')}
-            aria-expanded={settingsOpen}
-            aria-controls="presentation-settings"
-            onClick={() => setSettingsOpen(!settingsOpen)}
-          >
-            <Settings2 size={16} />
-            <span>{t('settings')}</span>
-          </button>
-          <DownloadMenu busy={exporting} onDownload={exportPresentation} />
-          <button className="btn primary" onClick={present}>
+          {!shared && (
+            <>
+              <button
+                ref={settingsButtonRef}
+                className="btn"
+                aria-label={t('settings')}
+                aria-expanded={settingsOpen}
+                aria-controls="presentation-settings"
+                onClick={() => setSettingsOpen(!settingsOpen)}
+              >
+                <Settings2 size={16} />
+                <span>{t('settings')}</span>
+              </button>
+              <button
+                className="btn"
+                aria-label={t('share')}
+                title={t('shareHint')}
+                onClick={() => setSharing(true)}
+                disabled={!slides.length}
+              >
+                <Share2 size={15} />
+                <span>{t('share')}</span>
+              </button>
+              <DownloadMenu
+                busy={exporting}
+                disabled={!slides.length}
+                onDownload={exportPresentation}
+              />
+            </>
+          )}
+          <button className="btn primary" onClick={present} disabled={!slides.length}>
             <Play size={14} fill="currentColor" />
             <span>{t('present')}</span>
             <kbd>F</kbd>
@@ -571,12 +672,14 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
               className={`slide-nav ${index === i ? 'selected' : ''}`}
               key={i}
               onClick={() => select(i)}
-              aria-label={t('sidebar.slide', { number: i + 1, title: item.title })}
               aria-current={index === i ? 'step' : undefined}
             >
-              <span className="slide-number">{String(i + 1).padStart(2, '0')}</span>
+              <span className="slide-number" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span className="sr-only">{t('sidebar.slide', { number: i + 1 })}</span>
               <span className="thumb-group">
-                <span className="thumbnail">
+                <span className="thumbnail" aria-hidden="true" inert>
                   <SlideView slide={item} theme={theme} accent={accent} look={look} miniature />
                 </span>
                 <span className="thumb-name">
@@ -588,9 +691,13 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         </nav>
         <button
           className="add-slide"
+          hidden={!!shared}
           onClick={() => {
-            setDraft(`${source}\n\n---\n\n# ${t('newSlide.heading')}\n\n${t('newSlide.body')}\n`)
+            const text = `${source.trimEnd()}\n\n---\n\n# ${t('newSlide.heading')}\n\n${t('newSlide.body')}\n`
+            live.replace(text)
+            setIndex(slides.length)
             setTab('markdown')
+            focusSlide(text, slides.length)
             notice(t('toast.slideAdded'))
           }}
         >
@@ -614,17 +721,21 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
               <Monitor size={14} />
               {t('tabs.preview')}
             </button>
-            <button
-              className={tab === 'markdown' ? 'active' : ''}
-              onClick={() => setTab('markdown')}
-            >
-              <Code2 size={15} />
-              {t('tabs.edit')}
-            </button>
-            <button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}>
-              <Sparkles size={14} />
-              {t('tabs.ask')}
-            </button>
+            {!shared && (
+              <>
+                <button
+                  className={tab === 'markdown' ? 'active' : ''}
+                  onClick={() => setTab('markdown')}
+                >
+                  <Code2 size={15} />
+                  {t('tabs.edit')}
+                </button>
+                <button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}>
+                  <Sparkles size={14} />
+                  {t('tabs.ask')}
+                </button>
+              </>
+            )}
           </div>
           <span className="ready-label">
             <CheckCheck size={14} />
@@ -657,6 +768,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
                     key={`leave-${change.count}`}
                     className="canvas-slide kt-leave"
                     aria-hidden="true"
+                    inert
                   >
                     <SlideView slide={change.leaving} theme={theme} accent={accent} look={look} />
                   </div>
@@ -664,8 +776,15 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
                 <div
                   key={`slide-${index}`}
                   className={`canvas-slide ${change.leaving ? 'kt-enter' : ''}`}
+                  role="region"
+                  aria-roledescription="slide"
+                  aria-label={slideName}
                 >
-                  <SlideView slide={slide} theme={theme} accent={accent} look={look} />
+                  {slide ? (
+                    <SlideView slide={slide} theme={theme} accent={accent} look={look} />
+                  ) : (
+                    <p className="canvas-empty">{t('canvas.empty')}</p>
+                  )}
                 </div>
               </div>
               <div className="canvas-controls">
@@ -708,39 +827,25 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
               )}
             </>
           ) : (
-            <div className="source-editor">
-              <div className="source-header">
-                <span>
-                  <FileText size={14} />
-                  {current.name}
-                </span>
-                <div>
-                  <button className="btn" onClick={() => setModal('format')}>
-                    <BookOpen size={14} />
-                    {t('editor.help')}
-                  </button>
-                  <button className="btn primary" onClick={apply}>
-                    <Check size={14} />
-                    {t('editor.update')}
-                  </button>
+            <PresentationEditor
+              name={current.name}
+              source={source}
+              error={error}
+              textareaRef={textareaRef}
+              onChange={live.type}
+              onTidy={tidy}
+              onHelp={() => setModal('format')}
+              onSlide={setIndex}
+            >
+              {slide && (
+                <div
+                  className={`source-slide slide-backdrop ${theme}`}
+                  style={{ '--slide-tone': accent } as React.CSSProperties}
+                >
+                  <SlideView slide={slide} theme={theme} accent={accent} look={look} />
                 </div>
-              </div>
-              <textarea
-                aria-label={t('editor.label')}
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                onKeyDown={e => {
-                  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
-                    e.preventDefault()
-                    apply()
-                  }
-                }}
-                spellCheck={false}
-              />
-              <div className={`source-status ${error ? 'error' : ''}`} role="status">
-                {error || t('editor.status')}
-              </div>
-            </div>
+              )}
+            </PresentationEditor>
           )}
           <div className="presenter-tip" hidden={tab !== 'preview'}>
             <Keyboard size={15} />
@@ -763,7 +868,13 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           <span>{t('footer.quiet')}</span>
         </footer>
       </section>
-      <aside id="presentation-settings" className="inspector" hidden={!settingsOpen}>
+      <aside
+        ref={settingsRef}
+        id="presentation-settings"
+        className="inspector"
+        aria-label={ts('title')}
+        hidden={!settingsOpen || !!shared}
+      >
         <div className="inspector-heading">
           <Settings2 size={15} />
           <h2>{ts('title')}</h2>
@@ -961,12 +1072,26 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           <ArrowRight size={13} />
         </button>
       </aside>
+      <div className="sr-only" aria-live="polite">
+        {change.count ? slideName : ''}
+      </div>
       {toast && (
         <div className="toast" role="status">
           <Check size={15} />
           {toast}
         </div>
       )}
+      <SharePanel
+        open={sharing}
+        source={source}
+        site={site}
+        onClose={() => setSharing(false)}
+        onCopied={() => notice(t('toast.linkCopied'))}
+        onDownload={() => {
+          setSharing(false)
+          exportPresentation('html')
+        }}
+      />
       <dialog
         ref={dialogRef}
         className={`workspace-dialog ${modal === 'format' ? 'wide' : ''}`}
@@ -1085,7 +1210,7 @@ function exitFullscreen() {
   else (document as WebkitDocument).webkitExitFullscreen?.()
 }
 
-function useSlideChange(index: number, slide: Slide, motion: ActiveTransition) {
+function useSlideChange(index: number, slide: Slide | undefined, motion: ActiveTransition) {
   const [change, setChange] = useState({
     index,
     slide,
@@ -1097,7 +1222,7 @@ function useSlideChange(index: number, slide: Slide, motion: ActiveTransition) {
     setChange({
       index,
       slide,
-      leaving: motion === 'none' ? null : change.slide,
+      leaving: motion === 'none' ? null : (change.slide ?? null),
       direction: index < change.index ? -1 : 1,
       count: change.count + 1,
     })

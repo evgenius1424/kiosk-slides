@@ -45,7 +45,7 @@ Options:
 
 - `--theme room-dark|room-light` overrides the presentation's front-matter `theme:`.
 - `--tone graphite|plum|wine|teal|bronze` overrides the presentation's `tone:`, the background tone and the color of highlighted heading words. Any `#hex` color works too.
-- `--font classic|inter|figtree|bricolage-grotesque|space-grotesk|archivo-expanded` overrides the presentation's `font:`. The chosen font is embedded, so the file still works offline.
+- `--font classic|inter|figtree|bricolage-grotesque|space-grotesk|archivo-expanded|golos-text` overrides the presentation's `font:`. The chosen font is embedded, so the file still works offline.
 - `--scale normal|large|kiosk` overrides the presentation's `scale:`. `kiosk` makes headings as big as each one allows, for screens read from a distance.
 - `--brand <text>` replaces the `kiosk.` mark in the corner of every slide; `--brand none` hides it.
 - `--images <dir>` is the folder that `/images/…` paths resolve against. The default is the presentation's own folder, so `/images/logo.png` is read from `<presentation folder>/images/logo.png`.
@@ -55,7 +55,7 @@ Options:
 - `--check` only validates and prints the slide list and any warnings, without writing HTML.
 - `--format` tidies the Markdown file in place without changing what it shows.
 
-For a PDF, open the HTML in a browser and print it with Save as PDF: every slide prints on its own 16:9 page, in the same theme, tone and font, with selectable text. No other tool is needed.
+For a PDF, open the HTML in a desktop browser and print it with Save as PDF: every slide prints on its own 16:9 page, in the same theme, tone and font, with selectable text. No other tool is needed.
 
 If it fails, the message starts with `Line N:` and names the rule; fix the Markdown and run it again. An image error means a URL could not be fetched or a `/images/` file is missing; ask the user for the file or remove that slide's image.
 

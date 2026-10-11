@@ -29,4 +29,15 @@ describe('reviewPresentation', () => {
       'Give every slide a settings comment with a title, a label and a footer (footer missing on slide 2).',
     ])
   })
+
+  it('asks for alt text on images without it', () => {
+    const source = [
+      '---\ntitle: Demo\n---',
+      '<!--\ntitle: A\nlabel: B\nfooter: C\n-->\n\n# One\n\n![](https://example.com/a.png)',
+      '<!--\ntitle: A\nlabel: B\nfooter: C\n-->\n\n# Two\n\n![A chart of sales](https://example.com/b.png)',
+    ].join('\n\n---\n\n')
+    expect(reviewPresentation(parsePresentation(source))).toEqual([
+      'Slide 1: describe the image in its alt text.',
+    ])
+  })
 })

@@ -8,6 +8,7 @@ export type DownloadFormat = 'html' | 'pdf'
 
 type Props = {
   busy: boolean
+  disabled?: boolean
   onDownload: (format: DownloadFormat) => void
 }
 
@@ -16,7 +17,7 @@ const FORMATS = [
   { format: 'pdf', Icon: FileText },
 ] as const
 
-export function DownloadMenu({ busy, onDownload }: Props) {
+export function DownloadMenu({ busy, disabled, onDownload }: Props) {
   const t = useTranslations('Workspace')
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -43,7 +44,7 @@ export function DownloadMenu({ busy, onDownload }: Props) {
         aria-haspopup="true"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
-        disabled={busy}
+        disabled={busy || disabled}
       >
         <ArrowDownToLine size={15} />
         {busy ? t('preparing') : t('download')}

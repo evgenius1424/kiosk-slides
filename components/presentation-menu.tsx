@@ -19,18 +19,25 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const sorted = [...items].sort((a, b) => b.updatedAt - a.updatedAt)
   const close = () => {
     setOpen(false)
     setEditing(null)
   }
   useEffect(() => {
+    if (open) rootRef.current?.querySelector<HTMLElement>('.presentation-item')?.focus()
+  }, [open])
+  useEffect(() => {
     if (!open) return
     const outside = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) close()
     }
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !editing) close()
+      if (event.key === 'Escape' && !editing) {
+        close()
+        buttonRef.current?.focus()
+      }
     }
     document.addEventListener('pointerdown', outside)
     document.addEventListener('keydown', escape)
@@ -42,8 +49,9 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
   return (
     <div className="presentation-menu" ref={rootRef}>
       <button
+        ref={buttonRef}
         className="presentation-selector"
-        aria-haspopup="true"
+        aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => (open ? close() : setOpen(true))}
       >
@@ -51,7 +59,7 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
         <ChevronDown size={14} />
       </button>
       {open && (
-        <div className="presentation-popover" role="menu" aria-label={t('title')}>
+        <div className="presentation-popover" role="dialog" aria-label={t('title')}>
           <div className="presentation-popover-heading">
             {t('title')} <span>{t('savedHere')}</span>
           </div>
@@ -69,7 +77,6 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
                 ) : (
                   <button
                     className="presentation-item"
-                    role="menuitem"
                     onClick={() => {
                       onOpen(item.id)
                       close()
@@ -107,7 +114,6 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
           </ul>
           <button
             className="presentation-new"
-            role="menuitem"
             onClick={() => {
               onCreate()
               close()

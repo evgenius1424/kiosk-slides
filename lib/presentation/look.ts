@@ -3,59 +3,45 @@ import type { Presentation, Slide } from './types'
 export const scales = ['normal', 'large', 'kiosk'] as const
 export type Scale = (typeof scales)[number]
 
+export type FontFile = { family: string; file: string; weights: string; script: Script }
+
 export type Font = {
   id: string
   name: string
   stack: string
   width: number
-  file?: string
-  weights?: string
+  cyrillicWidth: number
+  files: FontFile[]
 }
 
 export type PresentationLook = { font: string; scale: Scale; brand: string }
 
 export const fonts: Font[] = [
-  { id: 'classic', name: 'Classic', stack: 'Arial,Helvetica,sans-serif', width: 0.56 },
-  {
-    id: 'inter',
-    name: 'Inter',
-    stack: "'Inter',Arial,sans-serif",
-    width: 0.56,
-    file: 'inter.woff2',
-    weights: '100 900',
-  },
-  {
-    id: 'figtree',
-    name: 'Figtree',
-    stack: "'Figtree',Arial,sans-serif",
-    width: 0.53,
-    file: 'figtree.woff2',
-    weights: '300 900',
-  },
-  {
-    id: 'bricolage-grotesque',
-    name: 'Bricolage Grotesque',
-    stack: "'Bricolage Grotesque',Arial,sans-serif",
-    width: 0.56,
-    file: 'bricolage-grotesque.woff2',
-    weights: '200 800',
-  },
-  {
-    id: 'space-grotesk',
-    name: 'Space Grotesk',
-    stack: "'Space Grotesk',Arial,sans-serif",
-    width: 0.56,
-    file: 'space-grotesk.woff2',
-    weights: '300 700',
-  },
-  {
-    id: 'archivo-expanded',
-    name: 'Archivo Expanded',
-    stack: "'Archivo Expanded',Arial,sans-serif",
-    width: 0.68,
-    file: 'archivo-expanded.woff2',
-    weights: '100 900',
-  },
+  font('classic', 'Classic', 0.56, 0.62, []),
+  font('inter', 'Inter', 0.56, 0.63, [
+    latin('Inter', 'inter.woff2', '100 900'),
+    cyrillic('Inter', 'inter-cyrillic.woff2', '100 900'),
+  ]),
+  font('figtree', 'Figtree', 0.53, 0.62, [
+    latin('Figtree', 'figtree.woff2', '300 900'),
+    cyrillic('Golos Text', 'golos-text-cyrillic.woff2', '400 900'),
+  ]),
+  font('bricolage-grotesque', 'Bricolage Grotesque', 0.56, 0.62, [
+    latin('Bricolage Grotesque', 'bricolage-grotesque.woff2', '200 800'),
+    cyrillic('Onest', 'onest-cyrillic.woff2', '100 900'),
+  ]),
+  font('space-grotesk', 'Space Grotesk', 0.56, 0.62, [
+    latin('Space Grotesk', 'space-grotesk.woff2', '300 700'),
+    cyrillic('Onest', 'onest-cyrillic.woff2', '100 900'),
+  ]),
+  font('archivo-expanded', 'Archivo Expanded', 0.68, 0.81, [
+    latin('Archivo Expanded', 'archivo-expanded.woff2', '100 900'),
+    cyrillic('Unbounded', 'unbounded-cyrillic.woff2', '200 900'),
+  ]),
+  font('golos-text', 'Golos Text', 0.56, 0.62, [
+    latin('Golos Text', 'golos-text.woff2', '400 900'),
+    cyrillic('Golos Text', 'golos-text-cyrillic.woff2', '400 900'),
+  ]),
 ]
 
 export const DEFAULT_BRAND = 'kiosk'
@@ -77,11 +63,14 @@ export const findFont = (id: string) => fonts.find(f => f.id === id) ?? fonts[0]
 export const fontId = (value: string) =>
   fonts.find(f => f.id === value.trim().toLowerCase().replace(/\s+/g, '-'))?.id
 
-export function fontFace({ name, file, weights }: Font, src: string) {
-  return file
-    ? `@font-face{font-family:'${name}';src:url(${src}) format('woff2');font-weight:${weights};font-display:swap}`
-    : ''
-}
+export const fontFiles = (fonts: Font[]) => [
+  ...new Map(fonts.flatMap(f => f.files).map(file => [file.file, file])).values(),
+]
+
+export const fontFace = ({ family, weights, script }: FontFile, src: string) =>
+  `@font-face{font-family:'${family}';src:url(${src}) format('woff2');font-weight:${weights};font-display:swap;unicode-range:${RANGES[script]}}`
+
+export const hasCyrillic = (text: string) => CYRILLIC.test(text)
 
 export function headingSize(
   slide: Pick<Slide, 'kind' | 'heading' | 'body'>,
@@ -90,7 +79,7 @@ export function headingSize(
   if (scale === 'normal') return undefined
   const box = boxes[scale]
   const text = slide.heading.map(p => p.text).join('')
-  const charWidth = findFont(font).width
+  const charWidth = mostlyCyrillic(text) ? findFont(font).cyrillicWidth : findFont(font).width
   if (slide.kind === 'message') {
     const height = box.height - bodyHeight(slide.body, box.body, charWidth)
     return fit(
@@ -105,6 +94,18 @@ export function headingSize(
   const width = slide.kind === 'code' ? box.width * 0.48 : box.width
   return fit(text, charWidth, width, box.widget, 5, lines => lines <= 2)
 }
+
+type Script = 'latin' | 'cyrillic'
+
+const RANGES: Record<Script, string> = {
+  latin:
+    'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD',
+  cyrillic: 'U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116',
+}
+
+const CYRILLIC = /[\u0400-\u04ff]/
+const CYRILLIC_LETTERS = /[\u0400-\u04ff]/g
+const LATIN_LETTERS = /[a-z]/gi
 
 const boxes = {
   large: { width: 86, height: 35, lineHeight: 1.05, message: 9, widget: 6, body: 2.4 },
@@ -149,4 +150,34 @@ function bodyHeight(body: string, size: number, charWidth: number) {
     .split('\n')
     .reduce((sum, line) => sum + Math.max(1, Math.ceil(line.length / perLine)), 0)
   return lines * 1.5 * size + 2.5
+}
+
+function font(
+  id: string,
+  name: string,
+  width: number,
+  cyrillicWidth: number,
+  files: FontFile[],
+): Font {
+  const families = [...new Set(files.map(f => `'${f.family}'`))]
+  return {
+    id,
+    name,
+    stack: [...families, 'Arial', 'Helvetica', 'sans-serif'].join(','),
+    width,
+    cyrillicWidth,
+    files,
+  }
+}
+
+function latin(family: string, file: string, weights: string): FontFile {
+  return { family, file, weights, script: 'latin' }
+}
+
+function cyrillic(family: string, file: string, weights: string): FontFile {
+  return { family, file, weights, script: 'cyrillic' }
+}
+
+function mostlyCyrillic(text: string) {
+  return (text.match(CYRILLIC_LETTERS)?.length ?? 0) > (text.match(LATIN_LETTERS)?.length ?? 0)
 }
