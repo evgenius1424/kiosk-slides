@@ -19,6 +19,9 @@ description: Render a Kiosk Slides Markdown deck into one self-contained HTML fi
    Options:
    - `--theme room-dark|room-light` overrides the deck's front-matter `theme:`.
    - `--tone graphite|plum|wine|teal|bronze` sets the background tone and the color of highlighted heading words. Any `#hex` color works too. The default is graphite.
+   - `--font classic|inter|figtree|bricolage-grotesque|zalando-sans|zalando-sans-expanded` overrides the deck's `font:`. The chosen font is embedded, so the file still works offline.
+   - `--scale normal|large|kiosk` overrides the deck's `scale:`. `kiosk` makes headings as big as each one allows, for screens read from a distance.
+   - `--brand <text>` replaces the `kiosk.` mark in the corner of every slide; `--brand none` hides it.
    - `--images <dir>` is the folder that `/images/…` paths resolve against. The default is the deck's own folder, so `/images/logo.png` is read from `<deck folder>/images/logo.png`.
    - `--no-motion` turns off the slide transition, for screen sharing or slow hardware.
    - `--check` only validates and prints the slide list, without writing HTML.
@@ -33,4 +36,4 @@ Don't edit the generated HTML by hand. Change the deck or the options and render
 
 ## Choosing a theme
 
-Use `room-dark` for screens in dim rooms, TVs, and kiosks, and `room-light` for bright rooms and projectors that wash out dark backgrounds. Keep graphite unless the user asks for color or names a brand color; then pass that color with `--tone`.
+Use `room-dark` for screens in dim rooms, TVs, and kiosks, and `room-light` for bright rooms and projectors that wash out dark backgrounds. Keep graphite unless the user asks for color or names a brand color; then pass that color with `--tone`. For an unattended screen or a big room, pass `--scale kiosk`.

@@ -1,5 +1,7 @@
 export { parseDeck } from './parse'
 export { downloadFile } from './export'
+export { setFrontMatter } from './front-matter'
 export type { HeadingPart } from './heading'
+export { DEFAULT_BRAND, defaultLook, findFont, fontFace, fontId, fonts, headingSize, isScale, scales, type DeckLook, type Font, type Scale } from './look'
 export { isTheme, setDeckTheme, themes, tones, type Theme } from './theme'
 export type { Deck, Layout, Slide, SlideChrome, SlideKind, SlideOfKind } from './types'

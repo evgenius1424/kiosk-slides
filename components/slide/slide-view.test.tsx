@@ -138,4 +138,16 @@ describe('SlideView: flow', () => {
       { boxes: ['Test', 'Ship'], arrows: 1 },
     ])
   })
+
+  it('hides the brand or shows a custom one', () => {
+    const look = { font: 'inter', scale: 'kiosk' as const, brand: '' }
+    const hidden = render(<SlideView slide={{ ...chrome, kind: 'message', title: '' }} look={look} />).container.querySelector('article')!
+    expect(hidden.querySelector('.slide-brand')).toBeNull()
+    expect(hidden.querySelector('.slide-meta')?.textContent).not.toContain('Kiosk')
+    expect(hidden.className).toContain('scale-kiosk')
+    expect(hidden.style.getPropertyValue('--slide-font')).toContain('Inter')
+    cleanup()
+    const custom = render(<SlideView slide={{ ...chrome, kind: 'message' }} look={{ ...look, brand: 'ZEOS' }} />).container.querySelector('article')!
+    expect(custom.querySelector('.slide-brand')?.textContent).toBe('ZEOS')
+  })
 })

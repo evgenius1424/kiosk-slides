@@ -25,3 +25,4 @@ next-env.d.ts
 # Built by pnpm build:skills
 skills/*/scripts/
 skills/*/references/
+skills/*/assets/

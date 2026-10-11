@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseDeck, setDeckTheme } from '@/lib/deck'
+import { parseDeck, setDeckTheme, setFrontMatter } from '@/lib/deck'
 
 const md = (...lines: string[]) => lines.join('\n')
 
@@ -19,12 +19,18 @@ describe('parseDeck: deck and message slides', () => {
       'Big type. One idea.',
     ))
     expect(deck).toEqual({
-      title: 'Demo deck', theme: 'room-light', duration: 20, loop: false,
+      title: 'Demo deck', theme: 'room-light', duration: 20, loop: false, font: 'classic', scale: 'normal', brand: 'kiosk',
       slides: [{
         kind: 'message', title: '', label: '', footer: '', layout: 'auto',
         heading: [{ text: 'Make your point ' }, { text: 'impossible to miss', highlight: true }], body: 'Big type. One idea.',
       }],
     })
+  })
+
+  it('reads the font, scale and brand', () => {
+    const deck = parseDeck(md('---', 'font: Zalando Sans Expanded', 'scale: kiosk', 'brand: ZEOS', '---', '# Hi'))
+    expect([deck.font, deck.scale, deck.brand]).toEqual(['zalando-sans-expanded', 'kiosk', 'ZEOS'])
+    expect(parseDeck(md('---', 'brand: none', '---', '# Hi')).brand).toBe('')
   })
 
   it('defaults the theme to room-dark', () => {
@@ -259,6 +265,12 @@ describe('parseDeck: errors', () => {
     expect(error(forty)).toBe('no error')
     // Slide n (1-based) starts on line 2n - 1, so slide 41 starts on line 81.
     expect(error(md(forty, '---', '# Slide 41'))).toBe('Line 81: Use at most 40 slides per deck.')
+  })
+
+  it('rejects an unknown font or scale on its front-matter line', () => {
+    expect(error(md('---', 'title: T', 'font: comic', '---', '# Hi'))).toMatch(/^Line 3: Unknown font “comic”\. Use classic, inter/)
+    expect(error(md('---', 'scale: huge', '---', '# Hi'))).toBe('Line 2: Unknown scale “huge”. Use normal, large, kiosk.')
+    expect(error(md('---', `brand: ${'x'.repeat(25)}`, '---', '# Hi'))).toBe('Line 2: Keep the brand to 24 characters.')
   })
 
   it('rejects an unknown theme on its front-matter line', () => {
@@ -518,5 +530,12 @@ describe('setDeckTheme', () => {
   it('leaves an indented theme key alone', () => {
     expect(setDeckTheme(md('---', 'x:', '  theme: y', 'theme: room-dark', '---', '# Hi'), 'room-light'))
       .toBe(md('---', 'x:', '  theme: y', 'theme: room-light', '---', '# Hi'))
+  })
+})
+
+describe('setFrontMatter', () => {
+  it('removes a key when the value is undefined', () => {
+    expect(setFrontMatter(md('---', 'title: T', 'scale: kiosk', '---', '# Hi'), 'scale')).toBe(md('---', 'title: T', '---', '# Hi'))
+    expect(setFrontMatter(md('# Hi'), 'scale')).toBe('# Hi')
   })
 })
