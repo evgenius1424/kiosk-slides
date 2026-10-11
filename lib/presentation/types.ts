@@ -1,6 +1,7 @@
 import type { Widget } from './components'
 import type { HeadingPart } from './heading'
 import type { PresentationLook } from './look'
+import type { Transition } from '../player'
 import type { Theme } from './theme'
 
 export type Layout = 'auto' | 'stacked' | 'split-left'
@@ -26,6 +27,9 @@ export type SlideOfKind<K extends SlideKind> = Extract<Slide, { kind: K }>
 export type Presentation = PresentationLook & {
   title: string
   theme: Theme
+  tone: string
+  transition: Transition
+  shareSafe: boolean
   duration: number
   loop: boolean
   slides: Slide[]

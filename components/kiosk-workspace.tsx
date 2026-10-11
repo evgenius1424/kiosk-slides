@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import {
   DEFAULT_BRAND,
+  DEFAULT_TONE,
   presentationLook,
   fonts,
   formatPresentation,
@@ -132,11 +133,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const presentation = useMemo(() => parsePresentation(source), [source])
   const [index, setIndex] = useState(0)
   const [tab, setTab] = useState<'preview' | 'markdown' | 'chat'>('preview')
-  const [accent, setAccent] = useState<string>(tones[0].color)
-  const [transition, setTransition] = useState<Transition>(DEFAULT_TRANSITION)
-  const [safe, setSafe] = useState(false)
-  const [duration, setDuration] = useState(presentation.duration)
-  const [loop, setLoop] = useState(presentation.loop)
+  const [safeKey, setSafeKey] = useState<boolean | null>(null)
   const [playing, setPlaying] = useState(false)
   const [presenting, setPresenting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -160,13 +157,29 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     setDraft(d => setFrontMatter(d, key, value))
   }
   const setTheme = (next: Theme) => setFront('theme', next)
+  const { tone: accent, transition, duration, loop } = presentation
+  const safe = safeKey ?? presentation.shareSafe
+  const setTone = (color: string) =>
+    setFront(
+      'tone',
+      color === DEFAULT_TONE ? undefined : tones.find(t => t.color === color)?.name.toLowerCase(),
+    )
+  const setTransition = (next: Transition) =>
+    setFront('transition', next === DEFAULT_TRANSITION ? undefined : next)
+  const setShareSafe = (next: boolean) => {
+    setSafeKey(null)
+    setFront('share-safe', next ? 'true' : undefined)
+  }
+  const setDuration = (seconds: number) =>
+    setFront('duration', seconds === 12 ? undefined : `${seconds}s`)
+  const setLoop = (next: boolean) => setFront('loop', next ? undefined : 'false')
   const slide = slides[Math.min(index, slides.length - 1)]
   const motion = activeTransition(transition, safe)
   const change = useSlideChange(index, slide, motion)
   const notice = useCallback((message: string) => setToast(message), [])
   const toggleSafe = useCallback(() => {
     notice(t('toast.shareSafe', { on: String(!safe) }))
-    setSafe(!safe)
+    setSafeKey(!safe)
   }, [safe, notice, t])
   const move = useCallback(
     (delta: number) => {
@@ -343,11 +356,9 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   }, [index, tab, presenting, slide])
   function show(value: string) {
     try {
-      const next = parsePresentation(value)
+      parsePresentation(value)
       setSource(value)
       setDraft(value)
-      setDuration(next.duration)
-      setLoop(next.loop)
       setError('')
     } catch (err) {
       setSource(blank)
@@ -357,6 +368,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     }
     setIndex(0)
     setPlaying(false)
+    setSafeKey(null)
   }
   const keepsDraft = () => draft === source || confirm(t('editor.discard'))
   const openPresentation = (id: string) => {
@@ -396,13 +408,11 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   }
   const apply = () => {
     try {
-      const next = parsePresentation(draft)
+      parsePresentation(draft)
       const formatted = formatPresentation(draft)
       setSource(formatted)
       setDraft(formatted)
       setIndex(0)
-      setDuration(next.duration)
-      setLoop(next.loop)
       setError('')
       setTab('preview')
       notice(t('toast.updated'))
@@ -439,8 +449,6 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     setSource(value)
     setDraft(value)
     setIndex(0)
-    setDuration(next.duration)
-    setLoop(next.loop)
     setError('')
     notice(t('toast.loaded', { name: target.name, count: next.slides.length }))
     return target.name
@@ -460,11 +468,8 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
       const { presentationHtml, fetchAsDataUrl } = await import('./slide/presentation-html')
       downloadFile(
         await presentationHtml(
-          { ...presentation, title: current.name, slides, duration, loop },
+          { ...presentation, title: current.name },
           {
-            theme,
-            tone: accent,
-            transition,
             shareSafe: safe,
             embedImage: fetchAsDataUrl,
             embedFont: file => fetchAsDataUrl(`/fonts/${file}`),
@@ -776,7 +781,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
                 title={ts(`tones.${name}`)}
                 aria-label={ts('toneOption', { name: ts(`tones.${name}`) })}
                 aria-pressed={accent === color}
-                onClick={() => setAccent(color)}
+                onClick={() => setTone(color)}
               >
                 {accent === color && <Check size={14} />}
               </button>
@@ -911,7 +916,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           </p>
           <div className="setting-row safe-row">
             <span>{ts('shareSafe')}</span>
-            <Toggle checked={safe} onChange={toggleSafe} label={ts('shareSafe')} />
+            <Toggle checked={safe} onChange={() => setShareSafe(!safe)} label={ts('shareSafe')} />
           </div>
           <p className="setting-help">{ts('shareSafeHelp')}</p>
           <div className="performance-note">
