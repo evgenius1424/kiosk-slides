@@ -1,6 +1,6 @@
 # 06 — Buttons component
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 01
 Spec: ../spec.md
 
