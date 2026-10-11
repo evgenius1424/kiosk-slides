@@ -1,10 +1,9 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import Anthropic from '@anthropic-ai/sdk'
 import type { ChatEvent, ChatMessage } from '@/lib/chat'
+import { ChatGPTError, checkLocalRequest, streamResponse } from '@/lib/chatgpt'
 import { parseDeck } from '@/lib/deck'
 
-const MODEL = 'claude-opus-5-5'
 const MAX_ATTEMPTS = 3
 const MAX_MESSAGES = 40
 const MAX_MESSAGE_LENGTH = 20_000
@@ -34,50 +33,39 @@ Write for the last row of the room: short headlines, one idea per slide, plain l
 Here is an example deck that follows every rule:`
 
 export async function POST(request: Request) {
-  let body: { messages?: ChatMessage[]; source?: string }
+  const reason = checkLocalRequest(request, { mutating: true })
+  if (reason) return Response.json({ error: reason }, { status: 403 })
+  if (!request.headers.get('content-type')?.startsWith('application/json')) return Response.json({ error: 'Send a JSON body.' }, { status: 415 })
+  let body: { messages?: ChatMessage[]; source?: string; model?: string }
   try { body = await request.json() } catch { return Response.json({ error: 'Send a JSON body.' }, { status: 400 }) }
   const problem = validate(body)
   if (problem) return Response.json({ error: problem }, { status: 400 })
-  if (!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN) return Response.json({ error: 'Set ANTHROPIC_API_KEY on the server to use the AI chat.' }, { status: 500 })
 
-  const system = await systemPrompt()
-  const messages = toApiMessages(body.messages!, body.source || '')
+  const instructions = await systemPrompt()
+  const input = toInput(body.messages!, body.source || '')
   const encoder = new TextEncoder()
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let open = true
       const send = (event: ChatEvent) => { if (open) try { controller.enqueue(encoder.encode(JSON.stringify(event) + '\n')) } catch { open = false } }
-      try { await generate(system, messages, send, request.signal) }
-      catch (err) { send({ type: 'error', message: describeError(err) }) }
+      try { await generate(body.model!, instructions, input, send, request.signal) }
+      catch (err) { send({ type: 'error', message: describeError(err, request.signal) }) }
       finally { if (open) controller.close() }
     },
   })
   return new Response(stream, { headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' } })
 }
 
-async function generate(system: string, messages: Anthropic.Beta.BetaMessageParam[], send: (event: ChatEvent) => void, signal: AbortSignal) {
-  const client = new Anthropic()
+async function generate(model: string, instructions: string, input: ChatMessage[], send: (event: ChatEvent) => void, signal: AbortSignal) {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const stream = client.beta.messages.stream({
-      model: MODEL,
-      max_tokens: 64000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      output_config: { effort: 'medium' },
-      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-      messages,
-    }, { signal })
-    stream.on('text', text => send({ type: 'text', text }))
-    const message = await stream.finalMessage()
-    if (message.stop_reason === 'refusal') { send({ type: 'error', message: 'Claude declined this request. Try rephrasing it.' }); return }
-    const reply = message.content.flatMap(block => block.type === 'text' ? [block.text] : []).join('')
+    const reply = await streamResponse({ model, instructions, input }, text => send({ type: 'text', text }), signal)
     const result = extractDeck(reply)
     if (result.kind === 'none') { send({ type: 'done', reply }); return }
     if (result.kind === 'valid') { send({ type: 'deck', source: result.source }); send({ type: 'done', reply }); return }
     if (attempt === MAX_ATTEMPTS) { send({ type: 'error', message: `The deck still has a problem after ${MAX_ATTEMPTS} tries: ${result.error}` }); send({ type: 'done', reply }); return }
     send({ type: 'retry', error: result.error })
-    messages.push({ role: 'assistant', content: message.content })
-    messages.push({ role: 'user', content: `The deck failed validation: ${result.error}\n\nFix that problem and return the complete corrected deck inside <deck></deck> tags.` })
+    input.push({ role: 'assistant', content: reply })
+    input.push({ role: 'user', content: `The deck failed validation: ${result.error}\n\nFix that problem and return the complete corrected deck inside <deck></deck> tags.` })
   }
 }
 
@@ -91,7 +79,7 @@ function extractDeck(reply: string): { kind: 'none' } | { kind: 'valid'; source:
   catch (err) { return { kind: 'invalid', error: (err as Error).message } }
 }
 
-function toApiMessages(history: ChatMessage[], source: string): Anthropic.Beta.BetaMessageParam[] {
+function toInput(history: ChatMessage[], source: string): ChatMessage[] {
   return history.map((message, i) => {
     if (i < history.length - 1 || !source.trim()) return { role: message.role, content: message.content }
     return { role: 'user', content: `The deck currently open in the editor:\n<deck>\n${source.trim()}\n</deck>\n\n${message.content}` }
@@ -106,8 +94,9 @@ async function systemPrompt() {
   return cachedPrompt
 }
 
-function validate(body: { messages?: ChatMessage[]; source?: string }) {
-  const { messages, source } = body
+function validate(body: { messages?: ChatMessage[]; source?: string; model?: string }) {
+  const { messages, source, model } = body
+  if (typeof model !== 'string' || !/^[\w.:-]{1,100}$/.test(model)) return 'Choose a ChatGPT model.'
   if (!Array.isArray(messages) || !messages.length) return 'Send at least one message.'
   if (messages.length > MAX_MESSAGES) return 'This conversation is too long. Start a new chat.'
   if (messages.some(m => (m?.role !== 'user' && m?.role !== 'assistant') || typeof m.content !== 'string' || !m.content.trim() || m.content.length > MAX_MESSAGE_LENGTH)) return 'Each message needs a role and text under 20,000 characters.'
@@ -116,10 +105,8 @@ function validate(body: { messages?: ChatMessage[]; source?: string }) {
   return ''
 }
 
-function describeError(err: unknown) {
-  if (err instanceof Anthropic.APIUserAbortError) return 'Generation stopped.'
-  if (err instanceof Anthropic.AuthenticationError) return 'The server API key was rejected.'
-  if (err instanceof Anthropic.RateLimitError) return 'Claude is busy right now. Try again in a moment.'
-  if (err instanceof Anthropic.APIError) return `Claude API error${err.status ? ` ${err.status}` : ''}: ${err.message}`
+function describeError(err: unknown, signal: AbortSignal) {
+  if (signal.aborted) return 'Generation stopped.'
+  if (err instanceof ChatGPTError) return err.message
   return 'Something went wrong while generating the deck.'
 }

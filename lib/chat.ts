@@ -1,3 +1,8 @@
+import type { ChatGPTModel, ChatGPTStatus } from './chatgpt'
+
+export type { ChatGPTModel, ChatGPTStatus }
+export const MANAGE_USAGE_URL = 'https://chatgpt.com/#settings'
+
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 export type ChatEvent =
   | { type: 'text'; text: string }
@@ -6,8 +11,25 @@ export type ChatEvent =
   | { type: 'done'; reply: string }
   | { type: 'error'; message: string }
 
-export async function streamChat(messages: ChatMessage[], source: string, onEvent: (event: ChatEvent) => void, signal: AbortSignal) {
-  const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages, source }), signal })
+export async function fetchStatus(): Promise<ChatGPTStatus> {
+  return (await request('/api/chatgpt/status')) as ChatGPTStatus
+}
+
+export async function fetchModels(): Promise<ChatGPTModel[]> {
+  return ((await request('/api/chatgpt/models')) as { models: ChatGPTModel[] }).models
+}
+
+export async function connectChatGPT() {
+  const { url } = (await request('/api/chatgpt/connect', { method: 'POST' })) as { url: string }
+  window.location.assign(url)
+}
+
+export async function disconnectChatGPT() {
+  return (await request('/api/chatgpt/disconnect', { method: 'POST' })) as { revoked: boolean }
+}
+
+export async function streamChat(messages: ChatMessage[], source: string, model: string, onEvent: (event: ChatEvent) => void, signal: AbortSignal) {
+  const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages, source, model }), signal })
   if (!response.ok || !response.body) {
     const body = await response.json().catch(() => null)
     throw new Error(body?.error || `The chat request failed (${response.status}).`)
@@ -31,4 +53,11 @@ export function visibleReply(text: string) {
   const close = text.indexOf('</deck>', open)
   const rest = close < 0 ? '' : text.slice(close + 7)
   return { text: (text.slice(0, open) + rest).trim(), writing: close < 0 }
+}
+
+async function request(url: string, init?: RequestInit) {
+  const response = await fetch(url, { cache: 'no-store', ...init })
+  const body = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(body?.error || `Request failed (${response.status}).`)
+  return body
 }
