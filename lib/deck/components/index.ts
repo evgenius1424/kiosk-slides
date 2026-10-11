@@ -1,4 +1,5 @@
 import { code } from './code'
+import { flow } from './flow'
 import { image } from './image'
 import { steps } from './steps'
 import type { WidgetOf } from './types'
@@ -8,6 +9,7 @@ export const widgetComponents = [
   steps,
   code,
   image,
+  flow,
 ] as const
 
 export type Widget = WidgetOf<(typeof widgetComponents)[number]>

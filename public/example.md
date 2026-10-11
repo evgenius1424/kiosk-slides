@@ -62,6 +62,20 @@ footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
 ---
 
 <!--
+title: The pipeline
+label: Flow
+footer: Boxes with the same text merge into one.
+-->
+
+# Two inputs, ==one deck==
+
+<!-- flow -->
+- Notes -> Draft -> Deck
+- Data -> Deck
+
+---
+
+<!--
 title: Closing
 label: Takeaway
 footer: Press P for unattended looping; any click or manual move pauses it.

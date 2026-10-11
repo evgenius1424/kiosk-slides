@@ -40,3 +40,25 @@ describe('SlideView', () => {
     expect(article.querySelector('.slide-image figcaption')?.textContent).toBe('From the back')
   })
 })
+
+describe('SlideView: flow', () => {
+  const flow = (lines: string[][]) => {
+    const article = view({ ...chrome, kind: 'flow', lines })
+    return {
+      boxes: [...article.querySelectorAll('.slide-flow .flow-box')].map(box => box.textContent),
+      arrows: article.querySelectorAll('.slide-flow .flow-arrow').length,
+    }
+  }
+
+  it('draws a single chain as boxes joined by arrows', () => {
+    expect(flow([['Write', 'Parse', 'Present']])).toEqual({ boxes: ['Write', 'Parse', 'Present'], arrows: 2 })
+  })
+
+  it('merges identical box text into one box where two chains converge', () => {
+    expect(flow([['Notes', 'Draft', 'Deck'], ['Data', 'Deck']])).toEqual({ boxes: ['Notes', 'Draft', 'Deck', 'Data'], arrows: 3 })
+  })
+
+  it('draws chains that share no text as parallel lines', () => {
+    expect(flow([['Plan', 'Build'], ['Test', 'Ship']])).toEqual({ boxes: ['Plan', 'Build', 'Test', 'Ship'], arrows: 2 })
+  })
+})

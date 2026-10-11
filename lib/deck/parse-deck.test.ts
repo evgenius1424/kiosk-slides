@@ -171,3 +171,34 @@ describe('parseDeck: errors', () => {
     expect(error(md('# One', '```js', 'x'))).toBe('Close the code block with ```')
   })
 })
+
+describe('parseDeck: flow', () => {
+  const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
+  const flow = (...bullets: string[]) => md('# How it ==moves==', '', '<!-- flow -->', ...bullets)
+
+  it('turns an annotated bullet list of arrow chains into a flow', () => {
+    expect(parseDeck(flow('- Write -> Parse -> Present')).slides[0]).toMatchObject({ kind: 'flow', lines: [['Write', 'Parse', 'Present']] })
+  })
+
+  it('keeps a converging pair and a parallel pair as two chains', () => {
+    expect(parseDeck(flow('- Notes -> Draft -> Deck', '- Data -> Deck')).slides[0]).toMatchObject({ lines: [['Notes', 'Draft', 'Deck'], ['Data', 'Deck']] })
+    expect(parseDeck(flow('- Plan -> Build', '- Test -> Ship')).slides[0]).toMatchObject({ lines: [['Plan', 'Build'], ['Test', 'Ship']] })
+  })
+
+  it('caps a flow at 2 lines of up to 4 boxes each', () => {
+    const message = 'Line 4: A flow supports at most 2 lines of up to 4 boxes each.'
+    expect(error(flow('- A -> B', '- C -> D', '- E -> F'))).toBe(message)
+    expect(error(flow('- A -> B -> C -> D -> E'))).toBe(message)
+  })
+
+  it('rejects a flow that is not a bullet list of chains', () => {
+    expect(error(flow('1. A -> B'))).toBe('Line 4: A flow is a bullet list of chains such as - Write -> Parse -> Present.')
+    expect(error(flow('- A -> -> B'))).toBe('Line 4: Every box in a flow needs text, e.g. - Write -> Parse -> Present.')
+  })
+
+  it('rejects a flow that loops back to an earlier box', () => {
+    const message = 'Line 4: A flow can’t loop back to an earlier box. Give the boxes different text.'
+    expect(error(flow('- A -> B -> A'))).toBe(message)
+    expect(error(flow('- A -> B', '- B -> A'))).toBe(message)
+  })
+})

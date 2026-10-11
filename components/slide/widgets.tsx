@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import type { SlideKind, SlideOfKind } from '@/lib/deck'
 import { CodeWidget } from './code'
+import { FlowWidget } from './flow'
 import { ImageWidget } from './image'
 import { StepsWidget } from './steps'
 
@@ -10,4 +11,5 @@ export const widgets: { [K in SlideKind]: ComponentType<{ slide: SlideOfKind<K> 
   steps: StepsWidget,
   code: CodeWidget,
   image: ImageWidget,
+  flow: FlowWidget,
 }
