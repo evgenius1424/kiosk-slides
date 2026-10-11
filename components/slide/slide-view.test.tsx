@@ -39,6 +39,13 @@ describe('SlideView', () => {
     expect(img.getAttribute('alt')).toBe('A screen')
     expect(article.querySelector('.slide-image figcaption')?.textContent).toBe('From the back')
   })
+
+  it('renders a metric value with its caption', () => {
+    const article = view({ ...chrome, kind: 'metric', value: '3x', caption: 'more questions answered' })
+    expect(article.className).toContain('kind-metric')
+    expect(article.querySelector('.slide-metric strong')?.textContent).toBe('3x')
+    expect(article.querySelector('.slide-metric > span')?.textContent).toBe('more questions answered')
+  })
 })
 
 describe('SlideView: buttons', () => {

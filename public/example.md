@@ -62,6 +62,20 @@ footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
 ---
 
 <!--
+title: Results
+label: Metric
+footer: One number, one caption, readable from across the room.
+-->
+
+# Short decks ==hold attention==
+
+<!-- metric -->
+**3x**
+more visitors stayed for the whole loop
+
+---
+
+<!--
 title: Next steps
 label: Buttons
 footer: Up to three https:// links, each opening in a new tab.
