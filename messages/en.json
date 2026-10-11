@@ -43,7 +43,7 @@
       "hide": "Hide slide list",
       "show": "Show slide list",
       "list": "Slides",
-      "slide": "Slide {number}: {title}",
+      "slide": "Slide {number}: ",
       "untitledSlide": "Slide {number}",
       "add": "Add a slide"
     },
@@ -57,6 +57,7 @@
       "next": "Next slide",
       "enter": "Enter presentation mode",
       "leave": "Leave presentation",
+      "slide": "Slide {number} of {count}: {title}",
       "empty": "Fix the text in Edit to see your slides."
     },
     "editor": {

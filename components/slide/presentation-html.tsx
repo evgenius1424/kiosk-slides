@@ -16,6 +16,7 @@ import {
   SWIPE,
   TRANSITION_MS,
   WHEEL,
+  slideLabel,
   slideSeconds,
   type Transition,
 } from '@/lib/player'
@@ -46,10 +47,11 @@ export async function presentationHtml(
   const files = findFont(presentation.font).files.filter(f => cyrillic || f.script === 'latin')
   const faces = await Promise.all(files.map(async f => fontFace(f, await embedFont(f.file))))
   const slides = await Promise.all(
-    presentation.slides.map(async slide => {
+    presentation.slides.map(async (slide, i, all) => {
       const embedded =
         slide.kind === 'image' ? { ...slide, src: await embedImage(slide.src) } : slide
-      return `<div class="portable-slide"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
+      const label = escapeAttribute(slideLabel(slide, i, all.length))
+      return `<div class="portable-slide" role="region" aria-roledescription="slide" aria-label="${label}"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
     }),
   )
   const config = JSON.stringify({
@@ -66,7 +68,7 @@ export async function presentationHtml(
     words: PLAYER_WORDS,
     hash: SLIDE_HASH.source,
   })
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${faces.join('')}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}</script></body></html>`
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${faces.join('')}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><div id="spoken" aria-live="polite"></div><script>const config=${config};${player}</script></body></html>`
 }
 
 export async function fetchAsDataUrl(src: string): Promise<string> {
@@ -81,7 +83,7 @@ const SAFE_AREA =
   'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'
 
 const pageStyles = (theme: Theme) =>
-  `html,body{margin:0;background:${theme === 'room-light' ? '#fafafa' : '#121214'};width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active,.portable-slide.kt-leave{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
+  `html,body{margin:0;background:${theme === 'room-light' ? '#fafafa' : '#121214'};width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active,.portable-slide.kt-leave{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#spoken{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
 
 const icon = (path: string, className: string) =>
   `<svg class="${className}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`
@@ -96,7 +98,7 @@ const fullElement=()=>document.fullscreenElement||document.webkitFullscreenEleme
 const mark=()=>{const h='#'+(index+1);if(location.hash===h)return;try{history.replaceState(history.state,'',h)}catch{location.replace(h)}};
 const keep=()=>{const want=playing||!!fullElement();if(!want){if(lock){lock.release().catch(()=>{});lock=null}return}if(asking||lock&&!lock.released||document.visibilityState!=='visible'||!navigator.wakeLock)return;asking=true;navigator.wakeLock.request('screen').then(l=>{lock=l;asking=false;keep()},()=>{asking=false})};
 const mode=()=>safe&&config.transition!=='none'?'share':config.transition;
-const show=()=>{const from=shown,t=mode();shown=index;root.dataset.transition=t;if(from!==index)root.style.setProperty('--kt-dir',index<from?-1:1);slides.forEach(s=>s.classList.remove('kt-enter','kt-leave'));void root.offsetWidth;slides.forEach((s,i)=>s.classList.toggle('active',i===index));clearTimeout(leaving);if(from!==index&&t!=='none'){slides[index].classList.add('kt-enter');slides[from].classList.add('kt-leave');leaving=setTimeout(()=>slides.forEach(s=>s.classList.remove('kt-enter','kt-leave')),config.ms[t])}mark();schedule()};
+const show=()=>{const from=shown,t=mode();shown=index;root.dataset.transition=t;if(from!==index)root.style.setProperty('--kt-dir',index<from?-1:1);slides.forEach(s=>s.classList.remove('kt-enter','kt-leave'));void root.offsetWidth;slides.forEach((s,i)=>{const on=i===index;s.classList.toggle('active',on);s.inert=!on;if(on)s.removeAttribute('aria-hidden');else s.setAttribute('aria-hidden','true')});if(from!==index)document.querySelector('#spoken').textContent=slides[index].getAttribute('aria-label');clearTimeout(leaving);if(from!==index&&t!=='none'){slides[index].classList.add('kt-enter');slides[from].classList.add('kt-leave');leaving=setTimeout(()=>slides.forEach(s=>s.classList.remove('kt-enter','kt-leave')),config.ms[t])}mark();schedule()};
 const say=m=>{const n=document.querySelector('#notice');n.textContent=m;clearTimeout(say.t);say.t=setTimeout(()=>n.textContent='',1800)};
 const pause=()=>{playing=false;clearTimeout(timer);keep()};
 const schedule=()=>{clearTimeout(timer);if(playing)timer=setTimeout(()=>{if(index===slides.length-1&&!config.loop){pause();say(config.words.end);return}index=(index+1)%slides.length;show()},config.durations[index]*1000);keep()};
@@ -118,6 +120,10 @@ document.addEventListener('touchstart',e=>{start=e.touches.length===1?{x:e.touch
 document.addEventListener('touchend',e=>{if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y,d=Math.abs(dy)>Math.abs(dx)?dy:Math.abs(dx)>Math.abs(dy)*config.swipe.ratio?dx:0;start=null;if(Math.abs(d)>config.swipe.distance)move(d<0?1:-1)});
 document.addEventListener('wheel',e=>{e.preventDefault();clearTimeout(gesture);gesture=setTimeout(()=>{locked=false;total=0},config.wheel.settleMs);if(locked)return;total+=e.deltaY*(e.deltaMode===1?config.wheel.lineHeight:1);if(Math.abs(total)>config.wheel.distance){move(Math.sign(total));locked=true;total=0}},{passive:false});
 show();wake();`
+
+function escapeAttribute(text: string) {
+  return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+}
 
 function base64(bytes: Uint8Array) {
   let binary = ''

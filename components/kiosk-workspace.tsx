@@ -51,6 +51,7 @@ import {
   slideFromHash,
   slideHash,
   slideSeconds,
+  slideTitle,
   swipeDelta,
   transitions,
   type ActiveTransition,
@@ -150,6 +151,8 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const canvasRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const settingsRef = useRef<HTMLElement>(null)
+  const settingsButtonRef = useRef<HTMLButtonElement>(null)
   const slides = presentation.slides
   const current = library.items.find(p => p.id === library.current) ?? library.items[0]
   const theme = presentation.theme
@@ -176,6 +179,8 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const slide = slides[at] as Slide | undefined
   const motion = activeTransition(transition, safe)
   const change = useSlideChange(index, slide, motion)
+  const slideName =
+    slide && t('canvas.slide', { number: at + 1, count: slides.length, title: slideTitle(slide) })
   const notice = useCallback((message: string) => setToast(message), [])
   useWakeLock(presenting || playing)
   const toggleSafe = useCallback(() => {
@@ -251,6 +256,21 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     else dialogRef.current?.close()
   }, [modal])
   useEffect(() => {
+    if (!settingsOpen) return
+    settingsRef.current?.querySelector<HTMLElement>('select,input,button')?.focus()
+    const outside = (event: PointerEvent) => {
+      const target = event.target as Element
+      if (
+        !settingsRef.current?.contains(target) &&
+        !settingsButtonRef.current?.contains(target) &&
+        !target.closest('dialog')
+      )
+        setSettingsOpen(false)
+    }
+    document.addEventListener('pointerdown', outside)
+    return () => document.removeEventListener('pointerdown', outside)
+  }, [settingsOpen])
+  useEffect(() => {
     if (!playing || !slide) return
     const timer = setTimeout(
       () => {
@@ -269,6 +289,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     const handler = (event: KeyboardEvent) => {
       if (event.isComposing || event.keyCode === 229) return
       if (event.key === 'Escape') {
+        if (settingsOpen && !modal) {
+          setSettingsOpen(false)
+          settingsButtonRef.current?.focus()
+        }
         leave()
         setModal(null)
         return
@@ -299,7 +323,20 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [move, playing, tab, notice, slides.length, presenting, present, leave, toggleSafe, t])
+  }, [
+    move,
+    playing,
+    tab,
+    notice,
+    slides.length,
+    presenting,
+    present,
+    leave,
+    toggleSafe,
+    t,
+    settingsOpen,
+    modal,
+  ])
   useEffect(() => {
     const target = canvasRef.current
     if (!target) return
@@ -489,13 +526,14 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
       className={`workspace ${presenting ? 'is-presenting' : ''} ${presenting && idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}
     >
       <header className="app-header">
-        <a href="/" className="brand" aria-label={t('home')}>
+        <a href="/" className="brand">
           <span className="brand-icon">
             <Layers2 size={19} strokeWidth={2.2} />
           </span>
-          <span>
+          <span aria-hidden="true">
             Kiosk<span className="brand-light">Slides</span>
           </span>
+          <span className="sr-only">{t('home')}</span>
           <span className="beta">{t('beta')}</span>
         </a>
         <div className="header-divider" />
@@ -513,6 +551,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         </span>
         <div className="header-actions">
           <button
+            ref={settingsButtonRef}
             className="btn"
             aria-label={t('settings')}
             aria-expanded={settingsOpen}
@@ -557,12 +596,14 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
               className={`slide-nav ${index === i ? 'selected' : ''}`}
               key={i}
               onClick={() => select(i)}
-              aria-label={t('sidebar.slide', { number: i + 1, title: item.title })}
               aria-current={index === i ? 'step' : undefined}
             >
-              <span className="slide-number">{String(i + 1).padStart(2, '0')}</span>
+              <span className="slide-number" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span className="sr-only">{t('sidebar.slide', { number: i + 1 })}</span>
               <span className="thumb-group">
-                <span className="thumbnail">
+                <span className="thumbnail" aria-hidden="true" inert>
                   <SlideView slide={item} theme={theme} accent={accent} look={look} miniature />
                 </span>
                 <span className="thumb-name">
@@ -646,6 +687,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
                     key={`leave-${change.count}`}
                     className="canvas-slide kt-leave"
                     aria-hidden="true"
+                    inert
                   >
                     <SlideView slide={change.leaving} theme={theme} accent={accent} look={look} />
                   </div>
@@ -653,6 +695,9 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
                 <div
                   key={`slide-${index}`}
                   className={`canvas-slide ${change.leaving ? 'kt-enter' : ''}`}
+                  role="region"
+                  aria-roledescription="slide"
+                  aria-label={slideName}
                 >
                   {slide ? (
                     <SlideView slide={slide} theme={theme} accent={accent} look={look} />
@@ -742,7 +787,13 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           <span>{t('footer.quiet')}</span>
         </footer>
       </section>
-      <aside id="presentation-settings" className="inspector" hidden={!settingsOpen}>
+      <aside
+        ref={settingsRef}
+        id="presentation-settings"
+        className="inspector"
+        aria-label={ts('title')}
+        hidden={!settingsOpen}
+      >
         <div className="inspector-heading">
           <Settings2 size={15} />
           <h2>{ts('title')}</h2>
@@ -940,6 +991,9 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           <ArrowRight size={13} />
         </button>
       </aside>
+      <div className="sr-only" aria-live="polite">
+        {change.count ? slideName : ''}
+      </div>
       {toast && (
         <div className="toast" role="status">
           <Check size={15} />
