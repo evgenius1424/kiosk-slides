@@ -19,6 +19,8 @@ export function reviewPresentation(presentation: Presentation) {
     problems.push(
       `${list(plain)} are only a heading and text. Turn some into steps, before/after, a metric, a chart, a table or a flow, so at most ${allowed} slides have no widget.`,
     )
+  const unnamed = slides.flatMap((s, i) => (s.kind === 'image' && !s.alt.trim() ? [i + 1] : []))
+  if (unnamed.length) problems.push(`${list(unnamed)}: describe the image in its alt text.`)
   return problems
 }
 

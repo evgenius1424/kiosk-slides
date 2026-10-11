@@ -29,7 +29,7 @@ autoplay:
   - `share-safe: true` swaps every transition for a quick flat fade that stays sharp over screen sharing. It is off by default.
   - `duration: Ns` is the autoplay time per slide in seconds. The default is 12, and it is clamped to 2–120.
   - `loop: false` stops autoplay at the end. Looping is on by default.
-  - `font:` is `classic` (default, Arial), `inter`, `figtree`, `bricolage-grotesque`, `space-grotesk`, or `archivo-expanded`. The font's name works too, like `Space Grotesk`.
+  - `font:` is `classic` (default, Arial), `inter`, `figtree`, `bricolage-grotesque`, `space-grotesk`, `archivo-expanded`, or `golos-text`. The font's name works too, like `Space Grotesk`. Every font also covers Russian and other Cyrillic text.
   - `scale:` is `normal` (default), `large`, or `kiosk`. `large` and `kiosk` size every heading to its length, so a one-word slide fills the screen and a long one still fits, and `kiosk` also enlarges the body for reading from across a room.
   - `brand:` is the word in the corner of every slide, at most 24 characters. The default is `kiosk`; `none` hides it.
 - **Slides** are separated by a line containing only `---`. A `---` line inside a ```` ``` ```` code fence does not split slides.
@@ -91,7 +91,7 @@ A slide may have **one** of these widgets. A second one is an error (`Use one su
 |---|---|---|---|
 | steps | `1.` `2.` `3.` numbered list | an ordered list | 5 items, 95 characters each, no nested lists |
 | code | a fenced ```` ``` ```` block | a code fence (the info string is the language) | 12 lines, 450 characters |
-| image | `![alt](src "caption")` on its own line | a paragraph holding only one image | `src` is `https://…`, `/images/…`, or `data:image/(png\|jpeg\|webp);base64,…`. Alt and caption are each 450 characters or fewer |
+| image | `![alt](src "caption")` on its own line | a paragraph holding only one image | `src` is `https://…`, `/images/…`, or `data:image/(png\|jpeg\|webp);base64,…`. Always write alt text that describes the image for people who can’t see it. Alt and caption are each 450 characters or fewer |
 | table | a GFM table | any table not headed `Before \| After` and not under `<!-- chart -->` | 5 columns, 1–6 body rows |
 | before-after | a table headed `Before \| After` | a 2-column table whose header is exactly Before, After (any case) | exactly 1 body row |
 | chart | `<!-- chart: type=bar -->` above a table | the `chart` annotation | `type` is `bar` or `line`; 5 columns, 1–6 body rows; every row labelled; number cells only |

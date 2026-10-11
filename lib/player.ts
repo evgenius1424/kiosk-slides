@@ -41,6 +41,7 @@ export const PLAYER_WORDS = {
   autoplay: { on: 'Autoplay on', off: 'Autoplay off' },
   shareSafe: { on: 'Screen-share safe on', off: 'Screen-share safe off' },
   end: 'End of presentation',
+  slide: 'Slide {number} of {count}: {title}',
 }
 
 export function isTransition(value: string): value is Transition {
@@ -68,6 +69,17 @@ export function slideFromHash(hash: string, count: number) {
 
 export function slideHash(index: number) {
   return `#${index + 1}`
+}
+
+export function slideTitle(slide: Slide) {
+  return slide.title || slide.heading.map(part => part.text).join('')
+}
+
+export function slideLabel(slide: Slide, index: number, count: number) {
+  return PLAYER_WORDS.slide
+    .replace('{number}', String(index + 1))
+    .replace('{count}', String(count))
+    .replace('{title}', () => slideTitle(slide))
 }
 
 export function swipeDelta(dx: number, dy: number, vertical: boolean) {
