@@ -108,6 +108,7 @@ describe('SlideView: table and before/after', () => {
     const sections = [...article.querySelectorAll('.comparison section')]
     expect(sections.map(s => [s.querySelector('.widget-label')?.textContent, s.querySelector('p')?.textContent]))
       .toEqual([['Before', 'Dense slides'], ['After', 'One idea']])
+    expect(sections.map(s => s.classList.contains('comparison-after'))).toEqual([false, true])
   })
 })
 
