@@ -40,3 +40,23 @@ describe('SlideView', () => {
     expect(article.querySelector('.slide-image figcaption')?.textContent).toBe('From the back')
   })
 })
+
+describe('SlideView: table and before/after', () => {
+  it('renders a table with a header row and one row per body row', () => {
+    const article = view({ ...chrome, kind: 'table', header: ['Task', 'Hours', 'Owner'], rows: [['Write', '3', 'Ana'], ['Review', '1', 'Bo']] })
+    expect(article.className).toContain('kind-table')
+    const table = article.querySelector('table.slide-table')!
+    expect([...table.querySelectorAll('thead th')].map(th => th.textContent)).toEqual(['Task', 'Hours', 'Owner'])
+    const rows = [...table.querySelectorAll('tbody tr')]
+    expect(rows).toHaveLength(2)
+    expect(rows.map(tr => tr.querySelectorAll('td').length)).toEqual([3, 3])
+    expect(rows[1].textContent).toBe('Review1Bo')
+  })
+
+  it('renders before and after side by side', () => {
+    const article = view({ ...chrome, kind: 'before-after', before: 'Dense slides', after: 'One idea' })
+    const sections = [...article.querySelectorAll('.comparison section')]
+    expect(sections.map(s => [s.querySelector('.widget-label')?.textContent, s.querySelector('p')?.textContent]))
+      .toEqual([['Before', 'Dense slides'], ['After', 'One idea']])
+  })
+})

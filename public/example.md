@@ -62,6 +62,36 @@ footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
 ---
 
 <!--
+title: Contrast
+label: Before / after
+footer: A Before | After table becomes a side-by-side comparison.
+-->
+
+# One idea ==per slide==
+
+| Before | After |
+| --- | --- |
+| Dense slides nobody can read from the back | One headline, big type, seen from across the room |
+
+---
+
+<!--
+title: Formats
+label: Tables
+footer: Any plain table renders as a table — up to 5 columns and 6 rows.
+-->
+
+# Pick the ==right widget==
+
+| You have | Write | You get |
+| --- | --- | --- |
+| A sequence | A numbered list | Steps |
+| Some code | A fenced block | Code |
+| A picture | An image | Image |
+
+---
+
+<!--
 title: Closing
 label: Takeaway
 footer: Press P for unattended looping; any click or manual move pauses it.
