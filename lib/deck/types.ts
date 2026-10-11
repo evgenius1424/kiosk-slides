@@ -1,0 +1,23 @@
+import type { Widget } from './components'
+
+export type Layout = 'auto' | 'stacked' | 'split-left'
+
+/** Fields every slide has, whatever its widget. */
+export type SlideChrome = {
+  title: string
+  label: string
+  footer: string
+  heading: string
+  body: string
+  layout: Layout
+  duration?: number
+}
+
+/** A slide with no supporting widget: just the heading and body. */
+export type MessageWidget = { kind: 'message' }
+
+export type Slide = SlideChrome & (MessageWidget | Widget)
+export type SlideKind = Slide['kind']
+export type SlideOfKind<K extends SlideKind> = Extract<Slide, { kind: K }>
+
+export type Deck = { title: string; duration: number; loop: boolean; slides: Slide[] }
