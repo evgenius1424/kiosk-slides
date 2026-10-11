@@ -1,8 +1,17 @@
 import { readFileSync } from 'node:fs'
 import { JSDOM } from 'jsdom'
-import { describe, expect, it } from 'vitest'
+import { createTranslator } from 'next-intl'
+import { describe, expect, it, vi } from 'vitest'
 import { parsePresentation } from '@/lib/presentation'
-import { PLAYER_KEYS, SWIPE, swipeDelta, type PlayerAction } from '@/lib/player'
+import {
+  PLAYER_KEYS,
+  PLAYER_WORDS,
+  SWIPE,
+  slideFromHash,
+  swipeDelta,
+  type PlayerAction,
+} from '@/lib/player'
+import messages from '@/messages/en.json'
 import { presentationHtml } from './presentation-html'
 
 const presentation = parsePresentation(readFileSync('public/example.md', 'utf8'))
@@ -64,21 +73,84 @@ describe('exported presentation player', () => {
     page.wheel(5, 1)
     expect(page.active()).toBe(1)
   })
+
+  it('starts on the slide in the address and keeps it there', async () => {
+    expect((await open('#3')).active()).toBe(2)
+    expect((await open('#999')).active()).toBe(last)
+    expect((await open('#s=abc')).active()).toBe(0)
+    const page = await open('#2')
+    page.press({ key: 'ArrowRight' })
+    expect(page.hash()).toBe('#3')
+    expect(page.history()).toBe(1)
+  })
+
+  it('says the same words as the site', async () => {
+    const page = await open()
+    page.press({ key: 'p' })
+    expect(page.notice()).toBe(PLAYER_WORDS.autoplay.on)
+    page.press({ key: 'p' })
+    expect(page.notice()).toBe(PLAYER_WORDS.autoplay.off)
+    page.press({ key: 's' })
+    expect(page.notice()).toBe(PLAYER_WORDS.shareSafe.on)
+  })
+
+  it('keeps the screen awake only while autoplay runs', async () => {
+    const page = await open()
+    expect(page.wakeLock.request).not.toHaveBeenCalled()
+    page.press({ key: 'p' })
+    await vi.waitFor(() => expect(page.wakeLock.request).toHaveBeenCalledWith('screen'))
+    page.press({ key: 'p' })
+    await vi.waitFor(() => expect(page.wakeLock.release).toHaveBeenCalled())
+  })
 })
 
-async function open() {
+describe('player words', () => {
+  it('match the site messages', () => {
+    const t = createTranslator({ locale: 'en', messages, namespace: 'Workspace.toast' })
+    expect({
+      autoplay: { on: t('autoplay', { on: 'true' }), off: t('autoplay', { on: 'false' }) },
+      shareSafe: { on: t('shareSafe', { on: 'true' }), off: t('shareSafe', { on: 'false' }) },
+      end: t('end'),
+    }).toEqual(PLAYER_WORDS)
+  })
+})
+
+describe('slide in the address', () => {
+  it('reads bare numbers and clamps them', () => {
+    expect(slideFromHash('#4', 10)).toBe(3)
+    expect(slideFromHash('#0', 10)).toBe(0)
+    expect(slideFromHash('#40', 10)).toBe(9)
+    expect(slideFromHash('#s=4', 10)).toBeUndefined()
+    expect(slideFromHash('', 10)).toBeUndefined()
+  })
+})
+
+async function open(hash = '') {
   const html = await presentationHtml(presentation, {
     tone: '#74747e',
     transition: 'none',
     embedImage: async src => src,
     embedFont: async file => file,
   })
-  const { window } = new JSDOM(html, { runScripts: 'dangerously' })
+  const release = vi.fn<() => Promise<void>>(async () => {})
+  const wakeLock = {
+    release,
+    request: vi.fn<(type: string) => Promise<object>>(async () => ({ released: false, release })),
+  }
+  const { window } = new JSDOM(html, {
+    runScripts: 'dangerously',
+    pretendToBeVisual: true,
+    url: `https://example.test/presentation.html${hash}`,
+    beforeParse: window => Object.defineProperty(window.navigator, 'wakeLock', { value: wakeLock }),
+  })
   const { document } = window
   const slides = [...document.querySelectorAll('.portable-slide')]
   const fire = (type: string, props: object) =>
     document.dispatchEvent(Object.assign(new window.Event(type, { cancelable: true }), props))
   return {
+    wakeLock,
+    hash: () => window.location.hash,
+    history: () => window.history.length,
     active: () => slides.findIndex(s => s.classList.contains('active')),
     notice: () => document.querySelector('#notice')!.textContent,
     press: (init: KeyboardEventInit) =>
