@@ -7,6 +7,10 @@ const nextConfig = {
       { key: 'Strict-Transport-Security', value: 'max-age=63072000' },
     ] }]
   },
+  // lib/chat-prompt.ts reads these at runtime, which file tracing can't see.
+  outputFileTracingIncludes: {
+    '/api/chat': ['./FORMAT.md', './public/example.md'],
+  },
   images: {
     unoptimized: true,
   },
