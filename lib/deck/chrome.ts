@@ -9,7 +9,12 @@ export const defaultChrome = (): Chrome => ({ title: '', label: '', footer: '', 
 /** Parse the per-slide settings comment: `<!--` then `key: value` lines then `-->`. */
 export function parseChrome(comment: string, fail: (message: string) => never): Chrome {
   const chrome = defaultChrome()
-  const lines = comment.replace(/^\s*<!--/, '').replace(/-->\s*$/, '').split('\n').map(l => l.trim()).filter(Boolean)
+  const lines = comment
+    .replace(/^\s*<!--/, '')
+    .replace(/-->\s*$/, '')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean)
   for (const line of lines) {
     const [, key, value = ''] = line.match(/^([\w-]+):\s*(.*)$/) ?? []
     if (key === 'title' || key === 'label' || key === 'footer') chrome[key] = value

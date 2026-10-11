@@ -19,6 +19,17 @@ describe('FORMAT.md', () => {
 
   it('shows every supported slide kind in its examples', () => {
     const kinds = new Set(examples.flatMap(source => parseDeck(source).slides.map(s => s.kind)))
-    expect([...kinds].sort()).toEqual(['before-after', 'buttons', 'chart', 'code', 'flow', 'image', 'message', 'metric', 'steps', 'table'])
+    expect([...kinds].sort()).toEqual([
+      'before-after',
+      'buttons',
+      'chart',
+      'code',
+      'flow',
+      'image',
+      'message',
+      'metric',
+      'steps',
+      'table',
+    ])
   })
 })

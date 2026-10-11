@@ -4,7 +4,12 @@ export type { ChatGPTModel, ChatGPTStatus }
 export const MANAGE_USAGE_URL = 'https://chatgpt.com/#settings'
 
 export class RequestError extends Error {
-  constructor(message: string, readonly status: number) { super(message) }
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message)
+  }
 }
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
@@ -32,8 +37,19 @@ export async function disconnectChatGPT() {
   return (await request('/api/chatgpt/disconnect', { method: 'POST' })) as { revoked: boolean }
 }
 
-export async function streamChat(messages: ChatMessage[], source: string, model: string, onEvent: (event: ChatEvent) => void, signal: AbortSignal) {
-  const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages, source, model }), signal })
+export async function streamChat(
+  messages: ChatMessage[],
+  source: string,
+  model: string,
+  onEvent: (event: ChatEvent) => void,
+  signal: AbortSignal,
+) {
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, source, model }),
+    signal,
+  })
   if (!response.ok || !response.body) {
     const body = await response.json().catch(() => null)
     throw new RequestError(body?.error || '', response.status)

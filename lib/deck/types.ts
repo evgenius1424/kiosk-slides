@@ -23,4 +23,10 @@ export type Slide = SlideChrome & (MessageWidget | Widget)
 export type SlideKind = Slide['kind']
 export type SlideOfKind<K extends SlideKind> = Extract<Slide, { kind: K }>
 
-export type Deck = DeckLook & { title: string; theme: Theme; duration: number; loop: boolean; slides: Slide[] }
+export type Deck = DeckLook & {
+  title: string
+  theme: Theme
+  duration: number
+  loop: boolean
+  slides: Slide[]
+}

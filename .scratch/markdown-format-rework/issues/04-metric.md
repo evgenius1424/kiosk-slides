@@ -6,7 +6,7 @@ Spec: ../spec.md
 
 ## What
 
-Add the component as specified under "Component detection/mapping rules" in the spec: *Metric*: `<!-- metric -->` above a bold value line followed by a caption line → `{ value, caption }`. Keep the existing metric visuals. Tests: happy path, plus errors for a missing bold value or a missing caption.
+Add the component as specified under "Component detection/mapping rules" in the spec: _Metric_: `<!-- metric -->` above a bold value line followed by a caption line → `{ value, caption }`. Keep the existing metric visuals. Tests: happy path, plus errors for a missing bold value or a missing caption.
 
 Follow the per-component module + render-component pattern that ticket 01 established, plus the shared annotation helper. Add one slide for this kind to `public/example.md`. Error messages use the `Line N: ...` convention and stay specific.
 

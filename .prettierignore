@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+FORMAT.md
+public/example.md
+skills/*/scripts/
+skills/*/references/
+skills/*/assets/

@@ -11,6 +11,7 @@ export const tones = [
   { name: 'Bronze', color: '#ac9167' },
 ] as const
 
-export const isTheme = (value: string | undefined): value is Theme => themes.includes(value as Theme)
+export const isTheme = (value: string | undefined): value is Theme =>
+  themes.includes(value as Theme)
 
 export const setDeckTheme = (source: string, theme: Theme) => setFrontMatter(source, 'theme', theme)

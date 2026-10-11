@@ -16,8 +16,10 @@ export const image = defineWidget<ImageWidget>({
   matches: ({ node }) => imageOf(node) !== undefined,
   parse: ({ node, fail }) => {
     const found = imageOf(node) ?? fail('Put the image on its own line: ![alt](src "caption").')
-    if (!/^(data:image\/(png|jpeg|webp);base64,|https:\/\/|\/images\/)/.test(found.url)) fail('Use an HTTPS image URL or embedded image data.')
-    const alt = found.alt ?? ''; const caption = found.title ?? ''
+    if (!/^(data:image\/(png|jpeg|webp);base64,|https:\/\/|\/images\/)/.test(found.url))
+      fail('Use an HTTPS image URL or embedded image data.')
+    const alt = found.alt ?? ''
+    const caption = found.title ?? ''
     if (alt.length > 450 || caption.length > 450) fail(messages.tooLong)
     return { kind: 'image', src: found.url, alt, caption }
   },

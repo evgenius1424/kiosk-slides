@@ -16,13 +16,16 @@ for (const skill of SKILLS) {
     minify: true,
     legalComments: 'none',
     define: { 'process.env.NODE_ENV': '"production"' },
-    banner: { js: "import{createRequire}from'module';const require=createRequire(import.meta.url);" },
+    banner: {
+      js: "import{createRequire}from'module';const require=createRequire(import.meta.url);",
+    },
     logLevel: 'warning',
   })
 }
 
 await mkdir('skills/kiosk-slides-deck/references', { recursive: true })
-for (const file of REFERENCES) await copyFile(file, `skills/kiosk-slides-deck/references/${file.split('/').pop()}`)
+for (const file of REFERENCES)
+  await copyFile(file, `skills/kiosk-slides-deck/references/${file.split('/').pop()}`)
 
 const fonts = (await readdir('public/fonts')).filter(file => file.endsWith('.woff2'))
 for (const skill of SKILLS) {
