@@ -71,12 +71,77 @@ describe('live editing', () => {
   })
 })
 
-function openEditor() {
+describe('paste anywhere', () => {
+  it('pastes a fenced presentation as a new one and undoes it', () => {
+    renderWorkspace()
+    paste('```markdown\n---\ntitle: Pasted plan\n---\n\n# Hello\n```')
+    expect(menuName()).toBe('Pasted plan')
+    expect(canvas()).toContain('Hello')
+    expect(screen.getByRole('status').textContent).toContain('Pasted as “Pasted plan”')
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(menuName()).not.toBe('Pasted plan')
+    expect(canvas()).toContain('One')
+    expect(localStorage.getItem('kiosk-presentations')).not.toContain('Pasted plan')
+  })
+
+  it('replaces the blank starter instead of adding another', () => {
+    renderWorkspace()
+    fireEvent.click(document.querySelector('.presentation-selector')!)
+    fireEvent.click(screen.getByRole('button', { name: /New presentation/ }))
+    paste('# Fresh\n')
+    const saved = JSON.parse(localStorage.getItem('kiosk-presentations')!)
+    expect(saved.items.map((p: { name: string }) => p.name)).toEqual(['One', 'Fresh'])
+  })
+
+  it('opens Edit with the error when the pasted presentation is broken', () => {
+    renderWorkspace()
+    paste('# One\n# Two\n')
+    const textarea = screen.getByRole('textbox', { name: 'Slide text' }) as HTMLTextAreaElement
+    expect(textarea.value).toBe('# One\n# Two\n')
+    expect(
+      screen
+        .getAllByRole('status')
+        .map(s => s.textContent)
+        .join(),
+    ).toContain('Line 2:')
+  })
+
+  it('ignores plain words and pastes inside the editor', () => {
+    renderWorkspace()
+    paste('just some words')
+    expect(screen.queryByRole('status')).toBeNull()
+    const textarea = openEditor()
+    paste('# Elsewhere\n', textarea)
+    expect(screen.queryByText(/Pasted as/)).toBeNull()
+  })
+})
+
+function renderWorkspace() {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
       <KioskWorkspace example={example} prompt="" site="https://example.com" />
     </NextIntlClientProvider>,
   )
+}
+
+function paste(text: string, target: Element = document.body) {
+  const event = new Event('paste', { bubbles: true, cancelable: true })
+  Object.assign(event, { clipboardData: { getData: () => text } })
+  act(() => {
+    target.dispatchEvent(event)
+  })
+}
+
+function canvas() {
+  return document.querySelector('.canvas-slide')?.textContent ?? ''
+}
+
+function menuName() {
+  return document.querySelector('.presentation-selector')?.textContent ?? ''
+}
+
+function openEditor() {
+  if (!document.querySelector('.workspace')) renderWorkspace()
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
   return screen.getByRole('textbox', { name: 'Slide text' }) as HTMLTextAreaElement
 }
