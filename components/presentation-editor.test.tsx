@@ -122,6 +122,7 @@ function renderWorkspace() {
       <KioskWorkspace example={example} prompt="" site="https://example.com" />
     </NextIntlClientProvider>,
   )
+  fireEvent.click(screen.getByRole('button', { name: /See an example/ }))
 }
 
 function paste(text: string, target: Element = document.body) {

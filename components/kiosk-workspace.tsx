@@ -69,12 +69,14 @@ import {
   type Library,
 } from '@/lib/presentations'
 import { decodeShare, readShareHash, shareSlideHash } from '@/lib/share'
+import { requestPrompt } from '@/lib/talk'
 import { PresentationChat } from './presentation-chat'
 import { downloadFile } from './download'
 import { PresentationEditor, selectSlide, useLiveSource } from './presentation-editor'
 import { PresentationMenu } from './presentation-menu'
 import { SharePanel } from './share-panel'
 import { SlideView } from './slide'
+import { StartScreen, resumingStart } from './start-screen'
 import { useWakeLock } from './use-wake-lock'
 
 const BASICS = ['newSlide', 'heading', 'highlight', 'text', 'extras'] as const
@@ -167,6 +169,8 @@ export function KioskWorkspace({
   const [shared, setShared] = useState<string | null>(null)
   const [broken, setBroken] = useState(false)
   const [sharing, setSharing] = useState(false)
+  const [start, setStart] = useState<'first' | 'new' | null>(null)
+  const [request, setRequest] = useState<string>()
   const canvasRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -240,10 +244,12 @@ export function KioskWorkspace({
     if (fullscreenElement()) exitFullscreen()
   }, [])
   useEffect(() => {
-    const next = loadLibrary(example, untitled)
+    const next = loadLibrary(blank, untitled)
     setLibrary(next)
     const link = readShareHash(location.hash)
     if (!link) {
+      const first = next.items.length === 1 && next.items[0].source === blank
+      if (resumingStart() || first) setStart(first ? 'first' : 'new')
       show(next.items.find(p => p.id === next.current)!.source, location.hash)
       setLoaded(true)
       return
@@ -258,7 +264,7 @@ export function KioskWorkspace({
       })
       .catch(() => setBroken(true))
       .finally(() => setLoaded(true))
-  }, [example, untitled])
+  }, [blank, untitled])
   useEffect(() => {
     if (!loaded || broken) return
     const hash = shared ? shareSlideHash(shared, at) : slideHash(at)
@@ -345,6 +351,7 @@ export function KioskWorkspace({
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.isComposing || event.keyCode === 229) return
+      if (start) return
       if (event.key === 'Escape') {
         if (settingsOpen && !modal) {
           setSettingsOpen(false)
@@ -393,6 +400,7 @@ export function KioskWorkspace({
     t,
     settingsOpen,
     modal,
+    start,
   ])
   useEffect(() => {
     const target = canvasRef.current
@@ -481,13 +489,44 @@ export function KioskWorkspace({
     show(target.source)
     setChatKey(k => k + 1)
   }
-  const newPresentation = () => {
+  const addBlank = () => {
+    setStart(null)
+    if (current.source === blank) return current
     const created = createPresentation(untitled, blank, library.items)
     setLibrary(l => ({ current: created.id, items: [...l.items, created] }))
     show(blank)
+    return created
+  }
+  const startBlank = () => {
+    const created = addBlank()
     setChatKey(k => k + 1)
     setTab('markdown')
     notice(t('toast.created', { name: created.name }))
+  }
+  const makeSlides = (text: string) => {
+    addBlank()
+    setChatKey(k => k + 1)
+    setRequest(text)
+    setTab('chat')
+  }
+  const openExample = () => {
+    const name = presentationName(example) || untitled
+    const reuse = current.source === blank
+    const target = {
+      ...(reuse ? current : createPresentation(name, example, library.items)),
+      name: uniqueName(name, library.items, reuse ? current.id : undefined),
+      source: example,
+      userNamed: true,
+      updatedAt: Date.now(),
+    }
+    setLibrary(l => ({
+      current: target.id,
+      items: reuse ? l.items.map(p => (p.id === target.id ? target : p)) : [...l.items, target],
+    }))
+    setStart(null)
+    setTab('preview')
+    show(example)
+    setChatKey(k => k + 1)
   }
   const renamePresentation = (id: string, name: string) =>
     setLibrary(l => ({
@@ -517,6 +556,7 @@ export function KioskWorkspace({
     notice(t('toast.tidied'))
   }
   const pastePresentation = (value: string) => {
+    setStart(null)
     const previous = current
     const name = presentationName(value) || untitled
     const reuse = previous.source === blank
@@ -583,14 +623,17 @@ export function KioskWorkspace({
     const known = library.items.find(p => p.source === source)
     const kept =
       known ?? createPresentation(presentationName(source) || untitled, source, library.items)
-    setLibrary(l => ({ current: kept.id, items: known ? l.items : [...l.items, kept] }))
+    setLibrary(l => ({
+      current: kept.id,
+      items: known ? l.items : [...l.items.filter(p => p.source !== blank), kept],
+    }))
     setShared(null)
     setChatKey(k => k + 1)
     notice(t('toast.kept', { name: kept.name }))
   }
   const copyPrompt = async () => {
     try {
-      await navigator.clipboard.writeText(prompt)
+      await navigator.clipboard.writeText(requestPrompt(prompt))
       notice(t('toast.promptCopied'))
     } catch {
       setModal('format')
@@ -630,598 +673,617 @@ export function KioskWorkspace({
       </main>
     )
   return (
-    <main
-      className={`workspace ${presenting ? 'is-presenting' : ''} ${presenting && idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}
-    >
-      <header className="app-header">
-        <a href="/" className="brand">
-          <span className="brand-icon">
-            <Layers2 size={19} strokeWidth={2.2} />
-          </span>
-          <span aria-hidden="true">
-            Kiosk<span className="brand-light">Slides</span>
-          </span>
-          <span className="sr-only">{t('home')}</span>
-          <span className="beta">{t('beta')}</span>
-        </a>
-        <div className="header-divider" />
-        {shared ? (
-          <div className="shared-bar">
-            <span>{t('shared.label')}</span>
-            <button className="btn" title={t('shared.keepHint')} onClick={keepCopy}>
-              <Plus size={15} />
-              {t('shared.keep')}
-            </button>
-          </div>
-        ) : (
-          <>
-            <PresentationMenu
-              items={library.items}
-              current={current}
-              onOpen={openPresentation}
-              onCreate={newPresentation}
-              onRename={renamePresentation}
-              onDelete={deletePresentation}
-            />
-            <span className="local-label">
-              <span />
-              {t('savedHere')}
+    <>
+      <main
+        inert={!!start}
+        className={`workspace ${presenting ? 'is-presenting' : ''} ${presenting && idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}
+      >
+        <header className="app-header">
+          <a href="/" className="brand">
+            <span className="brand-icon">
+              <Layers2 size={19} strokeWidth={2.2} />
             </span>
-          </>
-        )}
-        <div className="header-actions">
-          {!shared && (
+            <span aria-hidden="true">
+              Kiosk<span className="brand-light">Slides</span>
+            </span>
+            <span className="sr-only">{t('home')}</span>
+            <span className="beta">{t('beta')}</span>
+          </a>
+          <div className="header-divider" />
+          {shared ? (
+            <div className="shared-bar">
+              <span>{t('shared.label')}</span>
+              <button className="btn" title={t('shared.keepHint')} onClick={keepCopy}>
+                <Plus size={15} />
+                {t('shared.keep')}
+              </button>
+            </div>
+          ) : (
             <>
-              <button
-                ref={settingsButtonRef}
-                className="btn"
-                aria-label={t('settings')}
-                aria-expanded={settingsOpen}
-                aria-controls="presentation-settings"
-                onClick={() => setSettingsOpen(!settingsOpen)}
-              >
-                <Settings2 size={16} />
-                <span>{t('settings')}</span>
-              </button>
-              <button
-                className="btn"
-                aria-label={t('share')}
-                title={t('shareHint')}
-                onClick={() => setSharing(true)}
-                disabled={!slides.length}
-              >
-                <Share2 size={15} />
-                <span>{t('share')}</span>
-              </button>
-              <button
-                className="btn export-btn"
-                title={t('downloadHint')}
-                onClick={exportHTML}
-                disabled={exporting || !slides.length}
-              >
-                <ArrowDownToLine size={15} />
-                {exporting ? t('preparing') : t('download')}
-              </button>
+              <PresentationMenu
+                items={library.items}
+                current={current}
+                onOpen={openPresentation}
+                onCreate={() => setStart('new')}
+                onRename={renamePresentation}
+                onDelete={deletePresentation}
+              />
+              <span className="local-label">
+                <span />
+                {t('savedHere')}
+              </span>
             </>
           )}
-          <button className="btn primary" onClick={present} disabled={!slides.length}>
-            <Play size={14} fill="currentColor" />
-            <span>{t('present')}</span>
-            <kbd>F</kbd>
-          </button>
-        </div>
-      </header>
-      <aside className="slides-sidebar">
-        <div className="sidebar-heading">
-          <span>
-            {t('sidebar.title')} <span className="count-pill">{slides.length}</span>
-          </span>
-          <button
-            className="icon-btn"
-            aria-label={t('sidebar.hide')}
-            onClick={() => setSidebar(false)}
-          >
-            <PanelLeftClose size={16} />
-          </button>
-        </div>
-        <nav className="slide-list" aria-label={t('sidebar.list')}>
-          {slides.map((item, i) => (
-            <button
-              className={`slide-nav ${index === i ? 'selected' : ''}`}
-              key={i}
-              onClick={() => select(i)}
-              aria-current={index === i ? 'step' : undefined}
-            >
-              <span className="slide-number" aria-hidden="true">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <span className="sr-only">{t('sidebar.slide', { number: i + 1 })}</span>
-              <span className="thumb-group">
-                <span className="thumbnail" aria-hidden="true" inert>
-                  <SlideView slide={item} theme={theme} accent={accent} look={look} miniature />
-                </span>
-                <span className="thumb-name">
-                  {item.title || t('sidebar.untitledSlide', { number: i + 1 })}
-                </span>
-              </span>
-            </button>
-          ))}
-        </nav>
-        <button
-          className="add-slide"
-          hidden={!!shared}
-          onClick={() => {
-            const text = `${source.trimEnd()}\n\n---\n\n# ${t('newSlide.heading')}\n\n${t('newSlide.body')}\n`
-            live.replace(text)
-            setIndex(slides.length)
-            setTab('markdown')
-            focusSlide(text, slides.length)
-            notice(t('toast.slideAdded'))
-          }}
-        >
-          <Plus size={15} />
-          {t('sidebar.add')}
-        </button>
-      </aside>
-      <section className="editor-main">
-        <div className="editor-toolbar">
-          <div className="view-tabs">
-            {!sidebar && (
-              <button
-                className="icon-btn"
-                aria-label={t('sidebar.show')}
-                onClick={() => setSidebar(true)}
-              >
-                <Layers2 size={16} />
-              </button>
-            )}
-            <button className={tab === 'preview' ? 'active' : ''} onClick={() => setTab('preview')}>
-              <Monitor size={14} />
-              {t('tabs.preview')}
-            </button>
+          <div className="header-actions">
             {!shared && (
               <>
                 <button
-                  className={tab === 'markdown' ? 'active' : ''}
-                  onClick={() => setTab('markdown')}
+                  ref={settingsButtonRef}
+                  className="btn"
+                  aria-label={t('settings')}
+                  aria-expanded={settingsOpen}
+                  aria-controls="presentation-settings"
+                  onClick={() => setSettingsOpen(!settingsOpen)}
                 >
-                  <Code2 size={15} />
-                  {t('tabs.edit')}
+                  <Settings2 size={16} />
+                  <span>{t('settings')}</span>
                 </button>
-                <button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}>
-                  <Sparkles size={14} />
-                  {t('tabs.ask')}
+                <button
+                  className="btn"
+                  aria-label={t('share')}
+                  title={t('shareHint')}
+                  onClick={() => setSharing(true)}
+                  disabled={!slides.length}
+                >
+                  <Share2 size={15} />
+                  <span>{t('share')}</span>
+                </button>
+                <button
+                  className="btn export-btn"
+                  title={t('downloadHint')}
+                  onClick={exportHTML}
+                  disabled={exporting || !slides.length}
+                >
+                  <ArrowDownToLine size={15} />
+                  {exporting ? t('preparing') : t('download')}
                 </button>
               </>
             )}
-          </div>
-          <span className="ready-label">
-            <CheckCheck size={14} />
-            {fit ? t('fit.ready') : t('fit.check')}
-          </span>
-        </div>
-        <div className={`editor-body ${tab !== 'preview' ? 'markdown-body' : ''}`}>
-          <div className="chat-host" hidden={tab !== 'chat'}>
-            <PresentationChat
-              key={chatKey}
-              source={source}
-              onPresentation={loadGenerated}
-              onOpen={() => setTab('chat')}
-              onCopyPrompt={copyPrompt}
-            />
-          </div>
-          {tab === 'chat' ? null : tab === 'preview' ? (
-            <>
-              <div
-                ref={canvasRef}
-                className={`canvas-shell slide-backdrop ${theme}`}
-                data-transition={motion}
-                style={
-                  { '--slide-tone': accent, '--kt-dir': change.direction } as React.CSSProperties
-                }
-                onClick={() => setPlaying(false)}
-              >
-                {change.leaving && (
-                  <div
-                    key={`leave-${change.count}`}
-                    className="canvas-slide kt-leave"
-                    aria-hidden="true"
-                    inert
-                  >
-                    <SlideView slide={change.leaving} theme={theme} accent={accent} look={look} />
-                  </div>
-                )}
-                <div
-                  key={`slide-${index}`}
-                  className={`canvas-slide ${change.leaving ? 'kt-enter' : ''}`}
-                  role="region"
-                  aria-roledescription="slide"
-                  aria-label={slideName}
-                >
-                  {slide ? (
-                    <SlideView slide={slide} theme={theme} accent={accent} look={look} />
-                  ) : (
-                    <p className="canvas-empty">{t('canvas.empty')}</p>
-                  )}
-                </div>
-              </div>
-              <div className="canvas-controls">
-                <span>
-                  <span className="status-dot" />
-                  {presenting ? t('canvas.presenting') : '16:9'}
-                  <span className="control-separator">/</span>
-                  {t(`themes.${theme}`)}
-                </span>
-                <div className="slide-pagination">
-                  <button
-                    className="icon-btn"
-                    aria-label={t('canvas.previous')}
-                    onClick={() => move(-1)}
-                    disabled={index === 0}
-                  >
-                    <ChevronLeft size={17} />
-                  </button>
-                  <span>
-                    {String(index + 1).padStart(2, '0')}{' '}
-                    <span>/ {String(slides.length).padStart(2, '0')}</span>
-                  </span>
-                  <button
-                    className="icon-btn"
-                    aria-label={t('canvas.next')}
-                    onClick={() => move(1)}
-                    disabled={index === slides.length - 1}
-                  >
-                    <ChevronRight size={17} />
-                  </button>
-                </div>
-                <button className="icon-btn" aria-label={t('canvas.enter')} onClick={present}>
-                  <Expand size={16} />
-                </button>
-              </div>
-              {presenting && (
-                <button className="present-exit" aria-label={t('canvas.leave')} onClick={leave}>
-                  <X size={20} />
-                </button>
-              )}
-            </>
-          ) : (
-            <PresentationEditor
-              name={current.name}
-              source={source}
-              error={error}
-              textareaRef={textareaRef}
-              onChange={live.type}
-              onTidy={tidy}
-              onHelp={() => setModal('format')}
-              onSlide={setIndex}
-            >
-              {slide && (
-                <div
-                  className={`source-slide slide-backdrop ${theme}`}
-                  style={{ '--slide-tone': accent } as React.CSSProperties}
-                >
-                  <SlideView slide={slide} theme={theme} accent={accent} look={look} />
-                </div>
-              )}
-            </PresentationEditor>
-          )}
-          <div className="presenter-tip" hidden={tab !== 'preview'}>
-            <Keyboard size={15} />
-            <span>
-              {t.rich('tip', {
-                kbd: key => <kbd>{key}</kbd>,
-                extra: text => <span className="tip-extra">{text}</span>,
-              })}
-            </span>
-            <button onClick={() => setModal('help')}>
-              {t('allShortcuts')} <span>↗</span>
+            <button className="btn primary" onClick={present} disabled={!slides.length}>
+              <Play size={14} fill="currentColor" />
+              <span>{t('present')}</span>
+              <kbd>F</kbd>
             </button>
           </div>
-        </div>
-        <footer className="workspace-footer">
-          <span>
-            <ShieldCheck size={13} />
-            {t('footer.tagline')}
-          </span>
-          <span>{t('footer.quiet')}</span>
-        </footer>
-      </section>
-      <aside
-        ref={settingsRef}
-        id="presentation-settings"
-        className="inspector"
-        aria-label={ts('title')}
-        hidden={!settingsOpen || !!shared}
-      >
-        <div className="inspector-heading">
-          <Settings2 size={15} />
-          <h2>{ts('title')}</h2>
-        </div>
-        <section className="settings-section">
-          <h3>{ts('appearance')}</h3>
-          <label className="field-label" htmlFor="theme">
-            {ts('theme')}
-          </label>
-          <div className="select-wrap">
-            <span className={`theme-swatch ${theme}`} />
-            <select id="theme" value={theme} onChange={e => setTheme(e.target.value as Theme)}>
-              {themes.map(id => (
-                <option key={id} value={id}>
-                  {t(`themes.${id}`)}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={13} />
+        </header>
+        <aside className="slides-sidebar">
+          <div className="sidebar-heading">
+            <span>
+              {t('sidebar.title')} <span className="count-pill">{slides.length}</span>
+            </span>
+            <button
+              className="icon-btn"
+              aria-label={t('sidebar.hide')}
+              onClick={() => setSidebar(false)}
+            >
+              <PanelLeftClose size={16} />
+            </button>
           </div>
-          <div className="setting-label">{ts('tone')}</div>
-          <div className="color-options">
-            {tones.map(({ name, color }) => (
+          <nav className="slide-list" aria-label={t('sidebar.list')}>
+            {slides.map((item, i) => (
               <button
-                key={color}
-                className={`color-choice ${accent === color ? 'chosen' : ''}`}
-                style={{ background: color }}
-                title={ts(`tones.${name}`)}
-                aria-label={ts('toneOption', { name: ts(`tones.${name}`) })}
-                aria-pressed={accent === color}
-                onClick={() => setTone(color)}
+                className={`slide-nav ${index === i ? 'selected' : ''}`}
+                key={i}
+                onClick={() => select(i)}
+                aria-current={index === i ? 'step' : undefined}
               >
-                {accent === color && <Check size={14} />}
+                <span className="slide-number" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span className="sr-only">{t('sidebar.slide', { number: i + 1 })}</span>
+                <span className="thumb-group">
+                  <span className="thumbnail" aria-hidden="true" inert>
+                    <SlideView slide={item} theme={theme} accent={accent} look={look} miniature />
+                  </span>
+                  <span className="thumb-name">
+                    {item.title || t('sidebar.untitledSlide', { number: i + 1 })}
+                  </span>
+                </span>
               </button>
             ))}
-          </div>
-          <p className="setting-help">{ts('toneHelp')}</p>
-          <label className="field-label" htmlFor="font">
-            {ts('font')}
-          </label>
-          <div className="select-wrap">
-            <select
-              id="font"
-              value={look.font}
-              onChange={e =>
-                setFront('font', e.target.value === fonts[0].id ? undefined : e.target.value)
-              }
-            >
-              {fonts.map(f => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={13} />
-          </div>
-          <label className="field-label" htmlFor="scale">
-            {ts('textSize')}
-          </label>
-          <div className="select-wrap">
-            <select
-              id="scale"
-              value={look.scale}
-              onChange={e =>
-                setFront(
-                  'scale',
-                  e.target.value === 'normal' ? undefined : (e.target.value as Scale),
-                )
-              }
-            >
-              {SCALES.map(id => (
-                <option key={id} value={id}>
-                  {ts(`sizes.${id}`)}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={13} />
-          </div>
-          <div className="setting-row">
-            <label htmlFor="brand">{ts('brand')}</label>
-            <Toggle
-              checked={!!look.brand}
-              onChange={() => setFront('brand', look.brand ? 'none' : undefined)}
-              label={ts('showBrand')}
-            />
-          </div>
-          {look.brand && (
-            <input
-              id="brand"
-              className="brand-input"
-              maxLength={24}
-              placeholder={DEFAULT_BRAND}
-              value={brandDraft ?? (look.brand === DEFAULT_BRAND ? '' : look.brand)}
-              onChange={e => {
-                const text = e.target.value
-                setBrandDraft(text)
-                setFront('brand', text.trim() && text.trim() !== 'none' ? text.trim() : undefined)
-              }}
-              onBlur={() => setBrandDraft(null)}
-            />
-          )}
-          <p className="setting-help">{ts('brandHelp')}</p>
-        </section>
-        <section className="settings-section">
-          <h3>{ts('playback')}</h3>
-          <div className="setting-row">
-            <span>{ts('autoplay')}</span>
-            <Toggle
-              checked={playing}
-              onChange={() => {
-                setPlaying(!playing)
-                notice(t('toast.autoplay', { on: String(!playing) }))
-              }}
-              label={ts('autoplay')}
-            />
-          </div>
-          <p className="setting-help">{ts('autoplayHelp')}</p>
-          <div className="setting-row duration-row">
-            <label htmlFor="duration">{ts('duration')}</label>
-            <div className="duration-input">
-              <input
-                id="duration"
-                type="number"
-                min="2"
-                max="120"
-                value={duration}
-                onChange={e => setDuration(Math.max(2, Math.min(120, Number(e.target.value) || 2)))}
-              />
-              <span>{ts('seconds')}</span>
-            </div>
-          </div>
-          <div className="setting-row">
-            <span>{ts('loop')}</span>
-            <Toggle checked={loop} onChange={() => setLoop(!loop)} label={ts('loop')} />
-          </div>
-          <div className="mini-note">
-            <RotateCcw size={12} />
-            <span>{ts('startsPaused')}</span>
-          </div>
-        </section>
-        <section className="settings-section">
-          <h3>{ts('motion')}</h3>
-          <label className="field-label" htmlFor="transition">
-            {ts('transition')}
-          </label>
-          <div className="select-wrap">
-            <select
-              id="transition"
-              value={transition}
-              disabled={safe}
-              onChange={e => setTransition(e.target.value as Transition)}
-            >
-              {transitions.map(id => (
-                <option key={id} value={id}>
-                  {ts(`transitions.${id}.name`)}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={13} />
-          </div>
-          <p className="setting-help">
-            {safe ? ts('shareSafeActive') : ts(`transitions.${transition}.help`)}
-          </p>
-          <div className="setting-row safe-row">
-            <span>{ts('shareSafe')}</span>
-            <Toggle checked={safe} onChange={() => setShareSafe(!safe)} label={ts('shareSafe')} />
-          </div>
-          <p className="setting-help">{ts('shareSafeHelp')}</p>
-          <div className="performance-note">
-            <ShieldCheck size={16} />
-            <div>
-              <strong>{ts('clarityTitle')}</strong>
-              <p>{ts.rich('clarityBody', { br: () => <br /> })}</p>
-            </div>
-          </div>
-        </section>
-        <div className="build-panel">
-          <div>
-            <span className="status-dot" />
-            <strong>{fit ? ts('status.ready') : ts('status.review')}</strong>
-            <span>{ts('status.count', { count: slides.length })}</span>
-          </div>
-          <p>
-            <Check size={12} />
-            {ts('status.checked')}
-          </p>
-          <p>
-            <Check size={12} />
-            {fit ? ts('status.fits') : ts('status.overflows')}
-          </p>
-        </div>
-        <button className="shortcuts-button" onClick={() => setModal('help')}>
-          <CircleHelp size={15} />
-          {ts('help')}
-          <ArrowRight size={13} />
-        </button>
-      </aside>
-      <div className="sr-only" aria-live="polite">
-        {change.count ? slideName : ''}
-      </div>
-      {toast && (
-        <div className="toast" role="status">
-          <Check size={15} />
-          {toast.message}
-          {toast.action && (
-            <button
-              className="toast-action"
-              onClick={() => {
-                toast.action!.run()
-                setToast(null)
-              }}
-            >
-              {toast.action.label}
-            </button>
-          )}
-        </div>
-      )}
-      <SharePanel
-        open={sharing}
-        source={source}
-        site={site}
-        onClose={() => setSharing(false)}
-        onCopied={() => notice(t('toast.linkCopied'))}
-        onDownload={() => {
-          setSharing(false)
-          exportHTML()
-        }}
-      />
-      <dialog
-        ref={dialogRef}
-        className={`workspace-dialog ${modal === 'format' ? 'wide' : ''}`}
-        onCancel={() => setModal(null)}
-        onClick={e => {
-          if (e.target === e.currentTarget) setModal(null)
-        }}
-      >
-        <div className="dialog-heading">
-          <h2>{modal === 'format' ? th('title') : tk('title')}</h2>
-          <button className="icon-btn" aria-label={tk('close')} onClick={() => setModal(null)}>
-            <X size={18} />
+          </nav>
+          <button
+            className="add-slide"
+            hidden={!!shared}
+            onClick={() => {
+              const text = `${source.trimEnd()}\n\n---\n\n# ${t('newSlide.heading')}\n\n${t('newSlide.body')}\n`
+              live.replace(text)
+              setIndex(slides.length)
+              setTab('markdown')
+              focusSlide(text, slides.length)
+              notice(t('toast.slideAdded'))
+            }}
+          >
+            <Plus size={15} />
+            {t('sidebar.add')}
           </button>
-        </div>
-        {modal === 'format' ? (
-          <>
-            <p>{th('intro')}</p>
-            <div className="prompt-card">
-              <div>
-                <strong>{th('promptTitle')}</strong>
-                <p>{th('promptBody')}</p>
-              </div>
-              <button className="btn primary" onClick={copyPrompt}>
-                <Copy size={14} />
-                {th('copyPrompt')}
+        </aside>
+        <section className="editor-main">
+          <div className="editor-toolbar">
+            <div className="view-tabs">
+              {!sidebar && (
+                <button
+                  className="icon-btn"
+                  aria-label={t('sidebar.show')}
+                  onClick={() => setSidebar(true)}
+                >
+                  <Layers2 size={16} />
+                </button>
+              )}
+              <button
+                className={tab === 'preview' ? 'active' : ''}
+                onClick={() => setTab('preview')}
+              >
+                <Monitor size={14} />
+                {t('tabs.preview')}
+              </button>
+              {!shared && (
+                <>
+                  <button
+                    className={tab === 'markdown' ? 'active' : ''}
+                    onClick={() => setTab('markdown')}
+                  >
+                    <Code2 size={15} />
+                    {t('tabs.edit')}
+                  </button>
+                  <button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}>
+                    <Sparkles size={14} />
+                    {t('tabs.ask')}
+                  </button>
+                </>
+              )}
+            </div>
+            <span className="ready-label">
+              <CheckCheck size={14} />
+              {fit ? t('fit.ready') : t('fit.check')}
+            </span>
+          </div>
+          <div className={`editor-body ${tab !== 'preview' ? 'markdown-body' : ''}`}>
+            <div className="chat-host" hidden={tab !== 'chat'}>
+              <PresentationChat
+                key={chatKey}
+                source={source}
+                onPresentation={loadGenerated}
+                onOpen={() => setTab('chat')}
+                onCopyPrompt={copyPrompt}
+                request={request}
+                onRequestTaken={() => setRequest(undefined)}
+              />
+            </div>
+            {tab === 'chat' ? null : tab === 'preview' ? (
+              <>
+                <div
+                  ref={canvasRef}
+                  className={`canvas-shell slide-backdrop ${theme}`}
+                  data-transition={motion}
+                  style={
+                    { '--slide-tone': accent, '--kt-dir': change.direction } as React.CSSProperties
+                  }
+                  onClick={() => setPlaying(false)}
+                >
+                  {change.leaving && (
+                    <div
+                      key={`leave-${change.count}`}
+                      className="canvas-slide kt-leave"
+                      aria-hidden="true"
+                      inert
+                    >
+                      <SlideView slide={change.leaving} theme={theme} accent={accent} look={look} />
+                    </div>
+                  )}
+                  <div
+                    key={`slide-${index}`}
+                    className={`canvas-slide ${change.leaving ? 'kt-enter' : ''}`}
+                    role="region"
+                    aria-roledescription="slide"
+                    aria-label={slideName}
+                  >
+                    {slide ? (
+                      <SlideView slide={slide} theme={theme} accent={accent} look={look} />
+                    ) : (
+                      <p className="canvas-empty">{t('canvas.empty')}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="canvas-controls">
+                  <span>
+                    <span className="status-dot" />
+                    {presenting ? t('canvas.presenting') : '16:9'}
+                    <span className="control-separator">/</span>
+                    {t(`themes.${theme}`)}
+                  </span>
+                  <div className="slide-pagination">
+                    <button
+                      className="icon-btn"
+                      aria-label={t('canvas.previous')}
+                      onClick={() => move(-1)}
+                      disabled={index === 0}
+                    >
+                      <ChevronLeft size={17} />
+                    </button>
+                    <span>
+                      {String(index + 1).padStart(2, '0')}{' '}
+                      <span>/ {String(slides.length).padStart(2, '0')}</span>
+                    </span>
+                    <button
+                      className="icon-btn"
+                      aria-label={t('canvas.next')}
+                      onClick={() => move(1)}
+                      disabled={index === slides.length - 1}
+                    >
+                      <ChevronRight size={17} />
+                    </button>
+                  </div>
+                  <button className="icon-btn" aria-label={t('canvas.enter')} onClick={present}>
+                    <Expand size={16} />
+                  </button>
+                </div>
+                {presenting && (
+                  <button className="present-exit" aria-label={t('canvas.leave')} onClick={leave}>
+                    <X size={20} />
+                  </button>
+                )}
+              </>
+            ) : (
+              <PresentationEditor
+                name={current.name}
+                source={source}
+                error={error}
+                textareaRef={textareaRef}
+                onChange={live.type}
+                onTidy={tidy}
+                onHelp={() => setModal('format')}
+                onSlide={setIndex}
+              >
+                {slide && (
+                  <div
+                    className={`source-slide slide-backdrop ${theme}`}
+                    style={{ '--slide-tone': accent } as React.CSSProperties}
+                  >
+                    <SlideView slide={slide} theme={theme} accent={accent} look={look} />
+                  </div>
+                )}
+              </PresentationEditor>
+            )}
+            <div className="presenter-tip" hidden={tab !== 'preview'}>
+              <Keyboard size={15} />
+              <span>
+                {t.rich('tip', {
+                  kbd: key => <kbd>{key}</kbd>,
+                  extra: text => <span className="tip-extra">{text}</span>,
+                })}
+              </span>
+              <button onClick={() => setModal('help')}>
+                {t('allShortcuts')} <span>↗</span>
               </button>
             </div>
-            <h3 className="format-heading">{th('basicsTitle')}</h3>
-            <dl className="format-rules">
-              {BASICS.map(id => (
-                <div key={id}>
-                  <dt>
-                    <code>{th(`basics.${id}.term`)}</code>
-                  </dt>
-                  <dd>{th(`basics.${id}.rule`)}</dd>
-                </div>
+          </div>
+          <footer className="workspace-footer">
+            <span>
+              <ShieldCheck size={13} />
+              {t('footer.tagline')}
+            </span>
+            <span>{t('footer.quiet')}</span>
+          </footer>
+        </section>
+        <aside
+          ref={settingsRef}
+          id="presentation-settings"
+          className="inspector"
+          aria-label={ts('title')}
+          hidden={!settingsOpen || !!shared}
+        >
+          <div className="inspector-heading">
+            <Settings2 size={15} />
+            <h2>{ts('title')}</h2>
+          </div>
+          <section className="settings-section">
+            <h3>{ts('appearance')}</h3>
+            <label className="field-label" htmlFor="theme">
+              {ts('theme')}
+            </label>
+            <div className="select-wrap">
+              <span className={`theme-swatch ${theme}`} />
+              <select id="theme" value={theme} onChange={e => setTheme(e.target.value as Theme)}>
+                {themes.map(id => (
+                  <option key={id} value={id}>
+                    {t(`themes.${id}`)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={13} />
+            </div>
+            <div className="setting-label">{ts('tone')}</div>
+            <div className="color-options">
+              {tones.map(({ name, color }) => (
+                <button
+                  key={color}
+                  className={`color-choice ${accent === color ? 'chosen' : ''}`}
+                  style={{ background: color }}
+                  title={ts(`tones.${name}`)}
+                  aria-label={ts('toneOption', { name: ts(`tones.${name}`) })}
+                  aria-pressed={accent === color}
+                  onClick={() => setTone(color)}
+                >
+                  {accent === color && <Check size={14} />}
+                </button>
               ))}
-            </dl>
-            <details className="format-details">
-              <summary>{th('showPrompt')}</summary>
-              <pre>{prompt}</pre>
-            </details>
-          </>
-        ) : (
-          <>
-            <p>{tk('intro')}</p>
-            <dl className="shortcut-list">
-              {SHORTCUTS.map(id => (
-                <div key={id}>
-                  <dt>{tk(`items.${id}.name`)}</dt>
-                  <dd>
-                    <kbd>{tk(`items.${id}.keys`)}</kbd>
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <div className="dialog-note">{tk('note')}</div>
-          </>
+            </div>
+            <p className="setting-help">{ts('toneHelp')}</p>
+            <label className="field-label" htmlFor="font">
+              {ts('font')}
+            </label>
+            <div className="select-wrap">
+              <select
+                id="font"
+                value={look.font}
+                onChange={e =>
+                  setFront('font', e.target.value === fonts[0].id ? undefined : e.target.value)
+                }
+              >
+                {fonts.map(f => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={13} />
+            </div>
+            <label className="field-label" htmlFor="scale">
+              {ts('textSize')}
+            </label>
+            <div className="select-wrap">
+              <select
+                id="scale"
+                value={look.scale}
+                onChange={e =>
+                  setFront(
+                    'scale',
+                    e.target.value === 'normal' ? undefined : (e.target.value as Scale),
+                  )
+                }
+              >
+                {SCALES.map(id => (
+                  <option key={id} value={id}>
+                    {ts(`sizes.${id}`)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={13} />
+            </div>
+            <div className="setting-row">
+              <label htmlFor="brand">{ts('brand')}</label>
+              <Toggle
+                checked={!!look.brand}
+                onChange={() => setFront('brand', look.brand ? 'none' : undefined)}
+                label={ts('showBrand')}
+              />
+            </div>
+            {look.brand && (
+              <input
+                id="brand"
+                className="brand-input"
+                maxLength={24}
+                placeholder={DEFAULT_BRAND}
+                value={brandDraft ?? (look.brand === DEFAULT_BRAND ? '' : look.brand)}
+                onChange={e => {
+                  const text = e.target.value
+                  setBrandDraft(text)
+                  setFront('brand', text.trim() && text.trim() !== 'none' ? text.trim() : undefined)
+                }}
+                onBlur={() => setBrandDraft(null)}
+              />
+            )}
+            <p className="setting-help">{ts('brandHelp')}</p>
+          </section>
+          <section className="settings-section">
+            <h3>{ts('playback')}</h3>
+            <div className="setting-row">
+              <span>{ts('autoplay')}</span>
+              <Toggle
+                checked={playing}
+                onChange={() => {
+                  setPlaying(!playing)
+                  notice(t('toast.autoplay', { on: String(!playing) }))
+                }}
+                label={ts('autoplay')}
+              />
+            </div>
+            <p className="setting-help">{ts('autoplayHelp')}</p>
+            <div className="setting-row duration-row">
+              <label htmlFor="duration">{ts('duration')}</label>
+              <div className="duration-input">
+                <input
+                  id="duration"
+                  type="number"
+                  min="2"
+                  max="120"
+                  value={duration}
+                  onChange={e =>
+                    setDuration(Math.max(2, Math.min(120, Number(e.target.value) || 2)))
+                  }
+                />
+                <span>{ts('seconds')}</span>
+              </div>
+            </div>
+            <div className="setting-row">
+              <span>{ts('loop')}</span>
+              <Toggle checked={loop} onChange={() => setLoop(!loop)} label={ts('loop')} />
+            </div>
+            <div className="mini-note">
+              <RotateCcw size={12} />
+              <span>{ts('startsPaused')}</span>
+            </div>
+          </section>
+          <section className="settings-section">
+            <h3>{ts('motion')}</h3>
+            <label className="field-label" htmlFor="transition">
+              {ts('transition')}
+            </label>
+            <div className="select-wrap">
+              <select
+                id="transition"
+                value={transition}
+                disabled={safe}
+                onChange={e => setTransition(e.target.value as Transition)}
+              >
+                {transitions.map(id => (
+                  <option key={id} value={id}>
+                    {ts(`transitions.${id}.name`)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={13} />
+            </div>
+            <p className="setting-help">
+              {safe ? ts('shareSafeActive') : ts(`transitions.${transition}.help`)}
+            </p>
+            <div className="setting-row safe-row">
+              <span>{ts('shareSafe')}</span>
+              <Toggle checked={safe} onChange={() => setShareSafe(!safe)} label={ts('shareSafe')} />
+            </div>
+            <p className="setting-help">{ts('shareSafeHelp')}</p>
+            <div className="performance-note">
+              <ShieldCheck size={16} />
+              <div>
+                <strong>{ts('clarityTitle')}</strong>
+                <p>{ts.rich('clarityBody', { br: () => <br /> })}</p>
+              </div>
+            </div>
+          </section>
+          <div className="build-panel">
+            <div>
+              <span className="status-dot" />
+              <strong>{fit ? ts('status.ready') : ts('status.review')}</strong>
+              <span>{ts('status.count', { count: slides.length })}</span>
+            </div>
+            <p>
+              <Check size={12} />
+              {ts('status.checked')}
+            </p>
+            <p>
+              <Check size={12} />
+              {fit ? ts('status.fits') : ts('status.overflows')}
+            </p>
+          </div>
+          <button className="shortcuts-button" onClick={() => setModal('help')}>
+            <CircleHelp size={15} />
+            {ts('help')}
+            <ArrowRight size={13} />
+          </button>
+        </aside>
+        <div className="sr-only" aria-live="polite">
+          {change.count ? slideName : ''}
+        </div>
+        {toast && (
+          <div className="toast" role="status">
+            <Check size={15} />
+            {toast.message}
+            {toast.action && (
+              <button
+                className="toast-action"
+                onClick={() => {
+                  toast.action!.run()
+                  setToast(null)
+                }}
+              >
+                {toast.action.label}
+              </button>
+            )}
+          </div>
         )}
-      </dialog>
-    </main>
+        <SharePanel
+          open={sharing}
+          source={source}
+          site={site}
+          onClose={() => setSharing(false)}
+          onCopied={() => notice(t('toast.linkCopied'))}
+          onDownload={() => {
+            setSharing(false)
+            exportHTML()
+          }}
+        />
+        <dialog
+          ref={dialogRef}
+          className={`workspace-dialog ${modal === 'format' ? 'wide' : ''}`}
+          onCancel={() => setModal(null)}
+          onClick={e => {
+            if (e.target === e.currentTarget) setModal(null)
+          }}
+        >
+          <div className="dialog-heading">
+            <h2>{modal === 'format' ? th('title') : tk('title')}</h2>
+            <button className="icon-btn" aria-label={tk('close')} onClick={() => setModal(null)}>
+              <X size={18} />
+            </button>
+          </div>
+          {modal === 'format' ? (
+            <>
+              <p>{th('intro')}</p>
+              <div className="prompt-card">
+                <div>
+                  <strong>{th('promptTitle')}</strong>
+                  <p>{th('promptBody')}</p>
+                </div>
+                <button className="btn primary" onClick={copyPrompt}>
+                  <Copy size={14} />
+                  {th('copyPrompt')}
+                </button>
+              </div>
+              <h3 className="format-heading">{th('basicsTitle')}</h3>
+              <dl className="format-rules">
+                {BASICS.map(id => (
+                  <div key={id}>
+                    <dt>
+                      <code>{th(`basics.${id}.term`)}</code>
+                    </dt>
+                    <dd>{th(`basics.${id}.rule`)}</dd>
+                  </div>
+                ))}
+              </dl>
+              <details className="format-details">
+                <summary>{th('showPrompt')}</summary>
+                <pre>{requestPrompt(prompt)}</pre>
+              </details>
+            </>
+          ) : (
+            <>
+              <p>{tk('intro')}</p>
+              <dl className="shortcut-list">
+                {SHORTCUTS.map(id => (
+                  <div key={id}>
+                    <dt>{tk(`items.${id}.name`)}</dt>
+                    <dd>
+                      <kbd>{tk(`items.${id}.keys`)}</kbd>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="dialog-note">{tk('note')}</div>
+            </>
+          )}
+        </dialog>
+      </main>
+      {start && (
+        <StartScreen
+          prompt={prompt}
+          onMake={makeSlides}
+          onExample={openExample}
+          onBlank={startBlank}
+          onClose={start === 'new' ? () => setStart(null) : undefined}
+        />
+      )}
+    </>
   )
 }
 

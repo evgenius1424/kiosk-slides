@@ -11,7 +11,7 @@ The presentation format is specified below. A parser enforces every grammar rule
 
 const COPY_GUIDE = `You write presentations for Kiosk Slides, a tool for presenting one clear idea per slide on a TV, in a room, or on a call.
 
-I'll tell you what the presentation is about and who it is for. If anything important is missing, ask me first. Then reply with the complete presentation source in a single \`\`\`markdown code block so I can paste it into the Kiosk Slides editor. Give the presentation a short \`title:\` in its front matter. When I ask for changes, return the whole presentation again, never a partial edit.
+I'll tell you what the presentation is about and who it is for. Then reply with the complete presentation source in a single \`\`\`markdown code block so I can paste it into the Kiosk Slides editor. Give the presentation a short \`title:\` in its front matter. When I ask for changes, return the whole presentation again, never a partial edit.
 
 The presentation format is specified below. A parser enforces every grammar rule and rejects the presentation otherwise, so follow it exactly. ${QUALITY}`
 
@@ -28,7 +28,7 @@ export function systemPrompt(): Promise<string> {
 }
 
 export async function copyPrompt() {
-  return `${COPY_GUIDE}\n\n${await reference()}\n\nWhat should the presentation be about?`
+  return `${COPY_GUIDE}\n\n${await reference()}`
 }
 
 async function reference() {
