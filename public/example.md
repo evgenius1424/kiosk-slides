@@ -140,7 +140,7 @@ footer: Any plain table renders as a table — up to 5 columns and 6 rows.
 <!--
 title: The pipeline
 label: Flow
-footer: Boxes with the same text merge into one.
+footer: A box named in both chains is marked as shared.
 -->
 
 # Two inputs, ==one deck==

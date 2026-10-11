@@ -106,21 +106,27 @@ describe('SlideView: table and before/after', () => {
 describe('SlideView: flow', () => {
   const flow = (lines: string[][]) => {
     const article = view({ ...chrome, kind: 'flow', lines })
-    return {
-      boxes: [...article.querySelectorAll('.slide-flow .flow-box')].map(box => box.textContent),
-      arrows: article.querySelectorAll('.slide-flow .flow-arrow').length,
-    }
+    return [...article.querySelectorAll('.slide-flow .flow-line')].map(line => ({
+      boxes: [...line.querySelectorAll('.flow-box')].map(box => box.classList.contains('flow-shared') ? `[${box.textContent}]` : box.textContent),
+      arrows: line.querySelectorAll('.flow-arrow').length,
+    }))
   }
 
-  it('draws a single chain as boxes joined by arrows', () => {
-    expect(flow([['Write', 'Parse', 'Present']])).toEqual({ boxes: ['Write', 'Parse', 'Present'], arrows: 2 })
+  it('draws a single chain as one row of boxes joined by arrows', () => {
+    expect(flow([['Write', 'Parse', 'Present']])).toEqual([{ boxes: ['Write', 'Parse', 'Present'], arrows: 2 }])
   })
 
-  it('merges identical box text into one box where two chains converge', () => {
-    expect(flow([['Notes', 'Draft', 'Deck'], ['Data', 'Deck']])).toEqual({ boxes: ['Notes', 'Draft', 'Deck', 'Data'], arrows: 3 })
+  it('repeats a box both chains share on each row and marks it', () => {
+    expect(flow([['Notes', 'Draft', 'Deck'], ['Data', 'Deck']])).toEqual([
+      { boxes: ['Notes', 'Draft', '[Deck]'], arrows: 2 },
+      { boxes: ['Data', '[Deck]'], arrows: 1 },
+    ])
   })
 
-  it('draws chains that share no text as parallel lines', () => {
-    expect(flow([['Plan', 'Build'], ['Test', 'Ship']])).toEqual({ boxes: ['Plan', 'Build', 'Test', 'Ship'], arrows: 2 })
+  it('draws chains that share no text as plain parallel rows', () => {
+    expect(flow([['Plan', 'Build'], ['Test', 'Ship']])).toEqual([
+      { boxes: ['Plan', 'Build'], arrows: 1 },
+      { boxes: ['Test', 'Ship'], arrows: 1 },
+    ])
   })
 })

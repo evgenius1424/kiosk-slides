@@ -189,7 +189,7 @@ The first line is the bold value (`**…**` or `__…__`). The caption is on the
 ````
 
 - Each bullet is one chain of boxes joined by `->`, and every box needs text.
-- Boxes with exactly the same text are the same box, so the chains above merge at `Deck`. Bullets that share no text are drawn as two independent lines.
+- Each bullet is drawn as its own line. Boxes with exactly the same text are the same step, so the chains above meet at `Deck`: it appears on both lines, marked as shared. Bullets that share no text are drawn as two independent lines.
 - A flow can't loop. A box can't repeat within one bullet, and two bullets can't share boxes in opposite orders.
 
 ### Buttons
