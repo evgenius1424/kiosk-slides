@@ -15,6 +15,17 @@ const render = (transition: Transition = 'gentle', shareSafe = false) =>
     embedFont: async file => `data:font/woff2;base64,${file}`,
   })
 
+const renderFont = (source: typeof presentation, font: string) =>
+  presentationHtml(
+    { ...source, font },
+    {
+      tone: '#669a98',
+      transition: 'gentle',
+      embedImage: async src => src,
+      embedFont: async file => `data:font/woff2;base64,${file}`,
+    },
+  )
+
 describe('presentationHtml', () => {
   it('renders every slide into one self-contained page', async () => {
     const html = await render()
@@ -50,19 +61,22 @@ describe('presentationHtml', () => {
   })
 
   it('embeds only the chosen font', async () => {
-    const html = await presentationHtml(
-      { ...presentation, font: 'figtree' },
-      {
-        tone: '#669a98',
-        transition: 'gentle',
-        embedImage: async src => src,
-        embedFont: async file => `data:font/woff2;base64,${file}`,
-      },
-    )
+    const html = await renderFont(presentation, 'figtree')
     expect(html).toContain(
       "@font-face{font-family:'Figtree';src:url(data:font/woff2;base64,figtree.woff2)",
     )
     expect(html).not.toContain("font-family:'Inter'")
+    expect(html).not.toContain('golos-text-cyrillic.woff2')
     expect(await render()).not.toContain('@font-face')
+  })
+
+  it('embeds the Cyrillic face only when the text needs it', async () => {
+    const russian = parsePresentation('# Привет, мир')
+    const html = await renderFont(russian, 'figtree')
+    expect(html).toContain('figtree.woff2')
+    expect(html).toContain(
+      "@font-face{font-family:'Golos Text';src:url(data:font/woff2;base64,golos-text-cyrillic.woff2)",
+    )
+    expect(html).not.toContain('golos-text.woff2')
   })
 })

@@ -9,6 +9,8 @@ export {
   defaultLook,
   findFont,
   fontFace,
+  fontFiles,
+  hasCyrillic,
   fontId,
   fonts,
   headingSize,
