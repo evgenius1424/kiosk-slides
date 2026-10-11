@@ -81,7 +81,7 @@
       "swipe": "Swipe to change slides",
       "keys": "Esc to exit · P to autoplay",
       "autoplay": "{on, select, true {Autoplay on} other {Autoplay off}}",
-      "shareSafe": "{on, select, true {Screen-share safe on · quick flat fades} other {Screen-share safe off}}",
+      "shareSafe": "{on, select, true {Screen-share safe on} other {Screen-share safe off}}",
       "end": "End of presentation",
       "created": "{name} created · write, paste, or ask AI",
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",

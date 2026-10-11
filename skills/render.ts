@@ -11,11 +11,12 @@ import {
   reviewPresentation,
   scales,
   themes,
-  tones,
+  toneColor,
+  toneHint,
   type Presentation,
 } from '@/lib/presentation'
 import { presentationHtml, fetchAsDataUrl } from '@/components/slide/presentation-html'
-import { DEFAULT_TRANSITION, isTransition, transitions } from '@/lib/player'
+import { isTransition, transitions } from '@/lib/player'
 
 const usage =
   'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--check] [--format]'
@@ -25,13 +26,13 @@ const { values, positionals } = parseArgs({
   options: {
     out: { type: 'string', short: 'o' },
     theme: { type: 'string' },
-    tone: { type: 'string', default: 'graphite' },
+    tone: { type: 'string' },
     font: { type: 'string' },
     scale: { type: 'string' },
     brand: { type: 'string' },
     images: { type: 'string' },
-    transition: { type: 'string', default: DEFAULT_TRANSITION },
-    'share-safe': { type: 'boolean', default: false },
+    transition: { type: 'string' },
+    'share-safe': { type: 'boolean' },
     'no-motion': { type: 'boolean', default: false },
     check: { type: 'boolean', default: false },
     format: { type: 'boolean', default: false },
@@ -56,13 +57,9 @@ async function main() {
   }
   const theme = values.theme ?? presentation.theme
   if (!isTheme(theme)) throw new Error(`Unknown theme “${theme}”. Use ${themes.join(' or ')}.`)
-  const tone =
-    tones.find(t => t.name.toLowerCase() === values.tone!.toLowerCase())?.color ?? values.tone!
-  if (!/^#[0-9a-f]{3,8}$/i.test(tone))
-    throw new Error(
-      `Unknown tone “${values.tone}”. Use ${tones.map(t => t.name.toLowerCase()).join(', ')} or a #hex color.`,
-    )
-  const transition = values['no-motion'] ? 'none' : values.transition!
+  const tone = values.tone === undefined ? presentation.tone : toneColor(values.tone)
+  if (!tone) throw new Error(`Unknown tone “${values.tone}”. ${toneHint}`)
+  const transition = values['no-motion'] ? 'none' : (values.transition ?? presentation.transition)
   if (!isTransition(transition))
     throw new Error(`Unknown transition “${transition}”. Use ${transitions.join(', ')}.`)
   const imageDir = values.images ?? path.dirname(path.resolve(input))
@@ -70,7 +67,7 @@ async function main() {
     theme,
     tone,
     transition,
-    shareSafe: values['share-safe'],
+    shareSafe: values['share-safe'] ?? presentation.shareSafe,
     embedImage: src => embed(src, imageDir),
     embedFont,
   })

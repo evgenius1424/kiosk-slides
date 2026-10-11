@@ -35,6 +35,13 @@ export const PLAYER_KEYS: Record<string, PlayerAction> = {
 export const SWIPE = { distance: 45, ratio: 1.2 }
 export const WHEEL = { distance: 65, settleMs: 240, lineHeight: 16 }
 export const IDLE_MS = 2600
+export const SLIDE_HASH = /^#(\d+)$/
+
+export const PLAYER_WORDS = {
+  autoplay: { on: 'Autoplay on', off: 'Autoplay off' },
+  shareSafe: { on: 'Screen-share safe on', off: 'Screen-share safe off' },
+  end: 'End of presentation',
+}
 
 export function isTransition(value: string): value is Transition {
   return transitions.includes(value as Transition)
@@ -52,6 +59,15 @@ export function playerAction(event: KeyboardEvent): PlayerAction | undefined {
 
 export function slideSeconds(slide: Slide, duration: number) {
   return slide.duration || duration
+}
+
+export function slideFromHash(hash: string, count: number) {
+  const match = SLIDE_HASH.exec(hash)
+  return match ? Math.max(0, Math.min(count - 1, Number(match[1]) - 1)) : undefined
+}
+
+export function slideHash(index: number) {
+  return `#${index + 1}`
 }
 
 export function swipeDelta(dx: number, dy: number, vertical: boolean) {

@@ -11,8 +11,16 @@ export const tones = [
   { name: 'Bronze', color: '#ac9167' },
 ] as const
 
+export const DEFAULT_TONE = tones[0].color
+
 export const isTheme = (value: string | undefined): value is Theme =>
   themes.includes(value as Theme)
+
+export const toneColor = (value: string) =>
+  tones.find(t => t.name.toLowerCase() === value.trim().toLowerCase())?.color ??
+  (/^#[0-9a-f]{3,8}$/i.test(value.trim()) ? value.trim() : undefined)
+
+export const toneHint = `Use ${tones.map(t => t.name.toLowerCase()).join(', ')} or a #hex color.`
 
 export const setPresentationTheme = (source: string, theme: Theme) =>
   setFrontMatter(source, 'theme', theme)

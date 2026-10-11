@@ -6,7 +6,8 @@ import { defaultChrome, parseChrome } from './chrome'
 import { widgetComponents, type Widget } from './components'
 import { headingLength, parseHeading } from './heading'
 import { defaultLook, fontId, fonts, isScale, scales } from './look'
-import { isTheme, themes, type Theme } from './theme'
+import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from '../player'
+import { DEFAULT_TONE, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
 import type { Presentation, MessageWidget, Slide } from './types'
@@ -37,12 +38,12 @@ const failAt = (line: number, message: string): never => {
 
 export function parsePresentation(source: string): Presentation {
   const lines = source.replace(/\r/g, '').split('\n')
-  const { title, theme, duration, loop, start, look } = parseFrontMatter(lines)
+  const { duration, start, look, ...settings } = parseFrontMatter(lines)
   const chunks = splitSlides(lines, start).filter(c => c.text.trim())
   const slides = chunks.map(parseSlide)
   if (!slides.length) failAt(1, 'Add a slide with a # headline.')
   if (slides.length > 40) failAt(chunks[40].line, 'Use at most 40 slides per presentation.')
-  return { title, theme, duration: Math.max(2, Math.min(120, duration)), loop, ...look, slides }
+  return { ...settings, ...look, duration: Math.max(2, Math.min(120, duration)), slides }
 }
 
 export function slideLines(source: string) {
@@ -59,6 +60,9 @@ export function slideLines(source: string) {
 function parseFrontMatter(lines: string[]) {
   let title = UNTITLED
   let theme: Theme = 'room-dark'
+  let tone: string = DEFAULT_TONE
+  let transition: Transition = DEFAULT_TRANSITION
+  let shareSafe = false
   let duration = 12
   let loop = true
   let start = 0
@@ -76,6 +80,24 @@ function parseFrontMatter(lines: string[]) {
     if (isTheme(themeField.value)) theme = themeField.value
     else if (themeField.value)
       failAt(themeField.line, `Unknown theme “${themeField.value}”. Use ${themes.join(' or ')}.`)
+    const toneField = field('tone')
+    if (toneField.value)
+      tone =
+        toneColor(toneField.value) ??
+        failAt(toneField.line, `Unknown tone “${toneField.value}”. ${toneHint}`)
+    const transitionField = field('transition')
+    if (transitionField.value && isTransition(transitionField.value.toLowerCase()))
+      transition = transitionField.value.toLowerCase() as Transition
+    else if (transitionField.value)
+      failAt(
+        transitionField.line,
+        `Unknown transition “${transitionField.value}”. Use ${transitions.join(', ')}.`,
+      )
+    const safeField = field('share-safe')
+    if (safeField.value === 'true' || safeField.value === 'false')
+      shareSafe = safeField.value === 'true'
+    else if (safeField.value)
+      failAt(safeField.line, `Set share-safe to true or false, not “${safeField.value}”.`)
     const font = field('font')
     if (font.value)
       look.font =
@@ -93,7 +115,7 @@ function parseFrontMatter(lines: string[]) {
     loop = !/loop:\s*false/.test(front)
     start = end + 1
   }
-  return { title, theme, duration, loop, start, look }
+  return { title, theme, tone, transition, shareSafe, duration, loop, start, look }
 }
 
 /** Split on bare `---` lines outside code fences. Each chunk remembers its first absolute line. */
