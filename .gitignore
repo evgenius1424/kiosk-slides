@@ -21,3 +21,7 @@ next-env.d.ts
 
 # Editor settings
 .idea/
+
+# Built by pnpm build:skills
+skills/*/scripts/
+skills/*/references/

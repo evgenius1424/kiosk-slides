@@ -1,5 +1,5 @@
 export { parseDeck } from './parse'
-export { downloadFile, exportDeck } from './export'
+export { downloadFile } from './export'
 export type { HeadingPart } from './heading'
-export { setDeckTheme, themes, type Theme } from './theme'
+export { isTheme, setDeckTheme, themes, tones, type Theme } from './theme'
 export type { Deck, Layout, Slide, SlideChrome, SlideKind, SlideOfKind } from './types'
