@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseAnnotation } from '@/lib/deck/annotation'
+import { parseAnnotation } from '@/lib/presentation/annotation'
 
 const fail = (message: string): never => {
   throw new Error(message)

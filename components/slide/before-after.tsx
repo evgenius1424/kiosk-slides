@@ -1,4 +1,4 @@
-import type { SlideOfKind } from '@/lib/deck'
+import type { SlideOfKind } from '@/lib/presentation'
 
 export function BeforeAfterView({ slide }: { slide: SlideOfKind<'before-after'> }) {
   return (

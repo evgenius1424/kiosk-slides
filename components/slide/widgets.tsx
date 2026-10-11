@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import type { SlideKind, SlideOfKind } from '@/lib/deck'
+import type { SlideKind, SlideOfKind } from '@/lib/presentation'
 import { BeforeAfterView } from './before-after'
 import { ButtonsView } from './buttons'
 import { ChartView } from './chart'

@@ -4,10 +4,10 @@ import { cleanup, render } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { KioskWorkspace } from '@/components/kiosk-workspace'
-import { parseDeck, setFrontMatter, tones } from '@/lib/deck'
+import { parsePresentation, setFrontMatter, tones } from '@/lib/presentation'
 import { DEFAULT_TRANSITION } from '@/lib/player'
 import messages from '@/messages/en.json'
-import { deckHtml } from './deck-html'
+import { presentationHtml } from './presentation-html'
 
 const example = Object.entries({
   theme: 'room-light',
@@ -18,7 +18,7 @@ const example = Object.entries({
   (source, [key, value]) => setFrontMatter(source, key, value),
   readFileSync('public/example.md', 'utf8'),
 )
-const deck = parseDeck(example)
+const presentation = parsePresentation(example)
 
 beforeAll(() => {
   vi.stubGlobal(
@@ -45,14 +45,14 @@ describe('site preview and exported presentation', () => {
     const thumbnails = [...container.querySelectorAll('.thumbnail article')].map(a =>
       markup(a).replace(' miniature', ' '),
     )
-    expect(exported).toHaveLength(deck.slides.length)
+    expect(exported).toHaveLength(presentation.slides.length)
     expect(preview).toBe(exported[0])
     expect(thumbnails).toEqual(exported)
   })
 })
 
 async function exportedSlides() {
-  const html = await deckHtml(deck, {
+  const html = await presentationHtml(presentation, {
     tone: tones[0].color,
     transition: DEFAULT_TRANSITION,
     embedImage: async src => src,

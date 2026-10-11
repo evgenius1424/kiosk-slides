@@ -1,7 +1,7 @@
 import { CLOSE_TAG, OPEN_TAG, type ChatEvent, type ChatMessage } from '@/lib/chat'
 import { systemPrompt } from '@/lib/chat-prompt'
 import { ChatGPTError, checkLocalRequest, streamResponse } from '@/lib/chatgpt'
-import { parseDeck, reviewDeck } from '@/lib/deck'
+import { parsePresentation, reviewPresentation } from '@/lib/presentation'
 import { serverT } from '@/i18n/server'
 
 const MAX_ATTEMPTS = 3
@@ -60,7 +60,7 @@ async function generate(
 ) {
   let fallback: { source: string; reply: string } | undefined
   const finish = (source: string, reply: string) => {
-    send({ type: 'deck', source })
+    send({ type: 'presentation', source })
     send({ type: 'done', reply })
   }
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -69,7 +69,7 @@ async function generate(
       text => send({ type: 'text', text }),
       signal,
     )
-    const result = extractDeck(reply)
+    const result = extractPresentation(reply)
     if (result.kind === 'none') {
       if (fallback) finish(fallback.source, fallback.reply)
       else send({ type: 'done', reply })
@@ -105,7 +105,7 @@ async function generate(
   }
 }
 
-function extractDeck(
+function extractPresentation(
   reply: string,
 ):
   | { kind: 'none' }
@@ -121,7 +121,7 @@ function extractDeck(
     }
   const source = reply.slice(open + OPEN_TAG.length, close).trim() + '\n'
   try {
-    return { kind: 'valid', source, problems: reviewDeck(parseDeck(source)) }
+    return { kind: 'valid', source, problems: reviewPresentation(parsePresentation(source)) }
   } catch (err) {
     return { kind: 'invalid', error: (err as Error).message }
   }
@@ -156,7 +156,7 @@ function validate(body: { messages?: ChatMessage[]; source?: string; model?: str
   if (messages[0].role !== 'user' || messages[messages.length - 1].role !== 'user')
     return serverT('badOrder')
   if (source !== undefined && (typeof source !== 'string' || source.length > MAX_SOURCE_LENGTH))
-    return serverT('deckTooLarge')
+    return serverT('presentationTooLarge')
   return ''
 }
 

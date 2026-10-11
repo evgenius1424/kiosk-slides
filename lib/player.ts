@@ -1,4 +1,4 @@
-import type { Slide } from './deck/types'
+import type { Slide } from './presentation/types'
 
 export const transitions = ['gentle', 'fade', 'slide', 'none'] as const
 

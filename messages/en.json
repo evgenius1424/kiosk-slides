@@ -313,7 +313,7 @@
     "tooLong": "This conversation is too long. Start a new chat.",
     "badMessage": "Each message needs a role and text under {max, number} characters.",
     "badOrder": "The conversation must start and end with a user message.",
-    "deckTooLarge": "The current presentation is too large to send.",
+    "presentationTooLarge": "The current presentation is too large to send.",
     "stillBroken": "The slides still have a problem after {attempts, plural, one {# try} other {# tries}}: {error}",
     "stopped": "Generation stopped.",
     "generic": "Something went wrong while writing your slides.",

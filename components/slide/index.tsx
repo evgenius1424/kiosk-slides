@@ -4,10 +4,10 @@ import {
   findFont,
   headingSize,
   DEFAULT_BRAND,
-  type DeckLook,
+  type PresentationLook,
   type HeadingPart,
   type Slide,
-} from '@/lib/deck'
+} from '@/lib/presentation'
 import { widgets } from './widgets'
 
 export function HeadingText({ parts }: { parts: HeadingPart[] }) {
@@ -39,7 +39,7 @@ export function SlideView({
   slide: Slide
   theme?: string
   accent?: string
-  look?: DeckLook
+  look?: PresentationLook
   miniature?: boolean
 }) {
   // `widgets` pairs each kind with its own component, so this lookup always matches `slide`.

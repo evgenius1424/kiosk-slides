@@ -28,7 +28,7 @@ import {
   visibleReply,
 } from '@/lib/chat'
 
-type Entry = ChatMessage & { deck?: string; notes?: string[]; error?: string }
+type Entry = ChatMessage & { presentation?: string; notes?: string[]; error?: string }
 
 const SUGGESTIONS = ['pitch', 'onboarding', 'tighten'] as const
 const MODEL_KEY = 'kiosk-chatgpt-model'
@@ -36,14 +36,14 @@ const WELCOME_KEY = 'kiosk-chatgpt-welcomed'
 const REPO_URL = 'https://github.com/evgenius1424/kiosk-slides'
 const LOCAL_URL = 'http://127.0.0.1:3000'
 
-export function DeckChat({
+export function PresentationChat({
   source,
-  onDeck,
+  onPresentation,
   onOpen,
   onCopyPrompt,
 }: {
   source: string
-  onDeck: (source: string, fresh: boolean) => string
+  onPresentation: (source: string, fresh: boolean) => string
   onOpen: () => void
   onCopyPrompt: () => void
 }) {
@@ -142,8 +142,8 @@ export function DeckChat({
     abortRef.current = controller
     let attempt = ''
     const notes: string[] = []
-    let deck = ''
-    const fresh = !entries.some(e => e.deck)
+    let presentation = ''
+    const fresh = !entries.some(e => e.presentation)
     let reply = ''
     let error = ''
     setLive({ text: '', notes: [] })
@@ -158,7 +158,8 @@ export function DeckChat({
             notes.push(event.polish ? t('progress.polishing') : t('progress.fixing'))
             attempt = ''
           }
-          if (event.type === 'deck') deck = onDeck(event.source, fresh && !deck)
+          if (event.type === 'presentation')
+            presentation = onPresentation(event.source, fresh && !presentation)
           if (event.type === 'done') reply = event.reply
           if (event.type === 'error') error = event.message
           setLive({ text: attempt, notes: [...notes] })
@@ -170,7 +171,7 @@ export function DeckChat({
     }
     setEntries(current => [
       ...current,
-      { role: 'assistant', content: reply || '', deck, notes, error },
+      { role: 'assistant', content: reply || '', presentation, notes, error },
     ])
     setLive(null)
     abortRef.current = null
@@ -272,7 +273,7 @@ export function DeckChat({
               key={i}
               text={entry.content}
               notes={entry.notes || []}
-              deck={entry.deck}
+              presentation={entry.presentation}
               error={entry.error}
             />
           ),
@@ -392,13 +393,13 @@ function RunLocally({ reason, onCopyPrompt }: { reason: string; onCopyPrompt: ()
 function AssistantBubble({
   text,
   notes,
-  deck,
+  presentation,
   error,
   pending,
 }: {
   text: string
   notes: string[]
-  deck?: string
+  presentation?: string
   error?: string
   pending?: boolean
 }) {
@@ -419,10 +420,10 @@ function AssistantBubble({
           {reply.writing ? t('writing') : t('thinking')}
         </span>
       )}
-      {deck && (
+      {presentation && (
         <span className="chat-note success">
           <Check size={12} />
-          {t('saved', { name: deck })}
+          {t('saved', { name: presentation })}
         </span>
       )}
       {error && (

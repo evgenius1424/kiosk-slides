@@ -1,5 +1,11 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { deckLook, findFont, fontFace, type Deck, type Theme } from '@/lib/deck'
+import {
+  presentationLook,
+  findFont,
+  fontFace,
+  type Presentation,
+  type Theme,
+} from '@/lib/presentation'
 import { slideStyles } from '@/lib/slide-styles'
 import {
   IDLE_MS,
@@ -12,7 +18,7 @@ import {
 } from '@/lib/player'
 import { SlideView } from '.'
 
-export type DeckHtmlOptions = {
+export type PresentationHtmlOptions = {
   theme?: Theme
   tone: string
   transition: Transition
@@ -21,31 +27,31 @@ export type DeckHtmlOptions = {
   embedFont: (file: string) => Promise<string>
 }
 
-export async function deckHtml(
-  deck: Deck,
+export async function presentationHtml(
+  presentation: Presentation,
   {
-    theme = deck.theme,
+    theme = presentation.theme,
     tone,
     transition,
     shareSafe = false,
     embedImage,
     embedFont,
-  }: DeckHtmlOptions,
+  }: PresentationHtmlOptions,
 ): Promise<string> {
-  const look = deckLook(deck)
-  const font = findFont(deck.font)
+  const look = presentationLook(presentation)
+  const font = findFont(presentation.font)
   const face = font.file ? fontFace(font, await embedFont(font.file)) : ''
   const slides = await Promise.all(
-    deck.slides.map(async slide => {
+    presentation.slides.map(async slide => {
       const embedded =
         slide.kind === 'image' ? { ...slide, src: await embedImage(slide.src) } : slide
       return `<div class="portable-slide"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
     }),
   )
   const config = JSON.stringify({
-    duration: deck.duration,
-    loop: deck.loop,
-    durations: deck.slides.map(s => slideSeconds(s, deck.duration)),
+    duration: presentation.duration,
+    loop: presentation.loop,
+    durations: presentation.slides.map(s => slideSeconds(s, presentation.duration)),
     transition,
     shareSafe,
     ms: TRANSITION_MS,
@@ -54,7 +60,7 @@ export async function deckHtml(
     wheel: WHEEL,
     idle: IDLE_MS,
   })
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${deck.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}</script></body></html>`
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}</script></body></html>`
 }
 
 export async function fetchAsDataUrl(src: string): Promise<string> {

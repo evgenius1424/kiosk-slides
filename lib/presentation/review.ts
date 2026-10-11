@@ -1,10 +1,10 @@
 import { UNTITLED } from './parse'
-import type { Deck } from './types'
+import type { Presentation } from './types'
 
-export function reviewDeck(deck: Deck) {
-  const { slides } = deck
+export function reviewPresentation(presentation: Presentation) {
+  const { slides } = presentation
   const problems: string[] = []
-  if (deck.title === UNTITLED)
+  if (presentation.title === UNTITLED)
     problems.push('Give the presentation a short title: in its front matter.')
   const missing = (['title', 'label', 'footer'] as const).filter(key => slides.some(s => !s[key]))
   if (missing.length) {

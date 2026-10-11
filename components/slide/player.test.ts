@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { JSDOM } from 'jsdom'
 import { describe, expect, it } from 'vitest'
-import { parseDeck } from '@/lib/deck'
+import { parsePresentation } from '@/lib/presentation'
 import { PLAYER_KEYS, SWIPE, swipeDelta, type PlayerAction } from '@/lib/player'
-import { deckHtml } from './deck-html'
+import { presentationHtml } from './presentation-html'
 
-const deck = parseDeck(readFileSync('public/example.md', 'utf8'))
-const last = deck.slides.length - 1
+const presentation = parsePresentation(readFileSync('public/example.md', 'utf8'))
+const last = presentation.slides.length - 1
 const moves: Partial<Record<PlayerAction, (from: number) => number>> = {
   next: from => Math.min(last, from + 1),
   previous: from => Math.max(0, from - 1),
@@ -67,7 +67,7 @@ describe('exported presentation player', () => {
 })
 
 async function open() {
-  const html = await deckHtml(deck, {
+  const html = await presentationHtml(presentation, {
     tone: '#74747e',
     transition: 'none',
     embedImage: async src => src,

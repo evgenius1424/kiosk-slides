@@ -2,8 +2,13 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-const CORE = ['lib/deck', 'lib/player.ts', 'lib/slide-styles.ts', 'components/slide']
-const CORE_ALIASES = ['@/lib/deck', '@/lib/player', '@/lib/slide-styles', '@/components/slide']
+const CORE = ['lib/presentation', 'lib/player.ts', 'lib/slide-styles.ts', 'components/slide']
+const CORE_ALIASES = [
+  '@/lib/presentation',
+  '@/lib/player',
+  '@/lib/slide-styles',
+  '@/components/slide',
+]
 const PACKAGES = [
   'react',
   'react-dom/server',

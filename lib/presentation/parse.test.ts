@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { parseDeck, setDeckTheme, setFrontMatter } from '@/lib/deck'
+import { parsePresentation, setPresentationTheme, setFrontMatter } from '@/lib/presentation'
 
 const md = (...lines: string[]) => lines.join('\n')
 
-describe('parseDeck: deck and message slides', () => {
-  it('reads deck front matter and a message slide', () => {
-    const deck = parseDeck(
+describe('parsePresentation: presentation and message slides', () => {
+  it('reads presentation front matter and a message slide', () => {
+    const presentation = parsePresentation(
       md(
         '---',
-        'title: Demo deck',
+        'title: Demo presentation',
         'theme: room-light',
         'autoplay:',
         '  duration: 20s',
@@ -20,8 +20,8 @@ describe('parseDeck: deck and message slides', () => {
         'Big type. One idea.',
       ),
     )
-    expect(deck).toEqual({
-      title: 'Demo deck',
+    expect(presentation).toEqual({
+      title: 'Demo presentation',
       theme: 'room-light',
       duration: 20,
       loop: false,
@@ -43,20 +43,24 @@ describe('parseDeck: deck and message slides', () => {
   })
 
   it('reads the font, scale and brand', () => {
-    const deck = parseDeck(
+    const presentation = parsePresentation(
       md('---', 'font: Archivo Expanded', 'scale: kiosk', 'brand: ZEOS', '---', '# Hi'),
     )
-    expect([deck.font, deck.scale, deck.brand]).toEqual(['archivo-expanded', 'kiosk', 'ZEOS'])
-    expect(parseDeck(md('---', 'brand: none', '---', '# Hi')).brand).toBe('')
+    expect([presentation.font, presentation.scale, presentation.brand]).toEqual([
+      'archivo-expanded',
+      'kiosk',
+      'ZEOS',
+    ])
+    expect(parsePresentation(md('---', 'brand: none', '---', '# Hi')).brand).toBe('')
   })
 
   it('defaults the theme to room-dark', () => {
-    expect(parseDeck('# Hi').theme).toBe('room-dark')
-    expect(parseDeck(md('---', 'title: T', '---', '# Hi')).theme).toBe('room-dark')
+    expect(parsePresentation('# Hi').theme).toBe('room-dark')
+    expect(parsePresentation(md('---', 'title: T', '---', '# Hi')).theme).toBe('room-dark')
   })
 
   it('reads slide chrome from the comment after the separator', () => {
-    const deck = parseDeck(
+    const presentation = parsePresentation(
       md(
         '# First',
         '---',
@@ -70,7 +74,7 @@ describe('parseDeck: deck and message slides', () => {
         '# Second',
       ),
     )
-    expect(deck.slides[1]).toEqual({
+    expect(presentation.slides[1]).toEqual({
       kind: 'message',
       title: 'Opening',
       label: 'Core concept',
@@ -83,21 +87,21 @@ describe('parseDeck: deck and message slides', () => {
   })
 
   it('splits slides on bare --- lines but not inside code fences', () => {
-    const deck = parseDeck(md('# One', '---', '# Two', '---', '', '# Three'))
-    expect(deck.slides.map(s => s.heading[0].text)).toEqual(['One', 'Two', 'Three'])
+    const presentation = parsePresentation(md('# One', '---', '# Two', '---', '', '# Three'))
+    expect(presentation.slides.map(s => s.heading[0].text)).toEqual(['One', 'Two', 'Three'])
   })
 })
 
-describe('parseDeck: widgets', () => {
+describe('parsePresentation: widgets', () => {
   it('turns a flat numbered list into steps', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
         '# Three **steps**',
         '',
         'Intro.',
         '',
         '1. Gather the **material**.',
-        '2. Generate a deck.',
+        '2. Generate a presentation.',
         '3. Present.',
       ),
     ).slides
@@ -109,12 +113,12 @@ describe('parseDeck: widgets', () => {
       layout: 'auto',
       heading: [{ text: 'Three ' }, { text: 'steps', highlight: true }],
       body: 'Intro.',
-      steps: ['Gather the **material**.', 'Generate a deck.', 'Present.'],
+      steps: ['Gather the **material**.', 'Generate a presentation.', 'Present.'],
     })
   })
 
   it('turns a fenced code block into code, even when it contains ---', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
         '# Keep it **simple**',
         '',
@@ -139,7 +143,7 @@ describe('parseDeck: widgets', () => {
   })
 
   it('turns a markdown image into image', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
         '# Look at **this**',
         '',
@@ -161,22 +165,24 @@ describe('parseDeck: widgets', () => {
   })
 
   it('accepts /images/ paths and embedded image data', () => {
-    expect(parseDeck(md('# A', '', '![x](/images/a.png)')).slides[0]).toMatchObject({
+    expect(parsePresentation(md('# A', '', '![x](/images/a.png)')).slides[0]).toMatchObject({
       kind: 'image',
       src: '/images/a.png',
       caption: '',
     })
-    expect(parseDeck(md('# A', '', '![x](data:image/png;base64,AAAA)')).slides[0]).toMatchObject({
+    expect(
+      parsePresentation(md('# A', '', '![x](data:image/png;base64,AAAA)')).slides[0],
+    ).toMatchObject({
       kind: 'image',
       src: 'data:image/png;base64,AAAA',
     })
   })
 })
 
-describe('parseDeck: metric', () => {
+describe('parsePresentation: metric', () => {
   const error = (source: string) => {
     try {
-      parseDeck(source)
+      parsePresentation(source)
     } catch (e) {
       return (e as Error).message
     }
@@ -184,9 +190,9 @@ describe('parseDeck: metric', () => {
   }
 
   it('turns an annotated bold value and caption line into a metric', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
-        '# Short decks **land**',
+        '# Short talks **land**',
         '',
         '<!-- metric -->',
         '**3x**',
@@ -199,7 +205,7 @@ describe('parseDeck: metric', () => {
       label: '',
       footer: '',
       layout: 'auto',
-      heading: [{ text: 'Short decks ' }, { text: 'land', highlight: true }],
+      heading: [{ text: 'Short talks ' }, { text: 'land', highlight: true }],
       body: '',
       value: '3x',
       caption: 'more questions answered at the booth',
@@ -222,10 +228,10 @@ describe('parseDeck: metric', () => {
   })
 })
 
-describe('parseDeck: errors', () => {
+describe('parsePresentation: errors', () => {
   const error = (source: string) => {
     try {
-      parseDeck(source)
+      parsePresentation(source)
     } catch (e) {
       return (e as Error).message
     }
@@ -252,7 +258,7 @@ describe('parseDeck: errors', () => {
     expect(error(md('# One', '', '# Two'))).toBe('Line 3: Each slide needs exactly one # heading.')
   })
 
-  const heading = (line: string) => parseDeck(line).slides[0].heading
+  const heading = (line: string) => parsePresentation(line).slides[0].heading
 
   it('reads bold, italic, code and links in the heading as parts', () => {
     expect(
@@ -390,7 +396,7 @@ describe('parseDeck: errors', () => {
     )
   })
 
-  it('rejects a deck with no slides on line 1', () => {
+  it('rejects a presentation with no slides on line 1', () => {
     expect(error('')).toBe('Line 1: Add a slide with a # headline.')
     expect(error(md('---', 'title: Empty', '---', ''))).toBe(
       'Line 1: Add a slide with a # headline.',
@@ -425,10 +431,10 @@ describe('parseDeck: errors', () => {
   })
 })
 
-describe('parseDeck: table and before/after', () => {
+describe('parsePresentation: table and before/after', () => {
   const error = (source: string) => {
     try {
-      parseDeck(source)
+      parsePresentation(source)
     } catch (e) {
       return (e as Error).message
     }
@@ -436,7 +442,7 @@ describe('parseDeck: table and before/after', () => {
   }
 
   it('turns a GFM table into a table with its header and rows', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
         '# Where the **time** goes',
         '',
@@ -481,7 +487,7 @@ describe('parseDeck: table and before/after', () => {
   })
 
   it('turns a Before | After table into before/after, ignoring case', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
         '# One **idea** per slide',
         '',
@@ -513,10 +519,10 @@ describe('parseDeck: table and before/after', () => {
   })
 })
 
-describe('parseDeck: chart', () => {
+describe('parsePresentation: chart', () => {
   const error = (source: string) => {
     try {
-      parseDeck(source)
+      parsePresentation(source)
     } catch (e) {
       return (e as Error).message
     }
@@ -524,7 +530,7 @@ describe('parseDeck: chart', () => {
   }
 
   it('turns an annotated table into a chart, first column as labels and the rest as series', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
         '# Visits **doubled**',
         '',
@@ -553,7 +559,7 @@ describe('parseDeck: chart', () => {
   })
 
   it('uses the x column for labels and the y column as the only series', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
         '# Revenue',
         '',
@@ -573,7 +579,7 @@ describe('parseDeck: chart', () => {
   })
 
   it('with only x given, charts every other column', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
         '# Costs',
         '',
@@ -657,7 +663,7 @@ describe('parseDeck: chart', () => {
   })
 
   it('lets the annotation win over shape detection for a Before | After table', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md('# C', '', '<!-- chart: type=bar -->', '| Before | After |', '| --- | --- |', '| x | 3 |'),
     ).slides
     expect(slide).toMatchObject({
@@ -706,10 +712,10 @@ describe('parseDeck: chart', () => {
   })
 })
 
-describe('parseDeck: buttons', () => {
+describe('parsePresentation: buttons', () => {
   const error = (source: string) => {
     try {
-      parseDeck(source)
+      parsePresentation(source)
     } catch (e) {
       return (e as Error).message
     }
@@ -717,7 +723,7 @@ describe('parseDeck: buttons', () => {
   }
 
   it('turns an annotated bullet list of links into buttons', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md(
         '# Try it **yourself**',
         '',
@@ -742,7 +748,7 @@ describe('parseDeck: buttons', () => {
   })
 
   it('flattens formatted link text into the button label', () => {
-    const [slide] = parseDeck(
+    const [slide] = parsePresentation(
       md('# Go', '', '<!-- buttons -->', '- [*Go* now `today`](https://x.com)'),
     ).slides
     expect(slide).toMatchObject({ buttons: [{ label: 'Go now today', url: 'https://x.com' }] })
@@ -782,10 +788,10 @@ describe('parseDeck: buttons', () => {
   })
 })
 
-describe('parseDeck: flow', () => {
+describe('parsePresentation: flow', () => {
   const error = (source: string) => {
     try {
-      parseDeck(source)
+      parsePresentation(source)
     } catch (e) {
       return (e as Error).message
     }
@@ -794,20 +800,23 @@ describe('parseDeck: flow', () => {
   const flow = (...bullets: string[]) => md('# How it **moves**', '', '<!-- flow -->', ...bullets)
 
   it('turns an annotated bullet list of arrow chains into a flow', () => {
-    expect(parseDeck(flow('- Write -> Parse -> Present')).slides[0]).toMatchObject({
+    expect(parsePresentation(flow('- Write -> Parse -> Present')).slides[0]).toMatchObject({
       kind: 'flow',
       lines: [['Write', 'Parse', 'Present']],
     })
   })
 
   it('keeps a converging pair and a parallel pair as two chains', () => {
-    expect(parseDeck(flow('- Notes -> Draft -> Deck', '- Data -> Deck')).slides[0]).toMatchObject({
+    expect(
+      parsePresentation(flow('- Notes -> Draft -> Presentation', '- Data -> Presentation'))
+        .slides[0],
+    ).toMatchObject({
       lines: [
-        ['Notes', 'Draft', 'Deck'],
-        ['Data', 'Deck'],
+        ['Notes', 'Draft', 'Presentation'],
+        ['Data', 'Presentation'],
       ],
     })
-    expect(parseDeck(flow('- Plan -> Build', '- Test -> Ship')).slides[0]).toMatchObject({
+    expect(parsePresentation(flow('- Plan -> Build', '- Test -> Ship')).slides[0]).toMatchObject({
       lines: [
         ['Plan', 'Build'],
         ['Test', 'Ship'],
@@ -838,28 +847,31 @@ describe('parseDeck: flow', () => {
   })
 })
 
-describe('setDeckTheme', () => {
+describe('setPresentationTheme', () => {
   it('replaces the theme line in the front matter', () => {
     expect(
-      setDeckTheme(md('---', 'title: T', 'theme: room-dark', '---', '# Hi'), 'room-light'),
+      setPresentationTheme(md('---', 'title: T', 'theme: room-dark', '---', '# Hi'), 'room-light'),
     ).toBe(md('---', 'title: T', 'theme: room-light', '---', '# Hi'))
   })
 
   it('adds a theme line to front matter that has none', () => {
-    expect(setDeckTheme(md('---', 'title: T', '---', '# Hi'), 'room-light')).toBe(
+    expect(setPresentationTheme(md('---', 'title: T', '---', '# Hi'), 'room-light')).toBe(
       md('---', 'title: T', 'theme: room-light', '---', '# Hi'),
     )
   })
 
-  it('adds front matter to a deck that has none', () => {
-    const next = setDeckTheme(md('# Hi', '', 'Body.'), 'room-light')
+  it('adds front matter to a presentation that has none', () => {
+    const next = setPresentationTheme(md('# Hi', '', 'Body.'), 'room-light')
     expect(next).toBe(md('---', 'theme: room-light', '---', '', '# Hi', '', 'Body.'))
-    expect(parseDeck(next).theme).toBe('room-light')
+    expect(parsePresentation(next).theme).toBe('room-light')
   })
 
   it('leaves an indented theme key alone', () => {
     expect(
-      setDeckTheme(md('---', 'x:', '  theme: y', 'theme: room-dark', '---', '# Hi'), 'room-light'),
+      setPresentationTheme(
+        md('---', 'x:', '  theme: y', 'theme: room-dark', '---', '# Hi'),
+        'room-light',
+      ),
     ).toBe(md('---', 'x:', '  theme: y', 'theme: room-light', '---', '# Hi'))
   })
 })

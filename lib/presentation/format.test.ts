@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { formatDeck, parseDeck } from '@/lib/deck'
+import { formatPresentation, parsePresentation } from '@/lib/presentation'
 
 const md = (...lines: string[]) => lines.join('\n')
 const example = readFileSync(path.join(process.cwd(), 'public/example.md'), 'utf8')
 
-describe('formatDeck', () => {
+describe('formatPresentation', () => {
   it('aligns tables and keeps annotations directly above them', () => {
     const source = md(
       '# Results',
@@ -17,7 +17,7 @@ describe('formatDeck', () => {
       '|5|82|',
       '|10|64|',
     )
-    expect(formatDeck(source)).toBe(
+    expect(formatPresentation(source)).toBe(
       md(
         '# Results',
         '',
@@ -53,7 +53,7 @@ describe('formatDeck', () => {
       '---',
       '',
     )
-    expect(formatDeck(source)).toBe(
+    expect(formatPresentation(source)).toBe(
       md(
         '---',
         'title: Demo',
@@ -79,17 +79,17 @@ describe('formatDeck', () => {
 
   it('leaves code untouched', () => {
     const source = md('# Code', '', '```txt', '|a|b|', '|---|---|', '*  x   ', '```', '')
-    expect(formatDeck(source)).toBe(source)
+    expect(formatPresentation(source)).toBe(source)
   })
 
   it('returns a presentation the parser rejects unchanged', () => {
     const source = md('# One', '## Two', '|a|b|', '|-|-|', '|1|2|')
-    expect(formatDeck(source)).toBe(source)
+    expect(formatPresentation(source)).toBe(source)
   })
 
   it('never changes what the example presentation shows', () => {
-    const formatted = formatDeck(example)
-    expect(parseDeck(formatted)).toEqual(parseDeck(example))
-    expect(formatDeck(formatted)).toBe(formatted)
+    const formatted = formatPresentation(example)
+    expect(parsePresentation(formatted)).toEqual(parsePresentation(example))
+    expect(formatPresentation(formatted)).toBe(formatted)
   })
 })

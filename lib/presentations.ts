@@ -1,17 +1,17 @@
-import { parseDeck, UNTITLED } from './deck'
+import { parsePresentation, UNTITLED } from './presentation'
 
-export type Presentation = {
+export type SavedPresentation = {
   id: string
   name: string
   source: string
   userNamed: boolean
   updatedAt: number
 }
-export type Library = { current: string; items: Presentation[] }
+export type Library = { current: string; items: SavedPresentation[] }
 
 const STORAGE_KEY = 'kiosk-presentations'
 
-export function blankDeck(heading: string, body: string) {
+export function blankPresentation(heading: string, body: string) {
   return `---\ntheme: room-dark\n---\n\n# ${heading}\n\n${body}\n`
 }
 
@@ -25,7 +25,7 @@ export function loadLibrary(example: string, untitled: string): Library {
       items: stored.items,
     }
   const first = {
-    ...createPresentation(deckName(example) || untitled, example, []),
+    ...createPresentation(presentationName(example) || untitled, example, []),
     userNamed: true,
   }
   return { current: first.id, items: [first] }
@@ -40,8 +40,8 @@ export function saveLibrary(library: Library) {
 export function createPresentation(
   name: string,
   source: string,
-  existing: Presentation[],
-): Presentation {
+  existing: SavedPresentation[],
+): SavedPresentation {
   return {
     id: newId(),
     name: uniqueName(name, existing),
@@ -51,7 +51,7 @@ export function createPresentation(
   }
 }
 
-export function uniqueName(name: string, existing: Presentation[], ignore?: string) {
+export function uniqueName(name: string, existing: SavedPresentation[], ignore?: string) {
   const taken = new Set(existing.filter(p => p.id !== ignore).map(p => p.name.toLowerCase()))
   if (!taken.has(name.toLowerCase())) return name
   let n = 2
@@ -59,11 +59,11 @@ export function uniqueName(name: string, existing: Presentation[], ignore?: stri
   return `${name} ${n}`
 }
 
-export function deckName(source: string) {
+export function presentationName(source: string) {
   try {
-    const deck = parseDeck(source)
-    if (deck.title !== UNTITLED) return deck.title.trim()
-    return deck.slides[0].heading
+    const presentation = parsePresentation(source)
+    if (presentation.title !== UNTITLED) return presentation.title.trim()
+    return presentation.slides[0].heading
       .map(part => part.text)
       .join('')
       .trim()

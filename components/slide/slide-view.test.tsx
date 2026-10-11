@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { Slide, SlideChrome } from '@/lib/deck'
+import type { Slide, SlideChrome } from '@/lib/presentation'
 import { SlideView } from '@/components/slide'
 
 afterEach(cleanup)
@@ -203,12 +203,12 @@ describe('SlideView: flow', () => {
   it('repeats a box both chains share on each row and marks it', () => {
     expect(
       flow([
-        ['Notes', 'Draft', 'Deck'],
-        ['Data', 'Deck'],
+        ['Notes', 'Draft', 'Presentation'],
+        ['Data', 'Presentation'],
       ]),
     ).toEqual([
-      { boxes: ['Notes', 'Draft', '[Deck]'], arrows: 2 },
-      { boxes: ['Data', '[Deck]'], arrows: 1 },
+      { boxes: ['Notes', 'Draft', '[Presentation]'], arrows: 2 },
+      { boxes: ['Data', '[Presentation]'], arrows: 1 },
     ])
   })
 

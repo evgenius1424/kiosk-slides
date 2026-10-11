@@ -3,8 +3,8 @@ import { cp, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { deckHtml } from '@/components/slide/deck-html'
-import { parseDeck } from '@/lib/deck'
+import { presentationHtml } from '@/components/slide/presentation-html'
+import { parsePresentation } from '@/lib/presentation'
 import { bundleRenderer } from '@/scripts/bundle-renderer.mjs'
 
 let dir = ''
@@ -33,9 +33,9 @@ describe('skill renderer', () => {
       '--transition',
       'slide',
     ])
-    const deck = parseDeck(await readFile('public/example.md', 'utf8'))
-    const site = await deckHtml(
-      { ...deck, font: 'inter' },
+    const presentation = parsePresentation(await readFile('public/example.md', 'utf8'))
+    const site = await presentationHtml(
+      { ...presentation, font: 'inter' },
       {
         tone: '#669a98',
         transition: 'slide',

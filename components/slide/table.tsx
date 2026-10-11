@@ -1,4 +1,4 @@
-import type { SlideOfKind } from '@/lib/deck'
+import type { SlideOfKind } from '@/lib/presentation'
 
 export function TableView({ slide }: { slide: SlideOfKind<'table'> }) {
   return (

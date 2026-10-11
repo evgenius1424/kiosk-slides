@@ -11,4 +11,4 @@ Words people and AIs read: site copy, docs, the AI prompt, skill instructions, p
 | **download**     | Saving a presentation as one HTML file                                            | export (in site UI) |
 | **present**      | Showing slides full screen                                                        |                     |
 
-Code still says `Deck` (`parseDeck`, `lib/deck/`, `deck-html.tsx`) and the skill folder is `kiosk-slides-deck`. Those names are internal and may stay, but nothing a person or an AI reads should say "deck". Skill descriptions may list "deck" only as a trigger word, since some people do say it.
+Code uses the same words: `Presentation`, `parsePresentation`, `lib/presentation/`. Only the skill folder `kiosk-slides-deck` still says "deck". Skill descriptions may list "deck" only as a trigger word, since some people do say it.
