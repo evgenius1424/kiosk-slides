@@ -36,7 +36,7 @@ Slides today are mostly seen through a video call or on a TV across a table. Kio
 - **Ask AI.** Chat with ChatGPT using your own ChatGPT plan, and watch the slides appear. Sign-in runs on your own computer, so your account never touches a server.
 - **Use any AI.** Copy the ready-made prompt into Gemini, ChatGPT, Claude or anything else, then paste the slides it writes.
 - **Dark and light themes** with five quiet background tones: Graphite, Plum, Wine, Teal and Bronze.
-- **Fonts** including Inter, Figtree, Bricolage Grotesque, Space Grotesk and Archivo Expanded.
+- **Fonts** including Inter, Figtree, Bricolage Grotesque, Space Grotesk, Archivo Expanded and Golos Text, each with Cyrillic letters.
 - **Your brand** in the corner of every slide, or nothing at all.
 - **Present anywhere**, including from a phone held sideways, with swipe and tap.
 - **Many presentations**, saved in your browser and one click apart.

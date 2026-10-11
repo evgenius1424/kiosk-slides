@@ -3,7 +3,7 @@ import path from 'node:path'
 import { getTranslations } from 'next-intl/server'
 import { KioskWorkspace } from '@/components/kiosk-workspace'
 import { copyPrompt } from '@/lib/chat-prompt'
-import { fontFace, fonts } from '@/lib/presentation'
+import { fontFace, fontFiles, fonts } from '@/lib/presentation'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 import { slideStyles } from '@/lib/slide-styles'
 
@@ -28,7 +28,11 @@ export default async function Page() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
-      <style>{fonts.map(f => fontFace(f, `/fonts/${f.file}`)).join('') + slideStyles}</style>
+      <style>
+        {fontFiles(fonts)
+          .map(f => fontFace(f, `/fonts/${f.file}`))
+          .join('') + slideStyles}
+      </style>
       <KioskWorkspace example={example} prompt={prompt} />
     </>
   )

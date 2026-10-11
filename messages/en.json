@@ -56,14 +56,16 @@
       "previous": "Previous slide",
       "next": "Next slide",
       "enter": "Enter presentation mode",
-      "leave": "Leave presentation"
+      "leave": "Leave presentation",
+      "empty": "Fix the text in Edit to see your slides."
     },
     "editor": {
       "help": "Help",
-      "update": "Update slides",
+      "tidy": "Clean up",
+      "tidyHint": "Lines up tables and spacing in your text",
       "label": "Slide text",
-      "status": "Paste slides from any AI or fix a word, then press Update slides. Tables and spacing get tidied for you.",
-      "discard": "You have edits you haven’t applied. Discard them?"
+      "status": "Slides follow your text as you type. Clean up lines up tables and spacing.",
+      "goToLine": "Go to line"
     },
     "tip": "Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<extra> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</extra>",
     "allShortcuts": "All shortcuts",
@@ -83,8 +85,8 @@
       "end": "End of presentation",
       "created": "{name} created · write, paste, or ask AI",
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
-      "slideAdded": "New slide added at the end. Edit it, then update your slides.",
-      "updated": "Slides updated and saved",
+      "slideAdded": "New slide added at the end",
+      "tidied": "Text cleaned up",
       "downloaded": "Downloaded · opens in any browser, even offline",
       "promptCopied": "Prompt copied · paste it into any AI chat",
       "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there."
@@ -160,7 +162,7 @@
     "title": "Getting your slides in",
     "intro": "The quickest way is to let AI write your slides. Use Ask AI here, or any AI chat you like.",
     "promptTitle": "Use any AI chat",
-    "promptBody": "Copy this prompt into your AI chat and say what your talk is about. Paste its answer here and press Update slides.",
+    "promptBody": "Copy this prompt into your AI chat and say what your talk is about. Paste its answer in Edit.",
     "copyPrompt": "Copy prompt",
     "basicsTitle": "For quick fixes",
     "basics": {
@@ -219,8 +221,8 @@
         "name": "First / last slide",
         "keys": "Home / End"
       },
-      "update": {
-        "name": "Tidy and update slides while editing",
+      "tidy": {
+        "name": "Clean up the text while editing",
         "keys": "Ctrl / ⌘ S"
       }
     },
@@ -283,7 +285,7 @@
     },
     "local": {
       "title": "Use any AI chat to write your slides.",
-      "body": "Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer into Edit and press Update slides.",
+      "body": "Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer in Edit.",
       "copyPrompt": "Copy prompt",
       "runHere": "Chat with your ChatGPT plan right here",
       "privacy": "Your sign-in stays on your computer and never reaches this website.",
