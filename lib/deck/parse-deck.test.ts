@@ -207,7 +207,24 @@ describe('parseDeck: errors', () => {
   })
 
   it('rejects an unclosed code fence', () => {
-    expect(error(md('# One', '```js', 'x'))).toBe('Close the code block with ```')
+    expect(error(md('# One', '', '```js', 'x'))).toBe('Line 3: Close the code block with ```')
+    expect(error(md('# One', '---', '# Two', '```', 'a', '```', '```js', 'x'))).toBe('Line 7: Close the code block with ```')
+  })
+
+  it('rejects a deck with no slides on line 1', () => {
+    expect(error('')).toBe('Line 1: Add a slide with a # headline.')
+    expect(error(md('---', 'title: Empty', '---', ''))).toBe('Line 1: Add a slide with a # headline.')
+  })
+
+  it('rejects a 41st slide on its own line', () => {
+    const forty = Array.from({ length: 40 }, (_, i) => `# Slide ${i + 1}`).join('\n---\n')
+    expect(error(forty)).toBe('no error')
+    // Slide n (1-based) starts on line 2n - 1, so slide 41 starts on line 81.
+    expect(error(md(forty, '---', '# Slide 41'))).toBe('Line 81: Use at most 40 slides per deck.')
+  })
+
+  it('rejects an unknown theme on its front-matter line', () => {
+    expect(error(md('---', 'title: T', 'theme: neon', '---', '# Hi'))).toBe('Line 3: Unknown theme “neon”. Use room-dark or room-light.')
   })
 })
 

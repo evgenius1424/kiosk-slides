@@ -21,13 +21,16 @@ const isComment = (node: RootContent): node is Html => node.type === 'html' && n
 type Chunk = { text: string; line: number }
 type Position = RootContent['position']
 
+const failAt = (line: number, message: string): never => { throw new Error(`Line ${line}: ${message}`) }
+
 /** Parse a deck. Throws an `Error` whose message starts with `Line N:` when the source breaks a rule. */
 export function parseDeck(source: string): Deck {
   const lines = source.replace(/\r/g, '').split('\n')
   const { title, duration, loop, start } = parseFrontMatter(lines)
-  const slides = splitSlides(lines, start).filter(c => c.text.trim()).map(parseSlide)
-  if (!slides.length) throw new Error('Add a slide with a # headline.')
-  if (slides.length > 40) throw new Error('Use at most 40 slides per deck.')
+  const chunks = splitSlides(lines, start).filter(c => c.text.trim())
+  const slides = chunks.map(parseSlide)
+  if (!slides.length) failAt(1, 'Add a slide with a # headline.')
+  if (slides.length > 40) failAt(chunks[40].line, 'Use at most 40 slides per deck.')
   return { title, duration: Math.max(2, Math.min(120, duration)), loop, slides }
 }
 
@@ -35,11 +38,12 @@ function parseFrontMatter(lines: string[]) {
   let title = 'Untitled deck'; let duration = 12; let loop = true; let start = 0
   if (lines[0]?.trim() === '---') {
     const end = lines.findIndex((l, i) => i > 0 && l.trim() === '---')
-    if (end < 0) throw new Error('Line 1: close the front matter with ---')
+    if (end < 0) failAt(1, 'close the front matter with ---')
     const front = lines.slice(1, end).join('\n')
     title = front.match(/^title:\s*(.+)$/m)?.[1] || title
-    const theme = front.match(/^theme:\s*(.+)$/m)?.[1]
-    if (theme && !['room-dark', 'room-light'].includes(theme)) throw new Error(`Unknown theme “${theme}”. Use room-dark or room-light.`)
+    const themeIndex = lines.findIndex((l, i) => i > 0 && i < end && /^theme:/.test(l))
+    const theme = lines[themeIndex]?.match(/^theme:\s*(.+)$/)?.[1]
+    if (theme && !['room-dark', 'room-light'].includes(theme)) failAt(themeIndex + 1, `Unknown theme “${theme}”. Use room-dark or room-light.`)
     duration = Number(front.match(/duration:\s*(\d+)s/)?.[1] || 12)
     loop = !/loop:\s*false/.test(front)
     start = end + 1
@@ -50,14 +54,14 @@ function parseFrontMatter(lines: string[]) {
 /** Split on bare `---` lines outside code fences. Each chunk remembers its first absolute line. */
 function splitSlides(lines: string[], start: number): Chunk[] {
   const chunks: { text: string[]; line: number }[] = [{ text: [], line: start + 1 }]
-  let fenced = false
+  let fenceLine = 0 // 1-based line of the open code fence, 0 when outside one
   for (let i = start; i < lines.length; i++) {
     const line = lines[i]
-    if (line.startsWith('```')) fenced = !fenced
-    if (!fenced && line.trim() === '---') chunks.push({ text: [], line: i + 2 })
+    if (line.startsWith('```')) fenceLine = fenceLine ? 0 : i + 1
+    if (!fenceLine && line.trim() === '---') chunks.push({ text: [], line: i + 2 })
     else chunks[chunks.length - 1].text.push(line)
   }
-  if (fenced) throw new Error('Close the code block with ```')
+  if (fenceLine) failAt(fenceLine, 'Close the code block with ```')
   return chunks.map(c => ({ text: c.text.join('\n'), line: c.line }))
 }
 
@@ -71,7 +75,7 @@ function checkSettings({ type, args }: Annotation, { settings = [] }: { settings
 
 function parseSlide(chunk: Chunk): Slide {
   const lineOf = (position: Position) => chunk.line + (position?.start.line ?? 1) - 1
-  const fail = (message: string, line = chunk.line): never => { throw new Error(`Line ${line}: ${message}`) }
+  const fail = (message: string, line = chunk.line): never => failAt(line, message)
   const raw = (target: Node | Node[]) => {
     const list = Array.isArray(target) ? target : [target]
     return list.length ? chunk.text.slice(list[0].position?.start.offset ?? 0, list.at(-1)!.position?.end.offset ?? 0) : ''
