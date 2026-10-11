@@ -1,5 +1,6 @@
 import { beforeAfter } from './before-after'
 import { code } from './code'
+import { flow } from './flow'
 import { image } from './image'
 import { metric } from './metric'
 import { steps } from './steps'
@@ -16,6 +17,7 @@ export const widgetComponents = [
   table,
   buttons,
   metric,
+  flow,
 ] as const
 
 export type Widget = WidgetOf<(typeof widgetComponents)[number]>
