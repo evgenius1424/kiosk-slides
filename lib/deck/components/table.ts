@@ -13,6 +13,7 @@ export const table = defineWidget<TableWidget>({
   matches: ({ node }) => node.type === 'table',
   parse: block => {
     const [header, ...rows] = tableCells(block) ?? block.fail('A table must be a markdown table.')
+    if (!rows.length) block.fail('Add at least one row under the table’s header.')
     if (header.length > 5) block.fail('Use at most 5 columns in a table.')
     if (rows.length > 6) block.fail('Use at most 6 rows in a table (not counting the header).')
     return { kind: 'table', header, rows }

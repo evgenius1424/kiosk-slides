@@ -30,6 +30,7 @@ export const chart = defineWidget<ChartWidget>({
     if (node.type !== 'table') return fail('Put a table directly under <!-- chart -->.')
 
     const [{ cells: header }, ...body] = rowsOf(node, block)
+    if (!body.length) fail('Add at least one row of data under the chart’s header.')
     if (header.length > 5 || body.length > 6) fail('A chart supports at most 5 columns and 6 rows. Trim the table or split the slide.')
     const column = (name: string) => {
       const index = header.indexOf(name)
@@ -39,7 +40,7 @@ export const chart = defineWidget<ChartWidget>({
     const yIndexes = y ? [column(y)] : header.map((_, i) => i).filter(i => i !== xIndex)
     if (!yIndexes.length || yIndexes.includes(xIndex)) fail('A chart needs a label column and at least one number column.')
 
-    const labels = body.map(row => row.cells[xIndex] ?? '')
+    const labels = body.map(row => row.cells[xIndex] || fail(`Give every row a label in the ${header[xIndex]} column.`, row.line))
     const series = yIndexes.map(i => ({
       name: header[i],
       values: body.map(row => {

@@ -220,6 +220,10 @@ describe('parseDeck: table and before/after', () => {
     })
   })
 
+  it('rejects a table with only a header row', () => {
+    expect(error(md('# T', '', '| Name | Role |', '| --- | --- |'))).toBe('Line 3: Add at least one row under the table’s header.')
+  })
+
   it('caps a table at 5 columns and 6 rows', () => {
     const row = (n: number) => `| ${Array.from({ length: n }, (_, i) => `c${i}`).join(' | ')} |`
     const sep = (n: number) => `|${' --- |'.repeat(n)}`
@@ -322,6 +326,16 @@ describe('parseDeck: chart', () => {
 
   it('needs at least one data column', () => {
     expect(error(md('# C', '', '<!-- chart: type=bar -->', '| Month |', '| --- |', '| Jan |'))).toBe('Line 4: A chart needs a label column and at least one number column.')
+  })
+
+  it('rejects a chart with only a header row', () => {
+    expect(error(md('# C', '', '<!-- chart: type=bar -->', '| Month | Visits |', '| --- | --- |')))
+      .toBe('Line 4: Add at least one row of data under the chart’s header.')
+  })
+
+  it('rejects a chart row with a blank label', () => {
+    expect(error(md('# C', '', '<!-- chart: type=bar -->', '| Month | Visits |', '| --- | --- |', '| Jan | 1 |', '|  | 2 |')))
+      .toBe('Line 7: Give every row a label in the Month column.')
   })
 
   it('rejects a data cell that is not a number', () => {
