@@ -36,8 +36,8 @@ describe('headingSize', () => {
   it('keeps widget headings modest and wider fonts smaller', () => {
     expect(headingSize(slide('Three steps', 'steps'), { scale: 'kiosk', font: 'inter' })).toBe(7)
     const text = 'Two inputs become one confident deck for everyone'
-    expect(
-      headingSize(slide(text), { scale: 'kiosk', font: 'zalando-sans-expanded' }),
-    ).toBeLessThan(headingSize(slide(text), { scale: 'kiosk', font: 'inter' })!)
+    expect(headingSize(slide(text), { scale: 'kiosk', font: 'archivo-expanded' })).toBeLessThan(
+      headingSize(slide(text), { scale: 'kiosk', font: 'inter' })!,
+    )
   })
 })

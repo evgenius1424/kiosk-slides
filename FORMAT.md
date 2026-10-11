@@ -25,7 +25,7 @@ autoplay:
   - `theme:` is `room-dark` or `room-light`.
   - `duration: Ns` is the autoplay time per slide in seconds. The default is 12, and it is clamped to 2–120.
   - `loop: false` stops autoplay at the end. Looping is on by default.
-  - `font:` is `classic` (default, Arial), `inter`, `figtree`, `bricolage-grotesque`, `zalando-sans`, or `zalando-sans-expanded`. The font's name works too, like `Zalando Sans`.
+  - `font:` is `classic` (default, Arial), `inter`, `figtree`, `bricolage-grotesque`, `space-grotesk`, or `archivo-expanded`. The font's name works too, like `Space Grotesk`.
   - `scale:` is `normal` (default), `large`, or `kiosk`. `large` and `kiosk` size every heading to its length, so a one-word slide fills the screen and a long one still fits, and `kiosk` also enlarges the body for reading from across a room.
   - `brand:` is the word in the corner of every slide, at most 24 characters. The default is `kiosk`; `none` hides it.
 - **Slides** are separated by a line containing only `---`. A `---` line inside a ```` ``` ```` code fence does not split slides.

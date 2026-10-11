@@ -44,9 +44,9 @@ describe('parseDeck: deck and message slides', () => {
 
   it('reads the font, scale and brand', () => {
     const deck = parseDeck(
-      md('---', 'font: Zalando Sans Expanded', 'scale: kiosk', 'brand: ZEOS', '---', '# Hi'),
+      md('---', 'font: Archivo Expanded', 'scale: kiosk', 'brand: ZEOS', '---', '# Hi'),
     )
-    expect([deck.font, deck.scale, deck.brand]).toEqual(['zalando-sans-expanded', 'kiosk', 'ZEOS'])
+    expect([deck.font, deck.scale, deck.brand]).toEqual(['archivo-expanded', 'kiosk', 'ZEOS'])
     expect(parseDeck(md('---', 'brand: none', '---', '# Hi')).brand).toBe('')
   })
 
