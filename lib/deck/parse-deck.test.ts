@@ -171,3 +171,82 @@ describe('parseDeck: errors', () => {
     expect(error(md('# One', '```js', 'x'))).toBe('Close the code block with ```')
   })
 })
+
+describe('parseDeck: chart', () => {
+  const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
+
+  it('turns an annotated table into a chart, first column as labels and the rest as series', () => {
+    const [slide] = parseDeck(md(
+      '# Visits ==doubled==',
+      '',
+      '<!-- chart: type=bar -->',
+      '| Month | Visits | Signups |',
+      '| --- | --- | --- |',
+      '| Jan | 120 | 8 |',
+      '| Feb | 1,450 | 12.5 |',
+    )).slides
+    expect(slide).toEqual({
+      kind: 'chart', title: '', label: '', footer: '', layout: 'auto',
+      heading: 'Visits ==doubled==', body: '',
+      type: 'bar', labels: ['Jan', 'Feb'],
+      series: [{ name: 'Visits', values: [120, 1450] }, { name: 'Signups', values: [8, 12.5] }],
+    })
+  })
+
+  it('uses the x column for labels and the y column as the only series', () => {
+    const [slide] = parseDeck(md(
+      '# Revenue',
+      '',
+      '<!-- chart: type=line x=Quarter y=Revenue -->',
+      '| Region | Quarter | Revenue | Cost |',
+      '| --- | --- | --- | --- |',
+      '| EU | Q1 | 10 | 4 |',
+      '| EU | Q2 | 14 | 5 |',
+    )).slides
+    expect(slide).toMatchObject({ kind: 'chart', type: 'line', labels: ['Q1', 'Q2'], series: [{ name: 'Revenue', values: [10, 14] }] })
+  })
+
+  it('with only x given, charts every other column', () => {
+    const [slide] = parseDeck(md(
+      '# Costs', '',
+      '<!-- chart: type=bar x=Quarter -->',
+      '| Cost | Quarter | Revenue |', '| --- | --- | --- |', '| 4 | Q1 | 10 |',
+    )).slides
+    expect(slide).toMatchObject({ labels: ['Q1'], series: [{ name: 'Cost', values: [4] }, { name: 'Revenue', values: [10] }] })
+  })
+
+  const table = ['| Month | Visits |', '| --- | --- |', '| Jan | 1 |']
+
+  it('requires type=bar or type=line', () => {
+    expect(error(md('# C', '', '<!-- chart -->', ...table))).toBe('Line 3: A chart needs type=bar or type=line.')
+    expect(error(md('# C', '', '<!-- chart: type=pie -->', ...table))).toBe('Line 3: A chart needs type=bar or type=line.')
+  })
+
+  it('needs a table under the chart annotation', () => {
+    expect(error(md('# C', '', '<!-- chart: type=bar -->', '- Jan 1'))).toBe('Line 4: Put a table directly under <!-- chart -->.')
+  })
+
+  it('caps a chart at 5 columns and 6 rows', () => {
+    const cap = 'Line 4: A chart supports at most 5 columns and 6 rows. Trim the table or split the slide.'
+    const wide = ['| a | b | c | d | e | f |', '|---|---|---|---|---|---|', '| x | 1 | 2 | 3 | 4 | 5 |']
+    expect(error(md('# C', '', '<!-- chart: type=bar -->', ...wide))).toBe(cap)
+    const tall = Array.from({ length: 7 }, (_, i) => `| m${i} | ${i} |`)
+    expect(error(md('# C', '', '<!-- chart: type=line -->', '| Month | Visits |', '| --- | --- |', ...tall))).toBe(cap)
+    const six = tall.slice(0, 6)
+    expect(error(md('# C', '', '<!-- chart: type=line -->', '| Month | Visits |', '| --- | --- |', ...six))).toBe('no error')
+  })
+
+  it('rejects x or y naming a column the table does not have', () => {
+    expect(error(md('# C', '', '<!-- chart: type=bar y=Sales -->', ...table))).toBe('Line 3: The table has no “Sales” column. Use one of: Month, Visits.')
+    expect(error(md('# C', '', '<!-- chart: type=bar x=Day -->', ...table))).toBe('Line 3: The table has no “Day” column. Use one of: Month, Visits.')
+  })
+
+  it('needs at least one data column', () => {
+    expect(error(md('# C', '', '<!-- chart: type=bar -->', '| Month |', '| --- |', '| Jan |'))).toBe('Line 4: A chart needs a label column and at least one number column.')
+  })
+
+  it('rejects a data cell that is not a number', () => {
+    expect(error(md('# C', '', '<!-- chart: type=bar -->', '| Month | Visits |', '| --- | --- |', '| Jan | 1 |', '| Feb | lots |')))
+      .toBe('Line 7: “lots” in the Visits column isn’t a number.')
+  })
+})

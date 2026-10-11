@@ -1,3 +1,4 @@
+import { chart } from './chart'
 import { code } from './code'
 import { image } from './image'
 import { steps } from './steps'
@@ -8,6 +9,7 @@ export const widgetComponents = [
   steps,
   code,
   image,
+  chart,
 ] as const
 
 export type Widget = WidgetOf<(typeof widgetComponents)[number]>
