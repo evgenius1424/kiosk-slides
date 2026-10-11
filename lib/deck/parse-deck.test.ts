@@ -200,6 +200,57 @@ describe('parseDeck: errors', () => {
   })
 })
 
+describe('parseDeck: table and before/after', () => {
+  const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
+
+  it('turns a GFM table into a table with its header and rows', () => {
+    const [slide] = parseDeck(md(
+      '# Where the ==time== goes',
+      '',
+      '| Task | Hours |',
+      '| --- | ---: |',
+      '| Writing | 3 |',
+      '| **Review** | 1 |',
+    )).slides
+    expect(slide).toEqual({
+      kind: 'table', title: '', label: '', footer: '', layout: 'auto',
+      heading: 'Where the ==time== goes', body: '',
+      header: ['Task', 'Hours'],
+      rows: [['Writing', '3'], ['**Review**', '1']],
+    })
+  })
+
+  it('caps a table at 5 columns and 6 rows', () => {
+    const row = (n: number) => `| ${Array.from({ length: n }, (_, i) => `c${i}`).join(' | ')} |`
+    const sep = (n: number) => `|${' --- |'.repeat(n)}`
+    expect(error(md('# T', '', row(5), sep(5), ...Array(6).fill(row(5))))).toBe('no error')
+    expect(error(md('# T', '', row(6), sep(6), row(6)))).toBe('Line 3: Use at most 5 columns in a table.')
+    expect(error(md('# T', '', row(2), sep(2), ...Array(7).fill(row(2))))).toBe('Line 3: Use at most 6 rows in a table (not counting the header).')
+  })
+
+  it('turns a Before | After table into before/after, ignoring case', () => {
+    const [slide] = parseDeck(md(
+      '# One ==idea== per slide',
+      '',
+      '| before | AFTER |',
+      '| --- | --- |',
+      '| Dense slides nobody reads | One idea, **big** type |',
+    )).slides
+    expect(slide).toEqual({
+      kind: 'before-after', title: '', label: '', footer: '', layout: 'auto',
+      heading: 'One ==idea== per slide', body: '',
+      before: 'Dense slides nobody reads', after: 'One idea, **big** type',
+    })
+  })
+
+  it('rejects a before/after with more or fewer than one row', () => {
+    expect(error(md('# BA', '', '| Before | After |', '| --- | --- |', '| a | b |', '| c | d |')))
+      .toBe('Line 3: Before/after is a single comparison — use a plain table for more rows.')
+    expect(error(md('# BA', '', '| Before | After |', '| --- | --- |')))
+      .toBe('Line 3: Add one row under Before | After with the two things to compare.')
+  })
+})
+
 describe('parseDeck: buttons', () => {
   const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
 

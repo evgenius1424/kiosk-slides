@@ -1,7 +1,9 @@
+import { beforeAfter } from './before-after'
 import { code } from './code'
 import { image } from './image'
 import { metric } from './metric'
 import { steps } from './steps'
+import { table } from './table'
 import { buttons } from './buttons'
 import type { WidgetOf } from './types'
 
@@ -10,6 +12,8 @@ export const widgetComponents = [
   steps,
   code,
   image,
+  beforeAfter, // before table: a Before | After table is the comparison, not data
+  table,
   buttons,
   metric,
 ] as const
