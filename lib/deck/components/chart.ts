@@ -1,18 +1,9 @@
-import type { Table } from 'mdast'
-import type { Block } from './types'
+import { tableRows } from './table'
 import { defineWidget } from './types'
 
 export type ChartType = 'bar' | 'line'
 export type ChartSeries = { name: string; values: number[] }
 export type ChartWidget = { kind: 'chart'; type: ChartType; labels: string[]; series: ChartSeries[] }
-
-type Row = { cells: string[]; line: number }
-
-/** Header + body rows of a GFM table as raw cell text, each with its absolute line. */
-const rowsOf = (table: Table, { raw, line }: Block): Row[] => table.children.map(row => ({
-  cells: row.children.map(cell => raw(cell.children).trim()),
-  line: line + (row.position?.start.line ?? 0) - (table.position?.start.line ?? 0),
-}))
 
 /** `1,450` / `12.5` / `-3` → number; anything else → NaN. */
 const toNumber = (cell: string) => /^-?[\d,]*\.?\d+$/.test(cell) ? Number(cell.replace(/,/g, '')) : NaN
@@ -23,14 +14,12 @@ export const chart = defineWidget<ChartWidget>({
   annotation: 'chart',
   settings: ['type', 'x', 'y'],
   parse: block => {
-    const { node, annotation, fail, line } = block
+    const { annotation, fail, line } = block
     // The annotation sits on the line directly above the block.
     const failAnnotation = (message: string) => fail(message, line - 1)
     const { type, x, y } = annotation?.args ?? {}
     if (type !== 'bar' && type !== 'line') return failAnnotation('A chart needs type=bar or type=line.')
-    if (node.type !== 'table') return fail('Put a table directly under <!-- chart -->.')
-
-    const [{ cells: header }, ...body] = rowsOf(node, block)
+    const [{ cells: header }, ...body] = tableRows(block) ?? fail('Put a table directly under <!-- chart -->.')
     if (!body.length) fail('Add at least one row of data under the chart’s header.')
     if (header.length > 5 || body.length > 6) fail('A chart supports at most 5 columns and 6 rows. Trim the table or split the slide.')
     const column = (name: string) => {

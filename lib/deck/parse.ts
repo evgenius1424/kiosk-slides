@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { parseAnnotation, type Annotation } from './annotation'
 import { defaultChrome, parseChrome } from './chrome'
 import { widgetComponents, type Widget } from './components'
+import { messages } from './components/shared'
 import type { Block } from './components/types'
 import type { Deck, MessageWidget, Slide } from './types'
 
@@ -111,7 +112,7 @@ function parseSlide(chunk: Chunk): Slide {
       annotation = parseAnnotation(node.value, message => fail(message, line), annotationTypes)
       node = next; line = nextLine; i++
     }
-    const block: Block = { node, line, annotation, raw, fail: (message, where = line) => fail(message, where) }
+    const block: Block = { node, line, lineOf: target => lineOf(target.position), annotation, raw, fail: (message, where = line) => fail(message, where) }
     const component = annotation
       ? widgetComponents.find(c => c.annotation === annotation.type)
       : widgetComponents.find(c => !c.annotation && c.matches?.(block))
@@ -122,7 +123,7 @@ function parseSlide(chunk: Chunk): Slide {
     } else if (node.type === 'paragraph') body.push(raw(node))
     else fail(`This slide has markdown the format doesn’t support (${node.type}).${unsupportedHints[node.type] ?? ''}`, line)
   }
-  if (body.join('\n\n').length > 320) fail('Supporting content is too long. Shorten it or split the slide.')
+  if (body.join('\n\n').length > 320) fail(messages.tooLong)
 
   return { ...widget, ...chrome, heading, body: body.join('\n\n') }
 }

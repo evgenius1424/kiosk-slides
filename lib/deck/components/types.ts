@@ -8,6 +8,8 @@ export type Block = {
   annotation?: Annotation
   /** Absolute 1-based line number of the block in the deck source. */
   line: number
+  /** Absolute 1-based line number of any node inside this block, e.g. a table row or list item. */
+  lineOf: (node: Node) => number
   /** Raw source text spanning the given node(s) of this slide, e.g. to keep inline markdown as written. */
   raw: (nodes: Node | Node[]) => string
   /** Throw a `Line N: message` error; defaults to this block's line. */

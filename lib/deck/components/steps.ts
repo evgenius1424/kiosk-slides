@@ -1,3 +1,4 @@
+import { messages } from './shared'
 import { defineWidget } from './types'
 
 export type StepsWidget = { kind: 'steps'; steps: string[] }
@@ -10,9 +11,9 @@ export const steps = defineWidget<StepsWidget>({
     if (node.type !== 'list') return fail('Steps must be a numbered list.')
     if (node.children.length > 5) fail('Use at most five steps.')
     const steps = node.children.map(item => {
-      if (item.children.some(child => child.type === 'list')) fail('Flatten the list — nesting isn’t supported.', line)
+      if (item.children.some(child => child.type === 'list')) fail(messages.flattenList, line)
       const text = raw(item.children)
-      if (text.length > 95) fail('Supporting content is too long. Shorten it or split the slide.')
+      if (text.length > 95) fail(messages.tooLong)
       return text
     })
     return { kind: 'steps', steps }

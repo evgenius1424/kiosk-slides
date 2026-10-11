@@ -1,3 +1,4 @@
+import { messages } from './shared'
 import { defineWidget } from './types'
 
 /** Each line is one arrow chain of box labels. Boxes with identical text across lines are the same node. */
@@ -12,7 +13,7 @@ export const flow = defineWidget<FlowWidget>({
     const cap = 'A flow supports at most 2 lines of up to 4 boxes each.'
     if (node.children.length > 2) fail(cap)
     const lines = node.children.map(item => {
-      if (item.children.some(child => child.type === 'list')) fail('Flatten the list — nesting isn’t supported.')
+      if (item.children.some(child => child.type === 'list')) fail(messages.flattenList)
       const boxes = raw(item.children).split('->').map(box => box.trim())
       if (boxes.some(box => !box)) fail('Every box in a flow needs text, e.g. - Write -> Parse -> Present.')
       if (boxes.length > 4) fail(cap)
