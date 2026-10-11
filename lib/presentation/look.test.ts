@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { headingSize, type HeadingPart } from '@/lib/deck'
+import { headingSize, type HeadingPart } from '@/lib/presentation'
 
 const slide = (text: string, kind: 'message' | 'steps' = 'message', body = '') => ({
   kind,
@@ -26,7 +26,7 @@ describe('headingSize', () => {
   })
 
   it('leaves room for the body', () => {
-    const text = 'Short decks hold attention'
+    const text = 'Short talks hold attention'
     const alone = headingSize(slide(text), { scale: 'kiosk', font: 'inter' })!
     expect(
       headingSize(slide(text, 'message', 'x '.repeat(150)), { scale: 'kiosk', font: 'inter' }),
@@ -35,7 +35,7 @@ describe('headingSize', () => {
 
   it('keeps widget headings modest and wider fonts smaller', () => {
     expect(headingSize(slide('Three steps', 'steps'), { scale: 'kiosk', font: 'inter' })).toBe(7)
-    const text = 'Two inputs become one confident deck for everyone'
+    const text = 'Two inputs become one confident presentation for everyone'
     expect(headingSize(slide(text), { scale: 'kiosk', font: 'archivo-expanded' })).toBeLessThan(
       headingSize(slide(text), { scale: 'kiosk', font: 'inter' })!,
     )

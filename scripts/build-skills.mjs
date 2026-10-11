@@ -1,25 +1,10 @@
 import { copyFile, mkdir, readdir } from 'node:fs/promises'
-import { build } from 'esbuild'
+import { bundleRenderer } from './bundle-renderer.mjs'
 
 const SKILL = 'skills/kiosk-slides'
 const REFERENCES = ['FORMAT.md', 'public/example.md']
 
-await build({
-  entryPoints: ['skills/render.ts'],
-  outfile: `${SKILL}/scripts/render.mjs`,
-  bundle: true,
-  platform: 'node',
-  format: 'esm',
-  target: 'node18',
-  jsx: 'automatic',
-  minify: true,
-  legalComments: 'eof',
-  define: { 'process.env.NODE_ENV': '"production"' },
-  banner: {
-    js: "import{createRequire}from'module';const require=createRequire(import.meta.url);",
-  },
-  logLevel: 'warning',
-})
+await bundleRenderer(`${SKILL}/scripts/render.mjs`)
 
 await mkdir(`${SKILL}/references`, { recursive: true })
 for (const file of REFERENCES) await copyFile(file, `${SKILL}/references/${file.split('/').pop()}`)

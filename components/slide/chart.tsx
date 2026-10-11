@@ -1,4 +1,4 @@
-import type { SlideOfKind } from '@/lib/deck'
+import type { SlideOfKind } from '@/lib/presentation'
 
 // Plot area inside a fixed viewBox; the SVG scales with the slide.
 const width = 600,

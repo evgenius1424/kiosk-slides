@@ -3,7 +3,7 @@ import path from 'node:path'
 import { getTranslations } from 'next-intl/server'
 import { KioskWorkspace } from '@/components/kiosk-workspace'
 import { copyPrompt } from '@/lib/chat-prompt'
-import { fontFace, fonts } from '@/lib/deck'
+import { fontFace, fonts } from '@/lib/presentation'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 import { slideStyles } from '@/lib/slide-styles'
 

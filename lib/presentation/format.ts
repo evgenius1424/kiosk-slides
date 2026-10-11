@@ -1,16 +1,16 @@
-import { parseDeck } from './parse'
+import { parsePresentation } from './parse'
 
-export function formatDeck(source: string) {
+export function formatPresentation(source: string) {
   const original = source.replace(/\r\n?/g, '\n')
   let before: string
   try {
-    before = JSON.stringify(parseDeck(original))
+    before = JSON.stringify(parsePresentation(original))
   } catch {
     return source
   }
   const formatted = format(original)
   try {
-    return JSON.stringify(parseDeck(formatted)) === before ? formatted : source
+    return JSON.stringify(parsePresentation(formatted)) === before ? formatted : source
   } catch {
     return source
   }

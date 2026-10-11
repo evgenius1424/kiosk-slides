@@ -4,18 +4,18 @@ import { parseArgs } from 'node:util'
 import {
   fontId,
   fonts,
-  formatDeck,
+  formatPresentation,
   isScale,
   isTheme,
-  parseDeck,
-  reviewDeck,
+  parsePresentation,
+  reviewPresentation,
   scales,
   themes,
   tones,
-  type Deck,
-} from '@/lib/deck'
-import { deckHtml, fetchAsDataUrl } from '@/components/slide/deck-html'
-import { DEFAULT_TRANSITION, isTransition, transitions } from '@/lib/transitions'
+  type Presentation,
+} from '@/lib/presentation'
+import { presentationHtml, fetchAsDataUrl } from '@/components/slide/presentation-html'
+import { DEFAULT_TRANSITION, isTransition, transitions } from '@/lib/player'
 
 const usage =
   'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--check] [--format]'
@@ -47,14 +47,14 @@ async function main() {
   const input = positionals[0]
   if (!input) throw new Error(usage)
   const source = await readFile(input, 'utf8')
-  const deck = withLook(parseDeck(source))
-  if (values.format) await writeFile(input, formatDeck(source))
+  const presentation = withLook(parsePresentation(source))
+  if (values.format) await writeFile(input, formatPresentation(source))
   if (values.check) {
-    console.log(summary(deck))
-    reviewDeck(deck).forEach(problem => console.log(`Warning: ${problem}`))
+    console.log(summary(presentation))
+    reviewPresentation(presentation).forEach(problem => console.log(`Warning: ${problem}`))
     return
   }
-  const theme = values.theme ?? deck.theme
+  const theme = values.theme ?? presentation.theme
   if (!isTheme(theme)) throw new Error(`Unknown theme “${theme}”. Use ${themes.join(' or ')}.`)
   const tone =
     tones.find(t => t.name.toLowerCase() === values.tone!.toLowerCase())?.color ?? values.tone!
@@ -66,7 +66,7 @@ async function main() {
   if (!isTransition(transition))
     throw new Error(`Unknown transition “${transition}”. Use ${transitions.join(', ')}.`)
   const imageDir = values.images ?? path.dirname(path.resolve(input))
-  const html = await deckHtml(deck, {
+  const html = await presentationHtml(presentation, {
     theme,
     tone,
     transition,
@@ -76,25 +76,25 @@ async function main() {
   })
   const out = values.out ?? input.replace(/\.(md|markdown)$/i, '') + '.html'
   await writeFile(out, html)
-  console.log(`${summary(deck)}\nWrote ${out}`)
+  console.log(`${summary(presentation)}\nWrote ${out}`)
 }
 
-function withLook(deck: Deck): Deck {
-  const font = values.font ? fontId(values.font) : deck.font
+function withLook(presentation: Presentation): Presentation {
+  const font = values.font ? fontId(values.font) : presentation.font
   if (!font)
     throw new Error(`Unknown font “${values.font}”. Use ${fonts.map(f => f.id).join(', ')}.`)
-  const scale = values.scale ?? deck.scale
+  const scale = values.scale ?? presentation.scale
   if (!isScale(scale)) throw new Error(`Unknown scale “${scale}”. Use ${scales.join(', ')}.`)
   const brand =
-    values.brand === undefined ? deck.brand : values.brand === 'none' ? '' : values.brand
-  return { ...deck, font, scale, brand }
+    values.brand === undefined ? presentation.brand : values.brand === 'none' ? '' : values.brand
+  return { ...presentation, font, scale, brand }
 }
 
-function summary(deck: Deck) {
-  const head = `“${deck.title}” · ${deck.theme} · ${deck.font} · ${deck.scale} · ${deck.slides.length} slides · ${deck.duration}s${deck.loop ? ' · loop' : ''}`
+function summary(presentation: Presentation) {
+  const head = `“${presentation.title}” · ${presentation.theme} · ${presentation.font} · ${presentation.scale} · ${presentation.slides.length} slides · ${presentation.duration}s${presentation.loop ? ' · loop' : ''}`
   return [
     head,
-    ...deck.slides.map(
+    ...presentation.slides.map(
       (s, i) =>
         `${String(i + 1).padStart(2, '0')} ${s.kind.padEnd(12)} ${s.heading.map(p => p.text).join('')}`,
     ),

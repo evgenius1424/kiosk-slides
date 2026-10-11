@@ -1,4 +1,4 @@
-import type { SlideOfKind } from '@/lib/deck'
+import type { SlideOfKind } from '@/lib/presentation'
 
 /**
  * One row per chain, joined by short arrows. A box both chains name is repeated on each row and

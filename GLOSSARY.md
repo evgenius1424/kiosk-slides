@@ -11,4 +11,4 @@ Words people and AIs read: site copy, docs, the AI prompt, skill instructions, p
 | **download**     | Saving a presentation as one HTML file                                            | export (in site UI) |
 | **present**      | Showing slides full screen                                                        |                     |
 
-Some code still says `Deck` (`parseDeck`, `lib/deck/`, `deck-html.tsx`). Those names are internal, but nothing a person or an AI reads should say "deck". Skill descriptions may list "deck" only as a trigger word, since some people do say it.
+Code uses the same words: `Presentation`, `parsePresentation`, `lib/presentation/`. Nothing a person or an AI reads should say "deck". Skill descriptions may list "deck" only as a trigger word, since some people do say it.

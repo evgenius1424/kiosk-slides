@@ -30,39 +30,45 @@ import {
 } from 'lucide-react'
 import {
   DEFAULT_BRAND,
-  downloadFile,
+  presentationLook,
   fonts,
-  formatDeck,
-  parseDeck,
+  formatPresentation,
+  parsePresentation,
   setFrontMatter,
   themes,
   tones,
   type Scale,
   type Slide,
   type Theme,
-} from '@/lib/deck'
+} from '@/lib/presentation'
 import {
   DEFAULT_TRANSITION,
+  IDLE_MS,
+  SWIPE,
   TRANSITION_MS,
+  WHEEL,
   activeTransition,
+  playerAction,
+  slideSeconds,
+  swipeDelta,
   transitions,
   type ActiveTransition,
   type Transition,
-} from '@/lib/transitions'
+} from '@/lib/player'
 import {
-  blankDeck,
+  blankPresentation,
   createPresentation,
-  deckName,
+  presentationName,
   loadLibrary,
   saveLibrary,
   uniqueName,
   type Library,
 } from '@/lib/presentations'
-import { DeckChat } from './deck-chat'
+import { PresentationChat } from './presentation-chat'
+import { downloadFile } from './download'
 import { PresentationMenu } from './presentation-menu'
 import { SlideView } from './slide'
 
-const SWIPE_DISTANCE = 45
 const BASICS = ['newSlide', 'heading', 'highlight', 'text', 'extras'] as const
 const SHORTCUTS = [
   'next',
@@ -106,13 +112,13 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const tk = useTranslations('Shortcuts')
   const tp = useTranslations('Presentations')
   const untitled = tp('untitled')
-  const blank = useMemo(() => blankDeck(tp('blank.heading'), tp('blank.body')), [tp])
+  const blank = useMemo(() => blankPresentation(tp('blank.heading'), tp('blank.body')), [tp])
   const [library, setLibrary] = useState<Library>(() => ({
     current: 'example',
     items: [
       {
         id: 'example',
-        name: deckName(example) || untitled,
+        name: presentationName(example) || untitled,
         source: example,
         userNamed: true,
         updatedAt: 0,
@@ -123,14 +129,14 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const [chatKey, setChatKey] = useState(0)
   const [source, setSource] = useState(example)
   const [draft, setDraft] = useState(example)
-  const deck = useMemo(() => parseDeck(source), [source])
+  const presentation = useMemo(() => parsePresentation(source), [source])
   const [index, setIndex] = useState(0)
   const [tab, setTab] = useState<'preview' | 'markdown' | 'chat'>('preview')
   const [accent, setAccent] = useState<string>(tones[0].color)
   const [transition, setTransition] = useState<Transition>(DEFAULT_TRANSITION)
   const [safe, setSafe] = useState(false)
-  const [duration, setDuration] = useState(deck.duration)
-  const [loop, setLoop] = useState(deck.loop)
+  const [duration, setDuration] = useState(presentation.duration)
+  const [loop, setLoop] = useState(presentation.loop)
   const [playing, setPlaying] = useState(false)
   const [presenting, setPresenting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -144,11 +150,11 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const [brandDraft, setBrandDraft] = useState<string | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const slides = deck.slides
+  const slides = presentation.slides
   const current = library.items.find(p => p.id === library.current) ?? library.items[0]
-  const theme = deck.theme
-  const look = { font: deck.font, scale: deck.scale, brand: deck.brand }
-  // The deck's front matter owns these settings, so the controls rewrite them in the source and the unbuilt draft.
+  const theme = presentation.theme
+  const look = presentationLook(presentation)
+  // The presentation's front matter owns these settings, so the controls rewrite them in the source and the unbuilt draft.
   const setFront = (key: string, value?: string) => {
     setSource(s => setFrontMatter(s, key, value))
     setDraft(d => setFrontMatter(d, key, value))
@@ -223,10 +229,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         }
         setIndex(i => (i + 1) % slides.length)
       },
-      (slide.duration || duration) * 1000,
+      slideSeconds(slide, duration) * 1000,
     )
     return () => clearTimeout(timer)
-  }, [playing, index, slides.length, loop, duration, slide.duration, notice, t])
+  }, [playing, index, slides.length, loop, duration, slide, notice, t])
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.isComposing || event.keyCode === 229) return
@@ -240,31 +246,24 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         tab !== 'preview'
       )
         return
-      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(event.key)) {
-        event.preventDefault()
-        move(1)
+      const action = playerAction(event)
+      if (!action) return
+      event.preventDefault()
+      if (action === 'next') move(1)
+      if (action === 'previous') move(-1)
+      if (action === 'first' || action === 'last') {
+        setIndex(action === 'first' ? 0 : slides.length - 1)
+        setPlaying(false)
       }
-      if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) {
-        event.preventDefault()
-        move(-1)
-      }
-      if (event.key.toLowerCase() === 'p') {
+      if (action === 'autoplay') {
         setPlaying(p => !p)
         notice(t('toast.autoplay', { on: String(!playing) }))
       }
-      if (event.key.toLowerCase() === 'f') {
+      if (action === 'fullscreen') {
         if (presenting) leave()
         else present()
       }
-      if (event.key.toLowerCase() === 's') toggleSafe()
-      if (event.key === 'Home') {
-        setIndex(0)
-        setPlaying(false)
-      }
-      if (event.key === 'End') {
-        setIndex(slides.length - 1)
-        setPlaying(false)
-      }
+      if (action === 'shareSafe') toggleSafe()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -281,10 +280,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
       timer = setTimeout(() => {
         locked = false
         total = 0
-      }, 240)
+      }, WHEEL.settleMs)
       if (locked) return
-      total += event.deltaY * (event.deltaMode === 1 ? 16 : 1)
-      if (Math.abs(total) > 65) {
+      total += event.deltaY * (event.deltaMode === 1 ? WHEEL.lineHeight : 1)
+      if (Math.abs(total) > WHEEL.distance) {
         move(Math.sign(total))
         total = 0
         locked = true
@@ -318,7 +317,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     const wake = () => {
       setIdle(false)
       clearTimeout(timer)
-      timer = setTimeout(() => setIdle(true), 2600)
+      timer = setTimeout(() => setIdle(true), IDLE_MS)
     }
     wake()
     window.addEventListener('pointermove', wake)
@@ -344,7 +343,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   }, [index, tab, presenting, slide])
   function show(value: string) {
     try {
-      const next = parseDeck(value)
+      const next = parsePresentation(value)
       setSource(value)
       setDraft(value)
       setDuration(next.duration)
@@ -397,8 +396,8 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   }
   const apply = () => {
     try {
-      const next = parseDeck(draft)
-      const formatted = formatDeck(draft)
+      const next = parsePresentation(draft)
+      const formatted = formatPresentation(draft)
       setSource(formatted)
       setDraft(formatted)
       setIndex(0)
@@ -412,8 +411,8 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     }
   }
   const loadGenerated = (generated: string, fresh: boolean) => {
-    const value = formatDeck(generated)
-    const name = deckName(value) || untitled
+    const value = formatPresentation(generated)
+    const name = presentationName(value) || untitled
     const reuse = !fresh || current.source === blank
     const target = reuse
       ? {
@@ -436,7 +435,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           )
         : [...l.items, target],
     }))
-    const next = parseDeck(value)
+    const next = parsePresentation(value)
     setSource(value)
     setDraft(value)
     setIndex(0)
@@ -458,10 +457,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const exportHTML = async () => {
     setExporting(true)
     try {
-      const { deckHtml, fetchAsDataUrl } = await import('./slide/deck-html')
+      const { presentationHtml, fetchAsDataUrl } = await import('./slide/presentation-html')
       downloadFile(
-        await deckHtml(
-          { ...deck, title: current.name, slides, duration, loop },
+        await presentationHtml(
+          { ...presentation, title: current.name, slides, duration, loop },
           {
             theme,
             tone: accent,
@@ -513,7 +512,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
             className="btn"
             aria-label={t('settings')}
             aria-expanded={settingsOpen}
-            aria-controls="deck-settings"
+            aria-controls="presentation-settings"
             onClick={() => setSettingsOpen(!settingsOpen)}
           >
             <Settings2 size={16} />
@@ -616,10 +615,10 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
         </div>
         <div className={`editor-body ${tab !== 'preview' ? 'markdown-body' : ''}`}>
           <div className="chat-host" hidden={tab !== 'chat'}>
-            <DeckChat
+            <PresentationChat
               key={chatKey}
               source={source}
-              onDeck={loadGenerated}
+              onPresentation={loadGenerated}
               onOpen={() => setTab('chat')}
               onCopyPrompt={copyPrompt}
             />
@@ -746,7 +745,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
           <span>{t('footer.quiet')}</span>
         </footer>
       </section>
-      <aside id="deck-settings" className="inspector" hidden={!settingsOpen}>
+      <aside id="presentation-settings" className="inspector" hidden={!settingsOpen}>
         <div className="inspector-heading">
           <Settings2 size={15} />
           <h2>{ts('title')}</h2>
@@ -1036,9 +1035,8 @@ function onSwipe(target: HTMLElement, move: (delta: number) => void, vertical: b
     const dx = event.changedTouches[0].clientX - start.x
     const dy = event.changedTouches[0].clientY - start.y
     start = null
-    const distance =
-      vertical && Math.abs(dy) > Math.abs(dx) ? dy : Math.abs(dx) > Math.abs(dy) * 1.2 ? dx : 0
-    if (Math.abs(distance) > SWIPE_DISTANCE) move(distance < 0 ? 1 : -1)
+    const distance = swipeDelta(dx, dy, vertical)
+    if (Math.abs(distance) > SWIPE.distance) move(distance < 0 ? 1 : -1)
   }
   target.addEventListener('touchstart', down, { passive: true })
   target.addEventListener('touchend', up)

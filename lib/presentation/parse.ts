@@ -9,7 +9,7 @@ import { defaultLook, fontId, fonts, isScale, scales } from './look'
 import { isTheme, themes, type Theme } from './theme'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
-import type { Deck, MessageWidget, Slide } from './types'
+import type { Presentation, MessageWidget, Slide } from './types'
 
 export const UNTITLED = 'Untitled presentation'
 
@@ -35,7 +35,7 @@ const failAt = (line: number, message: string): never => {
   throw new Error(`Line ${line}: ${message}`)
 }
 
-export function parseDeck(source: string): Deck {
+export function parsePresentation(source: string): Presentation {
   const lines = source.replace(/\r/g, '').split('\n')
   const { title, theme, duration, loop, start, look } = parseFrontMatter(lines)
   const chunks = splitSlides(lines, start).filter(c => c.text.trim())

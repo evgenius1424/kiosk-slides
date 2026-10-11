@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Check, ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react'
-import type { Presentation } from '@/lib/presentations'
+import type { SavedPresentation } from '@/lib/presentations'
 
 type Props = {
-  items: Presentation[]
-  current: Presentation
+  items: SavedPresentation[]
+  current: SavedPresentation
   onOpen: (id: string) => void
   onCreate: () => void
   onRename: (id: string, name: string) => void
@@ -40,9 +40,9 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
     }
   }, [open, editing])
   return (
-    <div className="deck-menu" ref={rootRef}>
+    <div className="presentation-menu" ref={rootRef}>
       <button
-        className="deck-selector"
+        className="presentation-selector"
         aria-haspopup="true"
         aria-expanded={open}
         onClick={() => (open ? close() : setOpen(true))}
@@ -51,8 +51,8 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
         <ChevronDown size={14} />
       </button>
       {open && (
-        <div className="deck-popover" role="menu" aria-label={t('title')}>
-          <div className="deck-popover-heading">
+        <div className="presentation-popover" role="menu" aria-label={t('title')}>
+          <div className="presentation-popover-heading">
             {t('title')} <span>{t('savedHere')}</span>
           </div>
           <ul>
@@ -68,7 +68,7 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
                   />
                 ) : (
                   <button
-                    className="deck-item"
+                    className="presentation-item"
                     role="menuitem"
                     onClick={() => {
                       onOpen(item.id)
@@ -106,7 +106,7 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
             ))}
           </ul>
           <button
-            className="deck-new"
+            className="presentation-new"
             role="menuitem"
             onClick={() => {
               onCreate()
@@ -133,7 +133,7 @@ function RenameField({ name, onDone }: { name: string; onDone: (name: string) =>
   }
   return (
     <input
-      className="deck-rename"
+      className="presentation-rename"
       aria-label={t('nameField')}
       value={value}
       maxLength={80}

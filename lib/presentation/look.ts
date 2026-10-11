@@ -1,4 +1,4 @@
-import type { Slide } from './types'
+import type { Presentation, Slide } from './types'
 
 export const scales = ['normal', 'large', 'kiosk'] as const
 export type Scale = (typeof scales)[number]
@@ -12,7 +12,7 @@ export type Font = {
   weights?: string
 }
 
-export type DeckLook = { font: string; scale: Scale; brand: string }
+export type PresentationLook = { font: string; scale: Scale; brand: string }
 
 export const fonts: Font[] = [
   { id: 'classic', name: 'Classic', stack: 'Arial,Helvetica,sans-serif', width: 0.56 },
@@ -59,10 +59,16 @@ export const fonts: Font[] = [
 ]
 
 export const DEFAULT_BRAND = 'kiosk'
-export const defaultLook = (): DeckLook => ({
+export const defaultLook = (): PresentationLook => ({
   font: fonts[0].id,
   scale: 'normal',
   brand: DEFAULT_BRAND,
+})
+
+export const presentationLook = ({ font, scale, brand }: Presentation): PresentationLook => ({
+  font,
+  scale,
+  brand,
 })
 
 export const isScale = (value: string | undefined): value is Scale =>
@@ -79,7 +85,7 @@ export function fontFace({ name, file, weights }: Font, src: string) {
 
 export function headingSize(
   slide: Pick<Slide, 'kind' | 'heading' | 'body'>,
-  { scale, font }: Pick<DeckLook, 'scale' | 'font'>,
+  { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
 ): number | undefined {
   if (scale === 'normal') return undefined
   const box = boxes[scale]

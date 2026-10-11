@@ -6,7 +6,7 @@ export type Block = {
   node: RootContent
   /** The `<!-- type: k=v -->` comment directly above this block, if any, with the comment's first line. */
   annotation?: Annotation & { line: number }
-  /** Absolute 1-based line number of the block in the deck source. */
+  /** Absolute 1-based line number of the block in the presentation source. */
   line: number
   /** Absolute 1-based line number of any node inside this block, e.g. a table row or list item. */
   lineOf: (node: Node) => number
@@ -17,8 +17,8 @@ export type Block = {
 }
 
 /**
- * A supporting widget kind. Each kind lives in its own module under `lib/deck/components/`
- * and is registered in `lib/deck/components/index.ts`.
+ * A supporting widget kind. Each kind lives in its own module under `lib/presentation/components/`
+ * and is registered in `lib/presentation/components/index.ts`.
  *
  * - Unannotated blocks go to the first registered component without an `annotation`
  *   whose `matches` returns true.

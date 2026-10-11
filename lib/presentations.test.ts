@@ -1,35 +1,40 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { parseDeck } from '@/lib/deck'
-import { blankDeck, createPresentation, deckName, uniqueName } from '@/lib/presentations'
+import { parsePresentation } from '@/lib/presentation'
+import {
+  blankPresentation,
+  createPresentation,
+  presentationName,
+  uniqueName,
+} from '@/lib/presentations'
 import messages from '@/messages/en.json'
 
 const DEFAULT_NAME = messages.Presentations.untitled
-const BLANK_DECK = blankDeck(
+const BLANK_PRESENTATION = blankPresentation(
   messages.Presentations.blank.heading,
   messages.Presentations.blank.body,
 )
 
 describe('presentations', () => {
-  it('starts new presentations from a valid one-slide deck', () => {
-    expect(parseDeck(BLANK_DECK).slides).toHaveLength(1)
+  it('starts new presentations from a valid one-slide presentation', () => {
+    expect(parsePresentation(BLANK_PRESENTATION).slides).toHaveLength(1)
   })
 
   it('numbers names that are already taken', () => {
-    const first = createPresentation(DEFAULT_NAME, BLANK_DECK, [])
-    const second = createPresentation(DEFAULT_NAME, BLANK_DECK, [first])
+    const first = createPresentation(DEFAULT_NAME, BLANK_PRESENTATION, [])
+    const second = createPresentation(DEFAULT_NAME, BLANK_PRESENTATION, [first])
     expect(second.name).toBe(`${DEFAULT_NAME} 2`)
-    expect(createPresentation(DEFAULT_NAME, BLANK_DECK, [first, second]).name).toBe(
+    expect(createPresentation(DEFAULT_NAME, BLANK_PRESENTATION, [first, second]).name).toBe(
       `${DEFAULT_NAME} 3`,
     )
     expect(uniqueName(DEFAULT_NAME, [first], first.id)).toBe(DEFAULT_NAME)
   })
 
-  it('names a deck from its title, or its first heading', () => {
-    expect(deckName(readFileSync('public/example.md', 'utf8'))).toBe(
+  it('names a presentation from its title, or its first heading', () => {
+    expect(presentationName(readFileSync('public/example.md', 'utf8'))).toBe(
       'Kiosk Slides — example presentation',
     )
-    expect(deckName('# Ship **faster** with less\n')).toBe('Ship faster with less')
-    expect(deckName('## not a deck')).toBe('')
+    expect(presentationName('# Ship **faster** with less\n')).toBe('Ship faster with less')
+    expect(presentationName('## not a presentation')).toBe('')
   })
 })
