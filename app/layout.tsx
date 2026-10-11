@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
 const ICONS: Metadata['icons'] = {
@@ -24,7 +25,23 @@ const ICONS: Metadata['icons'] = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('Metadata')
-  return { title: t('title'), description: t('description'), generator: 'v0.app', icons: ICONS }
+  const title = t('title', { name: SITE_NAME })
+  const description = t('description')
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: { default: title, template: t('titleTemplate', { name: SITE_NAME }) },
+    description,
+    applicationName: SITE_NAME,
+    keywords: t.raw('keywords') as string[],
+    authors: [{ name: 'Evgenii', url: 'https://github.com/evgenius1424' }],
+    creator: 'Evgenii',
+    alternates: { canonical: '/' },
+    openGraph: { type: 'website', url: '/', siteName: SITE_NAME, title, description, locale: t('ogLocale') },
+    twitter: { card: 'summary_large_image', title, description },
+    robots: { index: true, follow: true },
+    generator: 'v0.app',
+    icons: ICONS,
+  }
 }
 
 export const viewport: Viewport = {

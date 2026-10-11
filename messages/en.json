@@ -1,7 +1,24 @@
 {
   "Metadata": {
-    "title": "Kiosk Slides — The art of being seen",
-    "description": "Clear slides in a minute. Describe your talk, let AI write it, and present anywhere."
+    "title": "{name}: Slides made to be seen",
+    "titleTemplate": "%s · {name}",
+    "description": "Describe your talk to AI and get a clean, finished deck in seconds. Big, readable slides built for screen sharing and meeting-room TVs, with no layout work.",
+    "keywords": [
+      "AI slides",
+      "AI presentation maker",
+      "slide generator",
+      "presentation from text",
+      "screen sharing slides",
+      "meeting room display",
+      "kiosk display",
+      "HTML slides"
+    ],
+    "ogLocale": "en_US",
+    "image": {
+      "headline": "Slides made",
+      "highlight": "to be seen.",
+      "footer": "Ready in seconds. Built for screen sharing."
+    }
   },
   "Workspace": {
     "home": "Kiosk Slides home",
