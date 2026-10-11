@@ -63,6 +63,7 @@ function parseFrontMatter(lines: string[]) {
   let tone: string = DEFAULT_TONE
   let transition: Transition = DEFAULT_TRANSITION
   let shareSafe = false
+  let credit = true
   let duration = 12
   let loop = true
   let start = 0
@@ -98,6 +99,11 @@ function parseFrontMatter(lines: string[]) {
       shareSafe = safeField.value === 'true'
     else if (safeField.value)
       failAt(safeField.line, `Set share-safe to true or false, not “${safeField.value}”.`)
+    const creditField = field('credit')
+    if (creditField.value === 'true' || creditField.value === 'false')
+      credit = creditField.value === 'true'
+    else if (creditField.value)
+      failAt(creditField.line, `Set credit to true or false, not “${creditField.value}”.`)
     const font = field('font')
     if (font.value)
       look.font =
@@ -115,7 +121,7 @@ function parseFrontMatter(lines: string[]) {
     loop = !/loop:\s*false/.test(front)
     start = end + 1
   }
-  return { title, theme, tone, transition, shareSafe, duration, loop, start, look }
+  return { title, theme, tone, transition, shareSafe, credit, duration, loop, start, look }
 }
 
 /** Split on bare `---` lines outside code fences. Each chunk remembers its first absolute line. */

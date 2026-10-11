@@ -732,6 +732,12 @@ kbd {
 .shared-bar .btn {
   padding: 8px 12px;
 }
+.shared-credit {
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
 .shared-broken {
   display: grid;
   place-content: center;
@@ -1339,7 +1345,8 @@ html:has(.is-presenting .room-light) {
     font-size: 0;
     gap: 0;
   }
-  .shared-bar > span {
+  .shared-bar > span,
+  .shared-credit {
     display: none;
   }
   .export-btn svg {
