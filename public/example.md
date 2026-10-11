@@ -37,7 +37,7 @@ after: One large conclusion with the evidence that matters most.
 :::meta
 title: How it works
 label: Three steps
-footer: The Markdown remains editable even when AI drafts it.
+footer: Edit the source. Export HTML. Present anywhere.
 :::
 
 # Go from source to story in ==three steps==
@@ -69,14 +69,15 @@ starts: [Customer question, Working demo]
 :::meta
 title: The format
 label: Editable
-footer: The build command is illustrative until the CLI is implemented.
+footer: Export once. Open in any browser. No server required.
 layout: split-left
 :::
 
 # Keep the source ==simple==
 
-```sh
-kiosk build talk.md --out dist/
+```html
+<h1>One clear idea.</h1>
+<p>Make it count.</p>
 ```
 
 ---
@@ -92,22 +93,6 @@ footer: A headline should survive a room, a TV, and a shared browser window.
 :::metric
 value: 1
 caption: Main idea per slide
-:::
-
----
-
-:::meta
-title: Live demonstration
-label: Agent chat
-footer: The local service and its permitted tools are configured by the host.
-layout: split-left
-:::
-
-# Show the agent ==at work==
-
-:::agent-chat
-profile: demo-codex
-heading: Ask the local agent
 :::
 
 ---
