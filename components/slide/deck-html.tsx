@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import type { Deck, Theme } from '@/lib/deck'
+import { findFont, fontFace, type Deck, type Theme } from '@/lib/deck'
 import { slideStyles } from '@/lib/slide-styles'
 import { SlideView } from '.'
 
@@ -8,15 +8,19 @@ export type DeckHtmlOptions = {
   tone: string
   motion: boolean
   embedImage: (src: string) => Promise<string>
+  embedFont: (file: string) => Promise<string>
 }
 
-export async function deckHtml(deck: Deck, { theme = deck.theme, tone, motion, embedImage }: DeckHtmlOptions): Promise<string> {
+export async function deckHtml(deck: Deck, { theme = deck.theme, tone, motion, embedImage, embedFont }: DeckHtmlOptions): Promise<string> {
+  const look = { font: deck.font, scale: deck.scale, brand: deck.brand }
+  const font = findFont(deck.font)
+  const face = font.file ? fontFace(font, await embedFont(font.file)) : ''
   const slides = await Promise.all(deck.slides.map(async slide => {
     const embedded = slide.kind === 'image' ? { ...slide, src: await embedImage(slide.src) } : slide
-    return `<div class="portable-slide slide-backdrop ${theme}" style="--slide-tone:${tone}"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} />)}</div></div>`
+    return `<div class="portable-slide slide-backdrop ${theme}" style="--slide-tone:${tone}"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
   }))
   const config = JSON.stringify({ duration: deck.duration, loop: deck.loop, durations: deck.slides.map(s => s.duration || deck.duration) })
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${deck.title.replace(/[<>&"]/g, '')}</title><style>${slideStyles}${pageStyles(motion, theme)}</style></head><body>${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}<\/script></body></html>`
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${deck.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(motion, theme)}</style></head><body>${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}<\/script></body></html>`
 }
 
 export async function fetchAsDataUrl(src: string): Promise<string> {

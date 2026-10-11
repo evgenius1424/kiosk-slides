@@ -5,6 +5,7 @@ import { parseAnnotation, type Annotation } from './annotation'
 import { defaultChrome, parseChrome } from './chrome'
 import { widgetComponents, type Widget } from './components'
 import { headingLength, parseHeading } from './heading'
+import { defaultLook, fontId, fonts, isScale, scales } from './look'
 import { isTheme, themes, type Theme } from './theme'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
@@ -29,30 +30,42 @@ const failAt = (line: number, message: string): never => { throw new Error(`Line
 /** Parse a deck. Throws an `Error` whose message starts with `Line N:` when the source breaks a rule. */
 export function parseDeck(source: string): Deck {
   const lines = source.replace(/\r/g, '').split('\n')
-  const { title, theme, duration, loop, start } = parseFrontMatter(lines)
+  const { title, theme, duration, loop, start, look } = parseFrontMatter(lines)
   const chunks = splitSlides(lines, start).filter(c => c.text.trim())
   const slides = chunks.map(parseSlide)
   if (!slides.length) failAt(1, 'Add a slide with a # headline.')
   if (slides.length > 40) failAt(chunks[40].line, 'Use at most 40 slides per deck.')
-  return { title, theme, duration: Math.max(2, Math.min(120, duration)), loop, slides }
+  return { title, theme, duration: Math.max(2, Math.min(120, duration)), loop, ...look, slides }
 }
 
 function parseFrontMatter(lines: string[]) {
   let title = 'Untitled deck'; let theme: Theme = 'room-dark'; let duration = 12; let loop = true; let start = 0
+  const look = defaultLook()
   if (lines[0]?.trim() === '---') {
     const end = lines.findIndex((l, i) => i > 0 && l.trim() === '---')
     if (end < 0) failAt(1, 'close the front matter with ---')
     const front = lines.slice(1, end).join('\n')
+    const field = (key: string) => {
+      const index = lines.findIndex((l, i) => i > 0 && i < end && l.startsWith(`${key}:`))
+      return { value: lines[index]?.slice(key.length + 1).trim() || undefined, line: index + 1 }
+    }
     title = front.match(/^title:\s*(.+)$/m)?.[1] || title
-    const themeIndex = lines.findIndex((l, i) => i > 0 && i < end && /^theme:/.test(l))
-    const value = lines[themeIndex]?.match(/^theme:\s*(.+)$/)?.[1]
-    if (isTheme(value)) theme = value
-    else if (value) failAt(themeIndex + 1, `Unknown theme “${value}”. Use ${themes.join(' or ')}.`)
+    const themeField = field('theme')
+    if (isTheme(themeField.value)) theme = themeField.value
+    else if (themeField.value) failAt(themeField.line, `Unknown theme “${themeField.value}”. Use ${themes.join(' or ')}.`)
+    const font = field('font')
+    if (font.value) look.font = fontId(font.value) ?? failAt(font.line, `Unknown font “${font.value}”. Use ${fonts.map(f => f.id).join(', ')}.`)
+    const scale = field('scale')
+    if (isScale(scale.value)) look.scale = scale.value
+    else if (scale.value) failAt(scale.line, `Unknown scale “${scale.value}”. Use ${scales.join(', ')}.`)
+    const brand = field('brand')
+    if (brand.value && brand.value.length > 24) failAt(brand.line, 'Keep the brand to 24 characters.')
+    if (brand.value) look.brand = brand.value === 'none' ? '' : brand.value
     duration = Number(front.match(/duration:\s*(\d+)s/)?.[1] || 12)
     loop = !/loop:\s*false/.test(front)
     start = end + 1
   }
-  return { title, theme, duration, loop, start }
+  return { title, theme, duration, loop, start, look }
 }
 
 /** Split on bare `---` lines outside code fences. Each chunk remembers its first absolute line. */

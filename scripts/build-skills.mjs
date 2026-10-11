@@ -1,4 +1,4 @@
-import { copyFile, mkdir } from 'node:fs/promises'
+import { copyFile, mkdir, readdir } from 'node:fs/promises'
 import { build } from 'esbuild'
 
 const SKILLS = ['skills/kiosk-slides-deck', 'skills/kiosk-slides-render']
@@ -23,5 +23,11 @@ for (const skill of SKILLS) {
 
 await mkdir('skills/kiosk-slides-deck/references', { recursive: true })
 for (const file of REFERENCES) await copyFile(file, `skills/kiosk-slides-deck/references/${file.split('/').pop()}`)
+
+const fonts = (await readdir('public/fonts')).filter(file => file.endsWith('.woff2'))
+for (const skill of SKILLS) {
+  await mkdir(`${skill}/assets/fonts`, { recursive: true })
+  for (const file of fonts) await copyFile(`public/fonts/${file}`, `${skill}/assets/fonts/${file}`)
+}
 
 console.log(`Built ${SKILLS.join(', ')}`)
