@@ -1,26 +1,28 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { findFont, fontFace, type Deck, type Theme } from '@/lib/deck'
 import { slideStyles } from '@/lib/slide-styles'
+import { TRANSITION_MS, type Transition } from '@/lib/transitions'
 import { SlideView } from '.'
 
 export type DeckHtmlOptions = {
   theme?: Theme
   tone: string
-  motion: boolean
+  transition: Transition
+  shareSafe?: boolean
   embedImage: (src: string) => Promise<string>
   embedFont: (file: string) => Promise<string>
 }
 
-export async function deckHtml(deck: Deck, { theme = deck.theme, tone, motion, embedImage, embedFont }: DeckHtmlOptions): Promise<string> {
+export async function deckHtml(deck: Deck, { theme = deck.theme, tone, transition, shareSafe = false, embedImage, embedFont }: DeckHtmlOptions): Promise<string> {
   const look = { font: deck.font, scale: deck.scale, brand: deck.brand }
   const font = findFont(deck.font)
   const face = font.file ? fontFace(font, await embedFont(font.file)) : ''
   const slides = await Promise.all(deck.slides.map(async slide => {
     const embedded = slide.kind === 'image' ? { ...slide, src: await embedImage(slide.src) } : slide
-    return `<div class="portable-slide slide-backdrop ${theme}" style="--slide-tone:${tone}"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
+    return `<div class="portable-slide"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
   }))
-  const config = JSON.stringify({ duration: deck.duration, loop: deck.loop, durations: deck.slides.map(s => s.duration || deck.duration) })
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${deck.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(motion, theme)}</style></head><body>${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}<\/script></body></html>`
+  const config = JSON.stringify({ duration: deck.duration, loop: deck.loop, durations: deck.slides.map(s => s.duration || deck.duration), transition, shareSafe, ms: TRANSITION_MS })
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${deck.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}<\/script></body></html>`
 }
 
 export async function fetchAsDataUrl(src: string): Promise<string> {
@@ -33,7 +35,7 @@ export async function fetchAsDataUrl(src: string): Promise<string> {
 
 const SAFE_AREA = 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'
 
-const pageStyles = (motion: boolean, theme: Theme) => `html,body{margin:0;background:${theme === 'room-light' ? '#fafafa' : '#121214'};width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0}.portable-slide.active .slide{${motion ? 'animation:slide-enter .3s ease-out' : 'animation:none'}}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
+const pageStyles = (theme: Theme) => `html,body{margin:0;background:${theme === 'room-light' ? '#fafafa' : '#121214'};width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active,.portable-slide.kt-leave{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
 
 const icon = (path: string, className: string) => `<svg class="${className}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`
 
@@ -41,9 +43,11 @@ const controls = `<button id="full" type="button" aria-label="Toggle full screen
 
 const player = `const slides=[...document.querySelectorAll('.portable-slide')],full=document.querySelector('#full');
 const root=document.documentElement,canFull=!!(root.requestFullscreen||root.webkitRequestFullscreen);
-let index=0,timer,idle,playing=false,last=0,total=0,gesture,start=null;
+let index=0,shown=0,timer,leaving,idle,playing=false,safe=config.shareSafe,last=0,total=0,gesture,start=null;
 const fullElement=()=>document.fullscreenElement||document.webkitFullscreenElement;
-const show=()=>{slides.forEach((s,i)=>s.classList.toggle('active',i===index));schedule()};
+const mode=()=>safe&&config.transition!=='none'?'share':config.transition;
+const show=()=>{const from=shown,t=mode();shown=index;root.dataset.transition=t;if(from!==index)root.style.setProperty('--kt-dir',index<from?-1:1);slides.forEach(s=>s.classList.remove('kt-enter','kt-leave'));void root.offsetWidth;slides.forEach((s,i)=>s.classList.toggle('active',i===index));clearTimeout(leaving);if(from!==index&&t!=='none'){slides[index].classList.add('kt-enter');slides[from].classList.add('kt-leave');leaving=setTimeout(()=>slides.forEach(s=>s.classList.remove('kt-enter','kt-leave')),config.ms[t])}schedule()};
+const say=m=>{const n=document.querySelector('#notice');n.textContent=m;clearTimeout(say.t);say.t=setTimeout(()=>n.textContent='',1800)};
 const pause=()=>{playing=false;clearTimeout(timer)};
 const schedule=()=>{clearTimeout(timer);if(playing)timer=setTimeout(()=>{if(index===slides.length-1&&!config.loop){pause();return}index=(index+1)%slides.length;show()},config.durations[index]*1000)};
 const move=d=>{pause();index=Math.max(0,Math.min(slides.length-1,index+d));show()};
@@ -53,7 +57,7 @@ const syncFull=()=>root.classList.toggle('fullscreen',!!fullElement());
 full.hidden=!canFull;
 full.addEventListener('click',e=>{e.stopPropagation();toggleFull();wake()});
 document.addEventListener('fullscreenchange',syncFull);document.addEventListener('webkitfullscreenchange',syncFull);
-document.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229||e.target.closest('input,textarea,button'))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();move(1)}if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();move(-1)}if(e.key.toLowerCase()==='f'&&canFull)toggleFull();if(e.key.toLowerCase()==='p'){playing=!playing;schedule();const n=document.querySelector('#notice');n.textContent=playing?'Autoscroll on':'Autoscroll off';setTimeout(()=>n.textContent='',1800)}});
+document.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229||e.target.closest('input,textarea,button'))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();move(1)}if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();move(-1)}if(e.key.toLowerCase()==='f'&&canFull)toggleFull();if(e.key.toLowerCase()==='p'){playing=!playing;schedule();say(playing?'Autoscroll on':'Autoscroll off')}if(e.key.toLowerCase()==='s'){safe=!safe;root.dataset.transition=mode();say(safe?'Screen-share safe on':'Screen-share safe off')}});
 document.addEventListener('click',pause);
 document.addEventListener('pointermove',wake);document.addEventListener('pointerdown',wake);
 document.addEventListener('touchstart',e=>{start=e.touches.length===1?{x:e.touches[0].clientX,y:e.touches[0].clientY}:null},{passive:true});

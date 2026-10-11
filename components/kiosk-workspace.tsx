@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowDownToLine, ArrowRight, BookOpen, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Code2, Copy, Expand, FileText, Keyboard, Layers2, Monitor, PanelLeftClose, Play, Plus, RotateCcw, Settings2, ShieldCheck, Sparkles, X } from 'lucide-react'
-import { DEFAULT_BRAND, downloadFile, fonts, parseDeck, setFrontMatter, tones, type Scale, type Theme } from '@/lib/deck'
+import { DEFAULT_BRAND, downloadFile, fonts, parseDeck, setFrontMatter, tones, type Scale, type Slide, type Theme } from '@/lib/deck'
+import { DEFAULT_TRANSITION, SHARE_SAFE_HELP, TRANSITION_MS, activeTransition, transitions, type ActiveTransition, type Transition } from '@/lib/transitions'
 import { BLANK_DECK, DEFAULT_NAME, createPresentation, deckName, loadLibrary, saveLibrary, uniqueName, type Library } from '@/lib/presentations'
 import { DeckChat } from './deck-chat'
 import { PresentationMenu } from './presentation-menu'
@@ -31,7 +32,7 @@ export function KioskWorkspace({ example, help }: { example: string; help: { gui
   const [index, setIndex] = useState(0)
   const [tab, setTab] = useState<'preview' | 'markdown' | 'chat'>('preview')
   const [accent, setAccent] = useState<string>(tones[0].color)
-  const [motion, setMotion] = useState(true)
+  const [transition, setTransition] = useState<Transition>(DEFAULT_TRANSITION)
   const [safe, setSafe] = useState(false)
   const [duration, setDuration] = useState(deck.duration)
   const [loop, setLoop] = useState(deck.loop)
@@ -56,7 +57,10 @@ export function KioskWorkspace({ example, help }: { example: string; help: { gui
   const setFront = (key: string, value?: string) => { setSource(s => setFrontMatter(s, key, value)); setDraft(d => setFrontMatter(d, key, value)) }
   const setTheme = (next: Theme) => setFront('theme', next)
   const slide = slides[Math.min(index, slides.length - 1)]
+  const motion = activeTransition(transition, safe)
+  const change = useSlideChange(index, slide, motion)
   const notice = useCallback((message: string) => setToast(message), [])
+  const toggleSafe = useCallback(() => { notice(safe ? 'Screen-share safe off' : 'Screen-share safe on · quick flat fades'); setSafe(!safe) }, [safe, notice])
   const move = useCallback((delta: number) => { setPlaying(false); setIndex(i => Math.max(0, Math.min(slides.length - 1, i + delta))) }, [slides.length])
   const select = (i: number) => { setPlaying(false); setIndex(i) }
   const present = useCallback(() => {
@@ -84,11 +88,12 @@ export function KioskWorkspace({ example, help }: { example: string; help: { gui
       if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) { event.preventDefault(); move(-1) }
       if (event.key.toLowerCase() === 'p') { setPlaying(p => !p); notice(playing ? 'Autoscroll off' : 'Autoscroll on') }
       if (event.key.toLowerCase() === 'f') { if (presenting) leave(); else present() }
+      if (event.key.toLowerCase() === 's') toggleSafe()
       if (event.key === 'Home') { setIndex(0); setPlaying(false) }
       if (event.key === 'End') { setIndex(slides.length - 1); setPlaying(false) }
     }
     window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler)
-  }, [move, playing, tab, notice, slides.length, presenting, present, leave])
+  }, [move, playing, tab, notice, slides.length, presenting, present, leave, toggleSafe])
   useEffect(() => {
     const target = canvasRef.current; if (!target) return
     let total = 0; let locked = false; let timer: ReturnType<typeof setTimeout>
@@ -156,7 +161,7 @@ export function KioskWorkspace({ example, help }: { example: string; help: { gui
   }
   const exportHTML = async () => {
     setExporting(true)
-    try { const { deckHtml, fetchAsDataUrl } = await import('./slide/deck-html'); downloadFile(await deckHtml({ ...deck, title: current.name, slides, duration, loop }, { theme, tone: accent, motion: motion && !safe, embedImage: fetchAsDataUrl, embedFont: file => fetchAsDataUrl(`/fonts/${file}`) }), `${fileName(current.name)}.html`, 'text/html'); notice('Self-contained HTML exported') } catch (err) { notice((err as Error).message) } finally { setExporting(false) }
+    try { const { deckHtml, fetchAsDataUrl } = await import('./slide/deck-html'); downloadFile(await deckHtml({ ...deck, title: current.name, slides, duration, loop }, { theme, tone: accent, transition, shareSafe: safe, embedImage: fetchAsDataUrl, embedFont: file => fetchAsDataUrl(`/fonts/${file}`) }), `${fileName(current.name)}.html`, 'text/html'); notice('Self-contained HTML exported') } catch (err) { notice((err as Error).message) } finally { setExporting(false) }
   }
   return <main className={`workspace ${presenting ? 'is-presenting' : ''} ${presenting && idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}>
     <header className="app-header">
@@ -174,7 +179,7 @@ export function KioskWorkspace({ example, help }: { example: string; help: { gui
       <div className="editor-toolbar"><div className="view-tabs">{!sidebar && <button className="icon-btn" aria-label="Show slide list" onClick={() => setSidebar(true)}><Layers2 size={16} /></button>}<button className={tab === 'preview' ? 'active' : ''} onClick={() => setTab('preview')}><Monitor size={14} />Preview</button><button className={tab === 'markdown' ? 'active' : ''} onClick={() => setTab('markdown')}><Code2 size={15} />Markdown</button><button className={tab === 'chat' ? 'active' : ''} onClick={() => setTab('chat')}><Sparkles size={14} />Ask AI</button></div><span className="ready-label"><CheckCheck size={14} />{fit ? 'Ready for the room' : 'Check slide fit'}</span></div>
       <div className={`editor-body ${tab !== 'preview' ? 'markdown-body' : ''}`}>
         <div className="chat-host" hidden={tab !== 'chat'}><DeckChat key={chatKey} source={source} onDeck={loadGenerated} onOpen={() => setTab('chat')} /></div>
-        {tab === 'chat' ? null : tab === 'preview' ? <><div ref={canvasRef} className={`canvas-shell ${motion && !safe ? 'with-motion' : ''} ${presenting ? `slide-backdrop ${theme}` : ''}`} style={presenting ? { '--slide-tone': accent } as React.CSSProperties : undefined} onClick={() => setPlaying(false)}><div key={`${index}-${theme}`} className="canvas-slide"><SlideView slide={slide} theme={theme} accent={accent} look={look} /></div></div><div className="canvas-controls"><span><span className="status-dot" />{presenting ? 'Presentation' : '16:9'}<span className="control-separator">/</span>{theme === 'room-dark' ? 'Room dark' : 'Room light'}</span><div className="slide-pagination"><button className="icon-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={17} /></button><span>{String(index + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span></span><button className="icon-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={17} /></button></div><button className="icon-btn" aria-label="Enter presentation mode" onClick={present}><Expand size={16} /></button></div>{presenting && <button className="present-exit" aria-label="Leave presentation" onClick={leave}><X size={20} /></button>}</> : <div className="source-editor"><div className="source-header"><span><FileText size={14} />{current.name}</span><div><button className="btn" onClick={() => setModal('format')}><BookOpen size={14} />Markdown help</button><button className="btn primary" onClick={apply}><Check size={14} />Build deck</button></div></div><textarea aria-label="Deck Markdown source" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} /><div className={`source-status ${error ? 'error' : ''}`} role="status">{error || 'Write or paste your Markdown, then build. Built decks are saved in this browser.'}</div></div>}
+        {tab === 'chat' ? null : tab === 'preview' ? <><div ref={canvasRef} className={`canvas-shell slide-backdrop ${theme}`} data-transition={motion} style={{ '--slide-tone': accent, '--kt-dir': change.direction } as React.CSSProperties} onClick={() => setPlaying(false)}>{change.leaving && <div key={`leave-${change.count}`} className="canvas-slide kt-leave" aria-hidden="true"><SlideView slide={change.leaving} theme={theme} accent={accent} look={look} /></div>}<div key={`slide-${index}`} className={`canvas-slide ${change.leaving ? 'kt-enter' : ''}`}><SlideView slide={slide} theme={theme} accent={accent} look={look} /></div></div><div className="canvas-controls"><span><span className="status-dot" />{presenting ? 'Presentation' : '16:9'}<span className="control-separator">/</span>{theme === 'room-dark' ? 'Room dark' : 'Room light'}</span><div className="slide-pagination"><button className="icon-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={17} /></button><span>{String(index + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span></span><button className="icon-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={17} /></button></div><button className="icon-btn" aria-label="Enter presentation mode" onClick={present}><Expand size={16} /></button></div>{presenting && <button className="present-exit" aria-label="Leave presentation" onClick={leave}><X size={20} /></button>}</> : <div className="source-editor"><div className="source-header"><span><FileText size={14} />{current.name}</span><div><button className="btn" onClick={() => setModal('format')}><BookOpen size={14} />Markdown help</button><button className="btn primary" onClick={apply}><Check size={14} />Build deck</button></div></div><textarea aria-label="Deck Markdown source" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} /><div className={`source-status ${error ? 'error' : ''}`} role="status">{error || 'Write or paste your Markdown, then build. Built decks are saved in this browser.'}</div></div>}
         <div className="presenter-tip" hidden={tab !== 'preview'}><Keyboard size={15} /><span>Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<span className="tip-extra"> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</span></span><button onClick={() => setModal('help')}>All shortcuts <span>↗</span></button></div>
 
       </div>
@@ -182,7 +187,7 @@ export function KioskWorkspace({ example, help }: { example: string; help: { gui
     </section>
     <aside id="deck-settings" className="inspector" hidden={!settingsOpen}><div className="inspector-heading"><Settings2 size={15} /><h2>Deck settings</h2></div><section className="settings-section"><h3>APPEARANCE</h3><label className="field-label" htmlFor="theme">Theme</label><div className="select-wrap"><span className={`theme-swatch ${theme}`} /><select id="theme" value={theme} onChange={e => setTheme(e.target.value as Theme)}><option value="room-dark">Room dark</option><option value="room-light">Room light</option></select><ChevronDown size={13} /></div><div className="setting-label">Background tone</div><div className="color-options">{tones.map(({ name, color }) => <button key={color} className={`color-choice ${accent === color ? 'chosen' : ''}`} style={{ background: color }} title={name} aria-label={`${name} background`} aria-pressed={accent === color} onClick={() => setAccent(color)}>{accent === color && <Check size={14} />}</button>)}</div><p className="setting-help">Quiet color in the background, and on highlighted heading words.</p><label className="field-label" htmlFor="font">Font</label><div className="select-wrap"><select id="font" value={look.font} onChange={e => setFront('font', e.target.value === fonts[0].id ? undefined : e.target.value)}>{fonts.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}</select><ChevronDown size={13} /></div><label className="field-label" htmlFor="scale">Text size</label><div className="select-wrap"><select id="scale" value={look.scale} onChange={e => setFront('scale', e.target.value === 'normal' ? undefined : e.target.value as Scale)}><option value="normal">Normal</option><option value="large">Large</option><option value="kiosk">Kiosk · read from across the room</option></select><ChevronDown size={13} /></div><div className="setting-row"><label htmlFor="brand">Brand</label><Toggle checked={!!look.brand} onChange={() => setFront('brand', look.brand ? 'none' : undefined)} label="Show brand" /></div>{look.brand && <input id="brand" className="brand-input" maxLength={24} placeholder={DEFAULT_BRAND} value={brandDraft ?? (look.brand === DEFAULT_BRAND ? '' : look.brand)} onChange={e => { const text = e.target.value; setBrandDraft(text); setFront('brand', text.trim() && text.trim() !== 'none' ? text.trim() : undefined) }} onBlur={() => setBrandDraft(null)} />}<p className="setting-help">Shown in the corner of every slide. Leave empty for kiosk.</p></section>
       <section className="settings-section"><h3>PLAYBACK</h3><div className="setting-row"><span>Autoplay</span><Toggle checked={playing} onChange={() => { setPlaying(!playing); notice(playing ? 'Autoscroll off' : 'Autoscroll on') }} label="Autoplay" /></div><p className="setting-help">Let your story tell itself.</p><div className="setting-row duration-row"><label htmlFor="duration">Slide duration</label><div className="duration-input"><input id="duration" type="number" min="2" max="120" value={duration} onChange={e => setDuration(Math.max(2, Math.min(120, Number(e.target.value) || 2)))} /><span>sec</span></div></div><div className="setting-row"><span>Loop presentation</span><Toggle checked={loop} onChange={() => setLoop(!loop)} label="Loop presentation" /></div><div className="mini-note"><RotateCcw size={12} /><span>Starts paused. Always in your control.</span></div></section>
-      <section className="settings-section"><h3>MOTION & PERFORMANCE</h3><label className="field-label" htmlFor="transition">Slide transition</label><div className="select-wrap"><select id="transition" value={motion ? 'gentle' : 'none'} disabled={safe} onChange={e => setMotion(e.target.value === 'gentle')}><option value="gentle">Gentle fade</option><option value="none">None · instant</option></select><ChevronDown size={13} /></div><div className="setting-row safe-row"><span>Screen-share safe</span><Toggle checked={safe} onChange={() => { setSafe(!safe); notice(!safe ? 'Screen-share safe · motion disabled' : 'Screen-share safe off') }} label="Screen-share safe" /></div><p className="setting-help">Still visuals. No transitions.<br />Less work for your GPU.</p><div className="performance-note"><ShieldCheck size={16} /><div><strong>Clarity comes first.</strong><p>Your message stays readable,<br />even when frames get dropped.</p></div></div></section>
+      <section className="settings-section"><h3>MOTION & PERFORMANCE</h3><label className="field-label" htmlFor="transition">Slide transition</label><div className="select-wrap"><select id="transition" value={transition} disabled={safe} onChange={e => setTransition(e.target.value as Transition)}>{transitions.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select><ChevronDown size={13} /></div><p className="setting-help">{safe ? 'Screen-share safe is on, so every transition becomes a quick flat fade.' : transitions.find(t => t.id === transition)!.help}</p><div className="setting-row safe-row"><span>Screen-share safe</span><Toggle checked={safe} onChange={toggleSafe} label="Screen-share safe" /></div><p className="setting-help">{SHARE_SAFE_HELP}</p><div className="performance-note"><ShieldCheck size={16} /><div><strong>Clarity comes first.</strong><p>Your message stays readable,<br />even when frames get dropped.</p></div></div></section>
       <div className="build-panel"><div><span className="status-dot" /><strong>{fit ? 'Deck is ready' : 'Review layout'}</strong><span>{slides.length} slides</span></div><p><Check size={12} />Markdown validated</p><p><Check size={12} />{fit ? 'Current slide fits the canvas' : 'Content may overflow'}</p><p><Check size={12} />No live GPU simulation</p></div><button className="shortcuts-button" onClick={() => setModal('help')}><CircleHelp size={15} />A little help goes a long way<ArrowRight size={13} /></button>
     </aside>
     {toast && <div className="toast" role="status"><Check size={15} />{toast}</div>}
@@ -193,7 +198,7 @@ export function KioskWorkspace({ example, help }: { example: string; help: { gui
       <dl className="format-rules">{FORMAT_RULES.map(([term, rule]) => <div key={term}><dt><code>{term}</code></dt><dd>{rule}</dd></div>)}</dl>
       <details className="format-details"><summary>Full format reference</summary><pre>{help.guide}</pre></details>
       <details className="format-details"><summary>Show the prompt</summary><pre>{help.prompt}</pre></details>
-    </> : <><p>Everything you need. Nothing in the way.</p><dl className="shortcut-list">{[['Next slide','↓ / → / Page Down'],['Previous slide','↑ / ← / Page Up'],['Toggle autoplay','P'],['Presentation mode','F'],['Leave presentation','Esc'],['First / last slide','Home / End']].map(([name, key]) => <div key={name}><dt>{name}</dt><dd><kbd>{key}</kbd></dd></div>)}</dl><div className="dialog-note">Scroll over the canvas to move one slide at a time. Click the presentation or navigate to pause autoplay. Presentations are saved in this browser; switch or create them from the menu at the top.</div></>}</dialog>
+    </> : <><p>Everything you need. Nothing in the way.</p><dl className="shortcut-list">{[['Next slide','↓ / → / Page Down'],['Previous slide','↑ / ← / Page Up'],['Toggle autoplay','P'],['Presentation mode','F'],['Screen-share safe','S'],['Leave presentation','Esc'],['First / last slide','Home / End']].map(([name, key]) => <div key={name}><dt>{name}</dt><dd><kbd>{key}</kbd></dd></div>)}</dl><div className="dialog-note">Scroll over the canvas to move one slide at a time. Click the presentation or navigate to pause autoplay. Presentations are saved in this browser; switch or create them from the menu at the top.</div></>}</dialog>
   </main>
 }
 
@@ -232,4 +237,16 @@ function enterFullscreen() {
 function exitFullscreen() {
   if (document.exitFullscreen) document.exitFullscreen().catch(() => {})
   else (document as WebkitDocument).webkitExitFullscreen?.()
+}
+
+function useSlideChange(index: number, slide: Slide, motion: ActiveTransition) {
+  const [change, setChange] = useState({ index, slide, leaving: null as Slide | null, direction: 1, count: 0 })
+  if (change.index !== index) setChange({ index, slide, leaving: motion === 'none' ? null : change.slide, direction: index < change.index ? -1 : 1, count: change.count + 1 })
+  else if (change.slide !== slide) setChange({ ...change, slide })
+  useEffect(() => {
+    if (!change.leaving) return
+    const timer = setTimeout(() => setChange(c => ({ ...c, leaving: null })), TRANSITION_MS[motion])
+    return () => clearTimeout(timer)
+  }, [change.count, change.leaving, motion])
+  return change
 }

@@ -1,3 +1,5 @@
+import { transitionStyles } from './transitions'
+
 export const slideStyles = `
 .slide{--slide-accent:#ffffff;--slide-tone:#74747e;--slide-highlight:color-mix(in oklab,var(--slide-tone) 70%,#fff);--slide-bg:#121214;--slide-text:#fafafa;--slide-muted:#b4b4bd;--slide-surface:#242428;--slide-line:#3f3f46;display:flex;flex-direction:column;justify-content:space-between;width:100%;height:100%;padding:3.5cqw 5cqw;background:radial-gradient(ellipse 48% 58% at 100% 0%,color-mix(in srgb,var(--slide-tone) 12%,transparent),transparent 100%),color-mix(in srgb,var(--slide-bg) 95%,var(--slide-tone));color:var(--slide-text);overflow:hidden;box-sizing:border-box;font-family:var(--slide-font,Arial,Helvetica,sans-serif)}
 .slide *{box-sizing:border-box}.slide.room-light{--slide-bg:#fafafa;--slide-text:#18181b;--slide-muted:#52525b;--slide-surface:#f0f0f2;--slide-line:#d4d4d8;--slide-accent:#09090b;--slide-highlight:color-mix(in oklab,var(--slide-tone) 75%,#000)}
@@ -10,5 +12,5 @@ export const slideStyles = `
 .slide.scale-large h2,.slide.scale-kiosk h2{font-size:var(--heading-size,6.5cqw)}.slide.scale-large h2{max-width:86cqw;line-height:1.05;letter-spacing:-.055em}.scale-large .slide-body{font-size:2.4cqw;max-width:80cqw}.slide.scale-kiosk{padding:2.8cqw 4cqw}.scale-kiosk .slide-meta{font-size:1.3cqw}.scale-kiosk .slide-label{font-size:1.2cqw}.scale-kiosk .slide-content{padding:1.5cqw 0}.slide.scale-kiosk h2{max-width:92cqw;line-height:1;letter-spacing:-.06em}.scale-kiosk .slide-body{font-size:2.7cqw;line-height:1.45;max-width:80cqw}.scale-kiosk .slide-footer{font-size:1.3cqw}.scale-kiosk .slide-brand{font-size:1.8cqw}.scale-kiosk .slide-steps li{font-size:2.6cqw}.scale-kiosk .comparison p,.scale-kiosk .slide-buttons a{font-size:2.4cqw}.scale-kiosk .slide-metric>span{font-size:3cqw}
 
 .slide-backdrop{--slide-tone:#74747e;--slide-bg:#121214;background:radial-gradient(ellipse 48% 58% at 100% 0%,color-mix(in srgb,var(--slide-tone) 12%,transparent),transparent 100%),color-mix(in srgb,var(--slide-bg) 95%,var(--slide-tone))}.slide-backdrop.room-light{--slide-bg:#fafafa}.slide-backdrop .slide{background:transparent}
-@keyframes slide-enter{from{opacity:.6;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.slide{animation:none!important}}
-`;
+
+` + transitionStyles;

@@ -3,8 +3,9 @@ import path from 'node:path'
 import { parseArgs } from 'node:util'
 import { fontId, fonts, isScale, isTheme, parseDeck, scales, themes, tones, type Deck } from '@/lib/deck'
 import { deckHtml, fetchAsDataUrl } from '@/components/slide/deck-html'
+import { DEFAULT_TRANSITION, isTransition, transitions } from '@/lib/transitions'
 
-const usage = 'Usage: render.mjs deck.md [-o deck.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--no-motion] [--check]'
+const usage = 'Usage: render.mjs deck.md [-o deck.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--check]'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -16,6 +17,8 @@ const { values, positionals } = parseArgs({
     scale: { type: 'string' },
     brand: { type: 'string' },
     images: { type: 'string' },
+    transition: { type: 'string', default: DEFAULT_TRANSITION },
+    'share-safe': { type: 'boolean', default: false },
     'no-motion': { type: 'boolean', default: false },
     check: { type: 'boolean', default: false },
   },
@@ -32,8 +35,10 @@ async function main() {
   if (!isTheme(theme)) throw new Error(`Unknown theme “${theme}”. Use ${themes.join(' or ')}.`)
   const tone = tones.find(t => t.name.toLowerCase() === values.tone!.toLowerCase())?.color ?? values.tone!
   if (!/^#[0-9a-f]{3,8}$/i.test(tone)) throw new Error(`Unknown tone “${values.tone}”. Use ${tones.map(t => t.name.toLowerCase()).join(', ')} or a #hex color.`)
+  const transition = values['no-motion'] ? 'none' : values.transition!
+  if (!isTransition(transition)) throw new Error(`Unknown transition “${transition}”. Use ${transitions.map(t => t.id).join(', ')}.`)
   const imageDir = values.images ?? path.dirname(path.resolve(input))
-  const html = await deckHtml(deck, { theme, tone, motion: !values['no-motion'], embedImage: src => embed(src, imageDir), embedFont })
+  const html = await deckHtml(deck, { theme, tone, transition, shareSafe: values['share-safe'], embedImage: src => embed(src, imageDir), embedFont })
   const out = values.out ?? input.replace(/\.(md|markdown)$/i, '') + '.html'
   await writeFile(out, html)
   console.log(`${summary(deck)}\nWrote ${out}`)
