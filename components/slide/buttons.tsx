@@ -1,6 +1,6 @@
 import type { SlideOfKind } from '@/lib/deck'
 
-export function ButtonsWidget({ slide }: { slide: SlideOfKind<'buttons'> }) {
+export function ButtonsView({ slide }: { slide: SlideOfKind<'buttons'> }) {
   return (
     <div className="slide-buttons">
       {slide.buttons.map((button, i) => (

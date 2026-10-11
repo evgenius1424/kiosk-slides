@@ -8,7 +8,7 @@ const plotWidth = width - left - right, plotHeight = height - top - bottom
  * A small inline SVG bar or line chart, values scaled from zero. The parser caps a chart at 6 body rows
  * (≤6 labels) and 5 columns, one of which is the label column, so there are at most 4 series.
  */
-export function ChartWidget({ slide }: { slide: SlideOfKind<'chart'> }) {
+export function ChartView({ slide }: { slide: SlideOfKind<'chart'> }) {
   const { type, labels, series } = slide
   const values = series.flatMap(s => s.values)
   const min = Math.min(0, ...values), max = Math.max(0, ...values)

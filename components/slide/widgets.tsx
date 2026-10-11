@@ -1,25 +1,25 @@
 import type { ComponentType } from 'react'
 import type { SlideKind, SlideOfKind } from '@/lib/deck'
-import { BeforeAfterWidget } from './before-after'
-import { ChartWidget } from './chart'
-import { CodeWidget } from './code'
-import { FlowWidget } from './flow'
-import { ImageWidget } from './image'
-import { MetricWidget } from './metric'
-import { StepsWidget } from './steps'
-import { TableWidget } from './table'
-import { ButtonsWidget } from './buttons'
+import { BeforeAfterView } from './before-after'
+import { ButtonsView } from './buttons'
+import { ChartView } from './chart'
+import { CodeView } from './code'
+import { FlowView } from './flow'
+import { ImageView } from './image'
+import { MetricView } from './metric'
+import { StepsView } from './steps'
+import { TableView } from './table'
 
 /** The render component for each slide kind. TypeScript fails here until every kind has one. */
 export const widgets: { [K in SlideKind]: ComponentType<{ slide: SlideOfKind<K> }> | null } = {
   message: null,
-  steps: StepsWidget,
-  code: CodeWidget,
-  image: ImageWidget,
-  'before-after': BeforeAfterWidget,
-  table: TableWidget,
-  buttons: ButtonsWidget,
-  metric: MetricWidget,
-  flow: FlowWidget,
-  chart: ChartWidget,
+  steps: StepsView,
+  code: CodeView,
+  image: ImageView,
+  'before-after': BeforeAfterView,
+  table: TableView,
+  buttons: ButtonsView,
+  metric: MetricView,
+  flow: FlowView,
+  chart: ChartView,
 }

@@ -33,7 +33,7 @@ function layout(lines: string[][]) {
 const area = (rows: Rows, from: number, to: number): CSSProperties =>
   ({ gridRow: `${rows.start + 1} / ${rows.end + 2}`, gridColumn: `${from} / ${to}` })
 
-export function FlowWidget({ slide }: { slide: SlideOfKind<'flow'> }) {
+export function FlowView({ slide }: { slide: SlideOfKind<'flow'> }) {
   const { boxes, edges, column } = layout(slide.lines)
   // Boxes take odd grid columns, arrows the even columns between them.
   return <div className="slide-flow">
