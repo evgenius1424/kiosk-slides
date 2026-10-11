@@ -3,6 +3,7 @@ import {
   presentationLook,
   findFont,
   fontFace,
+  hasCyrillic,
   type Presentation,
   type Theme,
 } from '@/lib/presentation'
@@ -41,8 +42,9 @@ export async function presentationHtml(
   }: PresentationHtmlOptions,
 ): Promise<string> {
   const look = presentationLook(presentation)
-  const font = findFont(presentation.font)
-  const face = font.file ? fontFace(font, await embedFont(font.file)) : ''
+  const cyrillic = hasCyrillic(JSON.stringify(presentation))
+  const files = findFont(presentation.font).files.filter(f => cyrillic || f.script === 'latin')
+  const faces = await Promise.all(files.map(async f => fontFace(f, await embedFont(f.file))))
   const slides = await Promise.all(
     presentation.slides.map(async slide => {
       const embedded =
@@ -64,7 +66,7 @@ export async function presentationHtml(
     words: PLAYER_WORDS,
     hash: SLIDE_HASH.source,
   })
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}</script></body></html>`
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${faces.join('')}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}</script></body></html>`
 }
 
 export async function fetchAsDataUrl(src: string): Promise<string> {
