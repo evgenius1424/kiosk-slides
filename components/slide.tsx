@@ -4,7 +4,7 @@ export function Highlight({ text }: { text: string }) {
   return <>{text.split('==').map((part, i) => i % 2 ? <em key={i}>{part}</em> : <span key={i}>{part}</span>)}</>
 }
 
-export function SlideView({ slide, theme = 'room-dark', accent = '#d4d4d8', miniature = false }: { slide: Slide; theme?: string; accent?: string; miniature?: boolean }) {
+export function SlideView({ slide, theme = 'room-dark', accent = '#ffc792', miniature = false }: { slide: Slide; theme?: string; accent?: string; miniature?: boolean }) {
   return <article className={`slide ${theme} kind-${slide.type} ${miniature ? 'miniature' : ''}`} style={{ '--slide-accent': accent } as React.CSSProperties}>
     <header className="slide-meta"><span>{slide.title || 'Kiosk Slides'}</span><span className="slide-label"><span className="label-dot" />{slide.label || 'One clear idea'}</span></header>
     <div className="slide-content">

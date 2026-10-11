@@ -17,7 +17,7 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
   const [index, setIndex] = useState(0)
   const [tab, setTab] = useState<'preview' | 'markdown'>('preview')
   const [theme, setTheme] = useState('room-dark')
-  const [accent, setAccent] = useState('#d4d4d8')
+  const [accent, setAccent] = useState('#ffc792')
   const [motion, setMotion] = useState(true)
   const [safe, setSafe] = useState(false)
   const [duration, setDuration] = useState(deck.duration)
@@ -108,7 +108,6 @@ export function KioskWorkspace({ initialSource }: { initialSource: string }) {
     <section className="editor-main">
       <div className="editor-toolbar"><div className="view-tabs">{!sidebar && <button className="icon-btn" aria-label="Show slide list" onClick={() => setSidebar(true)}><Layers2 size={16} /></button>}<button className={tab === 'preview' ? 'active' : ''} onClick={() => setTab('preview')}><Monitor size={14} />Preview</button><button className={tab === 'markdown' ? 'active' : ''} onClick={() => setTab('markdown')}><Code2 size={15} />Markdown</button></div><span className="ready-label"><CheckCheck size={14} />{fit ? 'Ready for the room' : 'Check slide fit'}</span></div>
       <div className="editor-body">
-        <div className="deck-heading"><div className="eyebrow">YOUR STAGE, MINUS THE NOISE</div><h1>The art of being seen<span>.</span></h1><p>One idea at a time. Impossible to miss.</p></div>
         {tab === 'preview' ? <><div ref={canvasRef} className={`canvas-shell ${motion && !safe ? 'with-motion' : ''}`} onClick={() => setPlaying(false)}><div key={`${index}-${theme}`} className="canvas-slide"><SlideView slide={slide} theme={theme} accent={accent} /></div></div><div className="canvas-controls"><span><span className="status-dot" />{presenting ? 'Presentation' : '16:9'}<span className="control-separator">/</span>{theme === 'room-dark' ? 'Room dark' : 'Room light'}</span><div className="slide-pagination"><button className="icon-btn" aria-label="Previous slide" onClick={() => move(-1)} disabled={index === 0}><ChevronLeft size={17} /></button><span>{String(index + 1).padStart(2, '0')} <span>/ {String(slides.length).padStart(2, '0')}</span></span><button className="icon-btn" aria-label="Next slide" onClick={() => move(1)} disabled={index === slides.length - 1}><ChevronRight size={17} /></button></div><button className="icon-btn" aria-label="Enter presentation mode" onClick={present}><Expand size={16} /></button></div></> : <div className="source-editor"><div className="source-header"><span><FileText size={14} />example.md</span><button className="btn primary" onClick={apply}><Check size={14} />Build deck</button></div><textarea aria-label="Deck Markdown source" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} /><div className={`source-status ${error ? 'error' : ''}`} role="status">{error || 'Edit your Markdown, then build. Your last valid deck stays intact.'}</div></div>}
         <div className="presenter-tip"><Keyboard size={15} /><span>Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<span className="tip-extra"> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</span></span><button onClick={() => setModal('help')}>All shortcuts <span>↗</span></button></div>
 
