@@ -1,11 +1,18 @@
 import type { Heading, PhrasingContent } from 'mdast'
 
 /** A run of heading text with its styling. `highlight` is markdown bold. */
-export type HeadingPart = { text: string; highlight?: true; italic?: true; code?: true; url?: string }
+export type HeadingPart = {
+  text: string
+  highlight?: true
+  italic?: true
+  code?: true
+  url?: string
+}
 
 type Marks = Omit<HeadingPart, 'text'>
 
-const unsupported = 'Headings support **highlight**, *italic*, `code` and [links](https://...) only.'
+const unsupported =
+  'Headings support **highlight**, *italic*, `code` and [links](https://...) only.'
 
 /** Flatten a heading's inline markdown into styled parts, or fail on markup a slide can't show. */
 export function parseHeading(node: Heading, fail: (message: string) => never): HeadingPart[] {
@@ -26,4 +33,5 @@ export function parseHeading(node: Heading, fail: (message: string) => never): H
   return parts
 }
 
-export const headingLength = (parts: HeadingPart[]) => parts.reduce((sum, part) => sum + part.text.length, 0)
+export const headingLength = (parts: HeadingPart[]) =>
+  parts.reduce((sum, part) => sum + part.text.length, 0)

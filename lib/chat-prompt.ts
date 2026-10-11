@@ -16,7 +16,12 @@ The deck format is specified below. A parser enforces every rule and rejects the
 let cached: Promise<string> | undefined
 
 export function systemPrompt(): Promise<string> {
-  cached ??= reference().then(spec => `${CHAT_GUIDE}\n\n${spec}`).catch(err => { cached = undefined; throw err })
+  cached ??= reference()
+    .then(spec => `${CHAT_GUIDE}\n\n${spec}`)
+    .catch(err => {
+      cached = undefined
+      throw err
+    })
   return cached
 }
 

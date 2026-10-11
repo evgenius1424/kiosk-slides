@@ -1,6 +1,7 @@
 import { transitionStyles } from './transitions'
 
-export const slideStyles = `
+export const slideStyles =
+  `
 .slide{--slide-accent:#ffffff;--slide-tone:#74747e;--slide-highlight:color-mix(in oklab,var(--slide-tone) 70%,#fff);--slide-bg:#121214;--slide-text:#fafafa;--slide-muted:#b4b4bd;--slide-surface:#242428;--slide-line:#3f3f46;display:flex;flex-direction:column;justify-content:space-between;width:100%;height:100%;padding:3.5cqw 5cqw;background:radial-gradient(ellipse 48% 58% at 100% 0%,color-mix(in srgb,var(--slide-tone) 12%,transparent),transparent 100%),color-mix(in srgb,var(--slide-bg) 95%,var(--slide-tone));color:var(--slide-text);overflow:hidden;box-sizing:border-box;font-family:var(--slide-font,Arial,Helvetica,sans-serif)}
 .slide *{box-sizing:border-box}.slide.room-light{--slide-bg:#fafafa;--slide-text:#18181b;--slide-muted:#52525b;--slide-surface:#f0f0f2;--slide-line:#d4d4d8;--slide-accent:#09090b;--slide-highlight:color-mix(in oklab,var(--slide-tone) 75%,#000)}
 .slide-meta{text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;justify-content:space-between;font-size:1.5cqw;font-weight:500;color:var(--slide-muted)}.slide-label{font-size:1.3cqw}.label-dot{display:none}.slide-content{display:flex;flex-direction:column;justify-content:center;flex:1;padding:2.5cqw 0;gap:2.5cqw;min-height:0}.slide h2{margin:0;font-size:6.5cqw;line-height:1.08;letter-spacing:-.05em;font-weight:600;max-width:80cqw;text-wrap:balance;white-space:pre-line}.slide h2 strong{font-weight:750;color:var(--slide-highlight)}.slide h2 code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;letter-spacing:-.02em}.slide h2 a{color:inherit;text-decoration-thickness:.06em;text-underline-offset:.12em}.slide-body{font-size:2.2cqw;line-height:1.5;margin:2.5cqw 0 0;color:var(--slide-muted);white-space:pre-line;max-width:75cqw}.slide-footer{display:flex;align-items:center;justify-content:space-between;gap:3cqw;font-size:1.4cqw;color:var(--slide-muted);line-height:1.4}.slide-brand{flex-shrink:0;color:var(--slide-text);font-size:2cqw;font-weight:700;line-height:1;letter-spacing:-.08em;padding-right:.08em;white-space:nowrap}.slide-brand.custom{letter-spacing:-.03em;padding-right:.03em}.brand-period{color:var(--slide-accent)}
@@ -13,4 +14,4 @@ export const slideStyles = `
 
 .slide-backdrop{--slide-tone:#74747e;--slide-bg:#121214;background:radial-gradient(ellipse 48% 58% at 100% 0%,color-mix(in srgb,var(--slide-tone) 12%,transparent),transparent 100%),color-mix(in srgb,var(--slide-bg) 95%,var(--slide-tone))}.slide-backdrop.room-light{--slide-bg:#fafafa}.slide-backdrop .slide{background:transparent}
 
-` + transitionStyles;
+` + transitionStyles

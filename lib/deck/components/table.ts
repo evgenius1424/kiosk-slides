@@ -8,11 +8,15 @@ export type TableRow = { cells: string[]; line: number }
 /** A GFM table's rows, header first: cells as written (inline markdown kept) and each row's absolute line. */
 export const tableRows = ({ node, raw, lineOf }: Block): TableRow[] | undefined =>
   node.type === 'table'
-    ? node.children.map(row => ({ cells: row.children.map(cell => raw(cell.children).trim()), line: lineOf(row) }))
+    ? node.children.map(row => ({
+        cells: row.children.map(cell => raw(cell.children).trim()),
+        line: lineOf(row),
+      }))
     : undefined
 
 /** A GFM table's cells as written (inline markdown kept), header row first. */
-export const tableCells = (block: Block): string[][] | undefined => tableRows(block)?.map(row => row.cells)
+export const tableCells = (block: Block): string[][] | undefined =>
+  tableRows(block)?.map(row => row.cells)
 
 /** Any GFM table that isn't a chart or a before/after comparison. */
 export const table = defineWidget<TableWidget>({

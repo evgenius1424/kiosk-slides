@@ -19,11 +19,17 @@ const STRUCTURED_DATA = {
 }
 
 export default async function Page() {
-  const [example, prompt, t] = await Promise.all([readFile(path.join(process.cwd(), 'public/example.md'), 'utf8'), copyPrompt(), getTranslations('Metadata')])
+  const [example, prompt, t] = await Promise.all([
+    readFile(path.join(process.cwd(), 'public/example.md'), 'utf8'),
+    copyPrompt(),
+    getTranslations('Metadata'),
+  ])
   const structuredData = JSON.stringify({ ...STRUCTURED_DATA, description: t('description') })
-  return <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
-    <style>{fonts.map(f => fontFace(f, `/fonts/${f.file}`)).join('') + slideStyles}</style>
-    <KioskWorkspace example={example} prompt={prompt} />
-  </>
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <style>{fonts.map(f => fontFace(f, `/fonts/${f.file}`)).join('') + slideStyles}</style>
+      <KioskWorkspace example={example} prompt={prompt} />
+    </>
+  )
 }

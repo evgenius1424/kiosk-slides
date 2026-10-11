@@ -6,7 +6,14 @@ import type { Transition } from '@/lib/transitions'
 import { deckHtml } from './deck-html'
 
 const deck = parseDeck(readFileSync('public/example.md', 'utf8'))
-const render = (transition: Transition = 'gentle', shareSafe = false) => deckHtml(deck, { tone: '#669a98', transition, shareSafe, embedImage: async src => `data:image/png;base64,${src.length}`, embedFont: async file => `data:font/woff2;base64,${file}` })
+const render = (transition: Transition = 'gentle', shareSafe = false) =>
+  deckHtml(deck, {
+    tone: '#669a98',
+    transition,
+    shareSafe,
+    embedImage: async src => `data:image/png;base64,${src.length}`,
+    embedFont: async file => `data:font/woff2;base64,${file}`,
+  })
 
 describe('deckHtml', () => {
   it('renders every slide into one self-contained page', async () => {
@@ -43,8 +50,18 @@ describe('deckHtml', () => {
   })
 
   it('embeds only the chosen font', async () => {
-    const html = await deckHtml({ ...deck, font: 'figtree' }, { tone: '#669a98', transition: 'gentle', embedImage: async src => src, embedFont: async file => `data:font/woff2;base64,${file}` })
-    expect(html).toContain("@font-face{font-family:'Figtree';src:url(data:font/woff2;base64,figtree.woff2)")
+    const html = await deckHtml(
+      { ...deck, font: 'figtree' },
+      {
+        tone: '#669a98',
+        transition: 'gentle',
+        embedImage: async src => src,
+        embedFont: async file => `data:font/woff2;base64,${file}`,
+      },
+    )
+    expect(html).toContain(
+      "@font-face{font-family:'Figtree';src:url(data:font/woff2;base64,figtree.woff2)",
+    )
     expect(html).not.toContain("font-family:'Inter'")
     expect(await render()).not.toContain('@font-face')
   })

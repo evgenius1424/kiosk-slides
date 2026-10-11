@@ -13,16 +13,36 @@ export type DeckHtmlOptions = {
   embedFont: (file: string) => Promise<string>
 }
 
-export async function deckHtml(deck: Deck, { theme = deck.theme, tone, transition, shareSafe = false, embedImage, embedFont }: DeckHtmlOptions): Promise<string> {
+export async function deckHtml(
+  deck: Deck,
+  {
+    theme = deck.theme,
+    tone,
+    transition,
+    shareSafe = false,
+    embedImage,
+    embedFont,
+  }: DeckHtmlOptions,
+): Promise<string> {
   const look = { font: deck.font, scale: deck.scale, brand: deck.brand }
   const font = findFont(deck.font)
   const face = font.file ? fontFace(font, await embedFont(font.file)) : ''
-  const slides = await Promise.all(deck.slides.map(async slide => {
-    const embedded = slide.kind === 'image' ? { ...slide, src: await embedImage(slide.src) } : slide
-    return `<div class="portable-slide"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
-  }))
-  const config = JSON.stringify({ duration: deck.duration, loop: deck.loop, durations: deck.slides.map(s => s.duration || deck.duration), transition, shareSafe, ms: TRANSITION_MS })
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${deck.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}<\/script></body></html>`
+  const slides = await Promise.all(
+    deck.slides.map(async slide => {
+      const embedded =
+        slide.kind === 'image' ? { ...slide, src: await embedImage(slide.src) } : slide
+      return `<div class="portable-slide"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
+    }),
+  )
+  const config = JSON.stringify({
+    duration: deck.duration,
+    loop: deck.loop,
+    durations: deck.slides.map(s => s.duration || deck.duration),
+    transition,
+    shareSafe,
+    ms: TRANSITION_MS,
+  })
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${deck.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}</script></body></html>`
 }
 
 export async function fetchAsDataUrl(src: string): Promise<string> {
@@ -33,11 +53,14 @@ export async function fetchAsDataUrl(src: string): Promise<string> {
   return `data:${blob.type || 'image/png'};base64,${base64(new Uint8Array(await blob.arrayBuffer()))}`
 }
 
-const SAFE_AREA = 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'
+const SAFE_AREA =
+  'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'
 
-const pageStyles = (theme: Theme) => `html,body{margin:0;background:${theme === 'room-light' ? '#fafafa' : '#121214'};width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active,.portable-slide.kt-leave{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
+const pageStyles = (theme: Theme) =>
+  `html,body{margin:0;background:${theme === 'room-light' ? '#fafafa' : '#121214'};width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active,.portable-slide.kt-leave{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
 
-const icon = (path: string, className: string) => `<svg class="${className}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`
+const icon = (path: string, className: string) =>
+  `<svg class="${className}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`
 
 const controls = `<button id="full" type="button" aria-label="Toggle full screen" hidden>${icon('M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3', 'enter')}${icon('M18 6 6 18M6 6l12 12', 'exit')}</button>`
 
@@ -67,6 +90,7 @@ show();wake();`
 
 function base64(bytes: Uint8Array) {
   let binary = ''
-  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  for (let i = 0; i < bytes.length; i += 0x8000)
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
   return btoa(binary)
 }

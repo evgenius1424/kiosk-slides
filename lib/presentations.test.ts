@@ -5,7 +5,10 @@ import { blankDeck, createPresentation, deckName, uniqueName } from '@/lib/prese
 import messages from '@/messages/en.json'
 
 const DEFAULT_NAME = messages.Presentations.untitled
-const BLANK_DECK = blankDeck(messages.Presentations.blank.heading, messages.Presentations.blank.body)
+const BLANK_DECK = blankDeck(
+  messages.Presentations.blank.heading,
+  messages.Presentations.blank.body,
+)
 
 describe('presentations', () => {
   it('starts new presentations from a valid one-slide deck', () => {
@@ -16,7 +19,9 @@ describe('presentations', () => {
     const first = createPresentation(DEFAULT_NAME, BLANK_DECK, [])
     const second = createPresentation(DEFAULT_NAME, BLANK_DECK, [first])
     expect(second.name).toBe(`${DEFAULT_NAME} 2`)
-    expect(createPresentation(DEFAULT_NAME, BLANK_DECK, [first, second]).name).toBe(`${DEFAULT_NAME} 3`)
+    expect(createPresentation(DEFAULT_NAME, BLANK_DECK, [first, second]).name).toBe(
+      `${DEFAULT_NAME} 3`,
+    )
     expect(uniqueName(DEFAULT_NAME, [first], first.id)).toBe(DEFAULT_NAME)
   })
 

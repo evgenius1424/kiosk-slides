@@ -7,13 +7,19 @@ const settingKeys = ['title', 'label', 'footer', 'layout', 'duration']
  * Parse one annotation comment. When `known` is given, an unknown type is rejected
  * before its settings are looked at, so the author sees the more useful error first.
  */
-export function parseAnnotation(comment: string, fail: (message: string) => never, known?: readonly string[]): Annotation {
+export function parseAnnotation(
+  comment: string,
+  fail: (message: string) => never,
+  known?: readonly string[],
+): Annotation {
   const inner = comment.trim().replace(/^<!--/, '').replace(/-->$/, '').trim()
   const [, type, rest] = inner.match(/^([a-z][\w-]*)(?::([\s\S]*))?$/) ?? []
   if (!type) return fail('Write an annotation as <!-- type --> or <!-- type: key=value -->.')
   if (known && !known.includes(type)) {
     const options = known.length ? ` Use one of: ${known.join(', ')}.` : ''
-    const hint = settingKeys.includes(type) ? ' Slide settings go in the comment above the # heading.' : ''
+    const hint = settingKeys.includes(type)
+      ? ' Slide settings go in the comment above the # heading.'
+      : ''
     fail(`Unknown annotation “${type}”.${hint}${options}`)
   }
   const args: Record<string, string> = {}

@@ -5,7 +5,13 @@ export type ActiveTransition = Transition | 'share'
 
 export const DEFAULT_TRANSITION: Transition = 'gentle'
 
-export const TRANSITION_MS: Record<ActiveTransition, number> = { gentle: 880, fade: 600, slide: 700, share: 160, none: 0 }
+export const TRANSITION_MS: Record<ActiveTransition, number> = {
+  gentle: 880,
+  fade: 600,
+  slide: 700,
+  share: 160,
+  none: 0,
+}
 
 export function isTransition(value: string): value is Transition {
   return transitions.includes(value as Transition)

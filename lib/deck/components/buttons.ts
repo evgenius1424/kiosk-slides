@@ -10,11 +10,15 @@ export const buttons = defineWidget<ButtonsWidget>({
   kind: 'buttons',
   annotation: 'buttons',
   parse: ({ node, lineOf, fail }) => {
-    if (node.type !== 'list' || node.ordered) return fail('Buttons must be a bullet list of [Label](https://...) links.')
+    if (node.type !== 'list' || node.ordered)
+      return fail('Buttons must be a bullet list of [Label](https://...) links.')
     if (node.children.length > 3) fail('Use at most 3 buttons.')
     const buttons = node.children.map(item => {
       const itemLine = lineOf(item)
-      const paragraph = item.children.length === 1 && item.children[0].type === 'paragraph' ? item.children[0] : undefined
+      const paragraph =
+        item.children.length === 1 && item.children[0].type === 'paragraph'
+          ? item.children[0]
+          : undefined
       const child = paragraph && onlyChild(paragraph)
       const link = child?.type === 'link' ? child : undefined
       if (!link) return fail('Each button must be a single [Label](https://...) link.', itemLine)

@@ -6,8 +6,16 @@ import { SlideView } from '@/components/slide'
 
 afterEach(cleanup)
 
-const chrome: SlideChrome = { title: 'Title', label: 'Label', footer: 'Footer', layout: 'auto', heading: [{ text: 'Make it ' }, { text: 'count', highlight: true }], body: 'Body text.' }
-const view = (slide: Slide) => render(<SlideView slide={slide} />).container.querySelector('article')!
+const chrome: SlideChrome = {
+  title: 'Title',
+  label: 'Label',
+  footer: 'Footer',
+  layout: 'auto',
+  heading: [{ text: 'Make it ' }, { text: 'count', highlight: true }],
+  body: 'Body text.',
+}
+const view = (slide: Slide) =>
+  render(<SlideView slide={slide} />).container.querySelector('article')!
 
 describe('SlideView', () => {
   it('renders the chrome, highlighted heading, and body of a message slide', () => {
@@ -20,11 +28,23 @@ describe('SlideView', () => {
   })
 
   it('renders italic, code and links in the heading', () => {
-    const article = view({ ...chrome, kind: 'message', heading: [{ text: 'calm', italic: true }, { text: 'pnpm', code: true }, { text: 'docs', url: 'https://example.com' }] })
+    const article = view({
+      ...chrome,
+      kind: 'message',
+      heading: [
+        { text: 'calm', italic: true },
+        { text: 'pnpm', code: true },
+        { text: 'docs', url: 'https://example.com' },
+      ],
+    })
     expect(article.querySelector('h2 em')?.textContent).toBe('calm')
     expect(article.querySelector('h2 code')?.textContent).toBe('pnpm')
     const link = article.querySelector('h2 a')!
-    expect([link.textContent, link.getAttribute('href'), link.getAttribute('target')]).toEqual(['docs', 'https://example.com', '_blank'])
+    expect([link.textContent, link.getAttribute('href'), link.getAttribute('target')]).toEqual([
+      'docs',
+      'https://example.com',
+      '_blank',
+    ])
   })
 
   it('renders numbered steps', () => {
@@ -41,21 +61,37 @@ describe('SlideView', () => {
   })
 
   it('renders an image with its caption', () => {
-    const article = view({ ...chrome, kind: 'image', src: 'https://example.com/a.png', alt: 'A screen', caption: 'From the back' })
+    const article = view({
+      ...chrome,
+      kind: 'image',
+      src: 'https://example.com/a.png',
+      alt: 'A screen',
+      caption: 'From the back',
+    })
     const img = article.querySelector('.slide-image img')!
     expect(img.getAttribute('src')).toBe('https://example.com/a.png')
     expect(img.getAttribute('alt')).toBe('A screen')
     expect(article.querySelector('.slide-image figcaption')?.textContent).toBe('From the back')
   })
 
-  const chartData = { labels: ['Jan', 'Feb', 'Mar'], series: [{ name: 'Visits', values: [120, 300, 80] }, { name: 'Signups', values: [8, 12, 0] }] }
+  const chartData = {
+    labels: ['Jan', 'Feb', 'Mar'],
+    series: [
+      { name: 'Visits', values: [120, 300, 80] },
+      { name: 'Signups', values: [8, 12, 0] },
+    ],
+  }
 
   it('renders a bar chart with one bar per value, its labels, and a legend', () => {
     const article = view({ ...chrome, kind: 'chart', type: 'bar', ...chartData })
     expect(article.className).toContain('kind-chart')
     expect(article.querySelectorAll('.slide-chart svg .chart-bar')).toHaveLength(6)
-    expect([...article.querySelectorAll('.slide-chart .chart-label')].map(l => l.textContent)).toEqual(['Jan', 'Feb', 'Mar'])
-    expect([...article.querySelectorAll('.slide-chart .chart-legend li')].map(l => l.textContent)).toEqual(['Visits', 'Signups'])
+    expect(
+      [...article.querySelectorAll('.slide-chart .chart-label')].map(l => l.textContent),
+    ).toEqual(['Jan', 'Feb', 'Mar'])
+    expect(
+      [...article.querySelectorAll('.slide-chart .chart-legend li')].map(l => l.textContent),
+    ).toEqual(['Visits', 'Signups'])
   })
 
   it('renders a line chart with one line per series and one point per value', () => {
@@ -66,19 +102,30 @@ describe('SlideView', () => {
   })
 
   it('renders a metric value with its caption', () => {
-    const article = view({ ...chrome, kind: 'metric', value: '3x', caption: 'more questions answered' })
+    const article = view({
+      ...chrome,
+      kind: 'metric',
+      value: '3x',
+      caption: 'more questions answered',
+    })
     expect(article.className).toContain('kind-metric')
     expect(article.querySelector('.slide-metric strong')?.textContent).toBe('3x')
-    expect(article.querySelector('.slide-metric > span')?.textContent).toBe('more questions answered')
+    expect(article.querySelector('.slide-metric > span')?.textContent).toBe(
+      'more questions answered',
+    )
   })
 })
 
 describe('SlideView: buttons', () => {
   it('renders one external link button per entry', () => {
-    const article = view({ ...chrome, kind: 'buttons', buttons: [
-      { label: 'View the repo', url: 'https://github.com/example/repo' },
-      { label: 'See the product', url: 'https://example.com' },
-    ] })
+    const article = view({
+      ...chrome,
+      kind: 'buttons',
+      buttons: [
+        { label: 'View the repo', url: 'https://github.com/example/repo' },
+        { label: 'See the product', url: 'https://example.com' },
+      ],
+    })
     const links = [...article.querySelectorAll('.slide-buttons a')]
     expect(links.map(a => [a.textContent, a.getAttribute('href')])).toEqual([
       ['View the repo', 'https://github.com/example/repo'],
@@ -93,10 +140,22 @@ describe('SlideView: buttons', () => {
 
 describe('SlideView: table and before/after', () => {
   it('renders a table with a header row and one row per body row', () => {
-    const article = view({ ...chrome, kind: 'table', header: ['Task', 'Hours', 'Owner'], rows: [['Write', '3', 'Ana'], ['Review', '1', 'Bo']] })
+    const article = view({
+      ...chrome,
+      kind: 'table',
+      header: ['Task', 'Hours', 'Owner'],
+      rows: [
+        ['Write', '3', 'Ana'],
+        ['Review', '1', 'Bo'],
+      ],
+    })
     expect(article.className).toContain('kind-table')
     const table = article.querySelector('table.slide-table')!
-    expect([...table.querySelectorAll('thead th')].map(th => th.textContent)).toEqual(['Task', 'Hours', 'Owner'])
+    expect([...table.querySelectorAll('thead th')].map(th => th.textContent)).toEqual([
+      'Task',
+      'Hours',
+      'Owner',
+    ])
     const rows = [...table.querySelectorAll('tbody tr')]
     expect(rows).toHaveLength(2)
     expect(rows.map(tr => tr.querySelectorAll('td').length)).toEqual([3, 3])
@@ -104,10 +163,22 @@ describe('SlideView: table and before/after', () => {
   })
 
   it('renders before and after side by side', () => {
-    const article = view({ ...chrome, kind: 'before-after', before: 'Dense slides', after: 'One idea' })
+    const article = view({
+      ...chrome,
+      kind: 'before-after',
+      before: 'Dense slides',
+      after: 'One idea',
+    })
     const sections = [...article.querySelectorAll('.comparison section')]
-    expect(sections.map(s => [s.querySelector('.widget-label')?.textContent, s.querySelector('p')?.textContent]))
-      .toEqual([['Before', 'Dense slides'], ['After', 'One idea']])
+    expect(
+      sections.map(s => [
+        s.querySelector('.widget-label')?.textContent,
+        s.querySelector('p')?.textContent,
+      ]),
+    ).toEqual([
+      ['Before', 'Dense slides'],
+      ['After', 'One idea'],
+    ])
     expect(sections.map(s => s.classList.contains('comparison-after'))).toEqual([false, true])
   })
 })
@@ -116,24 +187,38 @@ describe('SlideView: flow', () => {
   const flow = (lines: string[][]) => {
     const article = view({ ...chrome, kind: 'flow', lines })
     return [...article.querySelectorAll('.slide-flow .flow-line')].map(line => ({
-      boxes: [...line.querySelectorAll('.flow-box')].map(box => box.classList.contains('flow-shared') ? `[${box.textContent}]` : box.textContent),
+      boxes: [...line.querySelectorAll('.flow-box')].map(box =>
+        box.classList.contains('flow-shared') ? `[${box.textContent}]` : box.textContent,
+      ),
       arrows: line.querySelectorAll('.flow-arrow').length,
     }))
   }
 
   it('draws a single chain as one row of boxes joined by arrows', () => {
-    expect(flow([['Write', 'Parse', 'Present']])).toEqual([{ boxes: ['Write', 'Parse', 'Present'], arrows: 2 }])
+    expect(flow([['Write', 'Parse', 'Present']])).toEqual([
+      { boxes: ['Write', 'Parse', 'Present'], arrows: 2 },
+    ])
   })
 
   it('repeats a box both chains share on each row and marks it', () => {
-    expect(flow([['Notes', 'Draft', 'Deck'], ['Data', 'Deck']])).toEqual([
+    expect(
+      flow([
+        ['Notes', 'Draft', 'Deck'],
+        ['Data', 'Deck'],
+      ]),
+    ).toEqual([
       { boxes: ['Notes', 'Draft', '[Deck]'], arrows: 2 },
       { boxes: ['Data', '[Deck]'], arrows: 1 },
     ])
   })
 
   it('draws chains that share no text as plain parallel rows', () => {
-    expect(flow([['Plan', 'Build'], ['Test', 'Ship']])).toEqual([
+    expect(
+      flow([
+        ['Plan', 'Build'],
+        ['Test', 'Ship'],
+      ]),
+    ).toEqual([
       { boxes: ['Plan', 'Build'], arrows: 1 },
       { boxes: ['Test', 'Ship'], arrows: 1 },
     ])
@@ -141,13 +226,17 @@ describe('SlideView: flow', () => {
 
   it('hides the brand or shows a custom one', () => {
     const look = { font: 'inter', scale: 'kiosk' as const, brand: '' }
-    const hidden = render(<SlideView slide={{ ...chrome, kind: 'message', title: '' }} look={look} />).container.querySelector('article')!
+    const hidden = render(
+      <SlideView slide={{ ...chrome, kind: 'message', title: '' }} look={look} />,
+    ).container.querySelector('article')!
     expect(hidden.querySelector('.slide-brand')).toBeNull()
     expect(hidden.querySelector('.slide-meta')?.textContent).not.toContain('Kiosk')
     expect(hidden.className).toContain('scale-kiosk')
     expect(hidden.style.getPropertyValue('--slide-font')).toContain('Inter')
     cleanup()
-    const custom = render(<SlideView slide={{ ...chrome, kind: 'message' }} look={{ ...look, brand: 'ZEOS' }} />).container.querySelector('article')!
+    const custom = render(
+      <SlideView slide={{ ...chrome, kind: 'message' }} look={{ ...look, brand: 'ZEOS' }} />,
+    ).container.querySelector('article')!
     expect(custom.querySelector('.slide-brand')?.textContent).toBe('ZEOS')
   })
 })
