@@ -11,29 +11,15 @@ A presentation is one Markdown file. The full grammar is in `references/FORMAT.m
 
 1. Find out what the presentation is for: the audience, the one thing they should remember, and where it plays (a room, a call, an unattended screen). If the user already said, don't ask again. If a detail is missing and a sensible default exists, use the default and say which.
 2. Outline before writing: one idea per slide, 5–12 slides, a closing slide that restates the message.
-3. Pick a widget for each slide from what the content is, not for variety:
-
-   | The content is                  | Use                                     |
-   | ------------------------------- | --------------------------------------- |
-   | One statement                   | a message slide (heading and body only) |
-   | A sequence of actions           | steps                                   |
-   | A single striking number        | metric                                  |
-   | A comparison of two states      | before-after                            |
-   | Several items with attributes   | table                                   |
-   | Numbers over categories or time | chart                                   |
-   | A process or pipeline           | flow                                    |
-   | Something to read or copy       | code                                    |
-   | A screenshot, logo, or photo    | image                                   |
-   | Where to go next                | buttons                                 |
-
-4. Write the presentation to a `.md` file. Put the key phrase of every heading in `**bold**`. Give each slide a settings comment with a short `title`, a `label`, and a `footer` that adds one useful line.
+3. Pick a widget for each slide from what its content is, using the table in "Writing a good presentation" in FORMAT.md. Keep message slides to a third at most and never two in a row.
+4. Write the presentation to a `.md` file. Put the key phrase of every heading in `**bold**`. Every slide gets a settings comment with a `title`, a `label`, and a `footer` that adds one useful line. Set `title:` in the front matter, and `brand:` when you know the organization or product.
 5. Validate:
 
    ```bash
-   node scripts/render.mjs slides.md --check
+   node scripts/render.mjs slides.md --check --format
    ```
 
-   It prints one line per slide (number, kind, heading) or a `Line N:` error. Fix every error and run it again until it passes. Never hand back a presentation that fails the check.
+   It prints one line per slide (number, kind, heading) or a `Line N:` error, then a `Warning:` line for each missing slide setting or for too many plain slides. `--format` also tidies the file (aligned tables, consistent spacing) without changing what it shows. Fix every error and every warning and run it again until it is clean. Never hand back a presentation that fails the check.
 
 6. Reply with one or two sentences about what you made, the slide list from the check, and the file. If the user wants HTML, hand the file to the `kiosk-slides-render` skill.
 
@@ -53,4 +39,4 @@ When the user asks for changes, edit the file in place and validate again. Keep 
 
 ## Writing well
 
-Write for the last row of the room. Short headlines that state the point, not the topic ("Short presentations **hold attention**", not "Attention span"). Plain words. Cut any body text the heading already says.
+Follow "Writing a good presentation" in FORMAT.md, and run its checklist before you hand the presentation over.

@@ -71,11 +71,11 @@ footer: A small table can become a bar or line chart.
 
 <!-- chart: type=bar x=Slides y=Recall -->
 | Slides | Recall | Viewers |
-| --- | --- | --- |
-| 5 | 82 | 140 |
-| 10 | 64 | 120 |
-| 20 | 41 | 95 |
-| 40 | 23 | 60 |
+| ------ | ------ | ------- |
+| 5      | 82     | 140     |
+| 10     | 64     | 120     |
+| 20     | 41     | 95      |
+| 40     | 23     | 60      |
 
 ---
 
@@ -115,8 +115,8 @@ footer: A Before | After table becomes a side-by-side comparison.
 
 # One idea **per slide**
 
-| Before | After |
-| --- | --- |
+| Before                                     | After                                             |
+| ------------------------------------------ | ------------------------------------------------- |
 | Dense slides nobody can read from the back | One headline, big type, seen from across the room |
 
 ---
@@ -129,11 +129,11 @@ footer: A plain table stays a table, up to 5 columns and 6 rows.
 
 # Pick the **right widget**
 
-| You have | Write | You get |
-| --- | --- | --- |
-| A sequence | A numbered list | Steps |
-| Some code | A code block | Code |
-| A picture | An image | Image |
+| You have   | Write           | You get |
+| ---------- | --------------- | ------- |
+| A sequence | A numbered list | Steps   |
+| Some code  | A code block    | Code    |
+| A picture  | An image        | Image   |
 
 ---
 

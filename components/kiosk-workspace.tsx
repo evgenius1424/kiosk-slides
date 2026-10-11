@@ -32,6 +32,7 @@ import {
   DEFAULT_BRAND,
   downloadFile,
   fonts,
+  formatDeck,
   parseDeck,
   setFrontMatter,
   themes,
@@ -63,7 +64,16 @@ import { SlideView } from './slide'
 
 const SWIPE_DISTANCE = 45
 const BASICS = ['newSlide', 'heading', 'highlight', 'text', 'extras'] as const
-const SHORTCUTS = ['next', 'previous', 'autoplay', 'present', 'shareSafe', 'leave', 'ends'] as const
+const SHORTCUTS = [
+  'next',
+  'previous',
+  'autoplay',
+  'present',
+  'shareSafe',
+  'leave',
+  'ends',
+  'update',
+] as const
 const SCALES: Scale[] = ['normal', 'large', 'kiosk']
 
 function Toggle({
@@ -388,7 +398,9 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   const apply = () => {
     try {
       const next = parseDeck(draft)
-      setSource(draft)
+      const formatted = formatDeck(draft)
+      setSource(formatted)
+      setDraft(formatted)
       setIndex(0)
       setDuration(next.duration)
       setLoop(next.loop)
@@ -399,7 +411,8 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
       setError((err as Error).message)
     }
   }
-  const loadGenerated = (value: string, fresh: boolean) => {
+  const loadGenerated = (generated: string, fresh: boolean) => {
+    const value = formatDeck(generated)
     const name = deckName(value) || untitled
     const reuse = !fresh || current.source === blank
     const target = reuse
@@ -699,6 +712,12 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
                 aria-label={t('editor.label')}
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
+                onKeyDown={e => {
+                  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+                    e.preventDefault()
+                    apply()
+                  }
+                }}
                 spellCheck={false}
               />
               <div className={`source-status ${error ? 'error' : ''}`} role="status">

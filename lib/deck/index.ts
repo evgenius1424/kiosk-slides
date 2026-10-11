@@ -1,4 +1,6 @@
 export { parseDeck, UNTITLED } from './parse'
+export { formatDeck } from './format'
+export { reviewDeck } from './review'
 export { downloadFile } from './export'
 export { setFrontMatter } from './front-matter'
 export type { HeadingPart } from './heading'

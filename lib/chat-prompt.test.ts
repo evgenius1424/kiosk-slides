@@ -11,6 +11,7 @@ describe('chat system prompt', () => {
     expect(prompt).toContain(read('FORMAT.md'))
     expect(prompt).toContain(`<example>\n${read('public/example.md')}\n</example>`)
     expect(prompt).toContain('<presentation></presentation>')
+    expect(prompt).toContain('Follow "Writing a good presentation" just as strictly')
   })
 
   it('has no leftover colon-fence directive syntax', async () => {
@@ -25,5 +26,6 @@ describe('copyable prompt', () => {
     expect(prompt).toContain(read('public/example.md'))
     expect(prompt).toContain('```markdown')
     expect(prompt).not.toContain('<presentation>')
+    expect(prompt).toContain('Follow "Writing a good presentation" just as strictly')
   })
 })

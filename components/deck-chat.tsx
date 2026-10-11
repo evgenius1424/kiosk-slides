@@ -155,7 +155,7 @@ export function DeckChat({
         event => {
           if (event.type === 'text') attempt += event.text
           if (event.type === 'retry') {
-            notes.push(t('progress.fixing'))
+            notes.push(event.polish ? t('progress.polishing') : t('progress.fixing'))
             attempt = ''
           }
           if (event.type === 'deck') deck = onDeck(event.source, fresh && !deck)
