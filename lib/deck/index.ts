@@ -1,4 +1,4 @@
-export { parseDeck } from './parse'
+export { parseDeck, UNTITLED } from './parse'
 export { downloadFile } from './export'
 export { setFrontMatter } from './front-matter'
 export type { HeadingPart } from './heading'

@@ -8,4 +8,4 @@ labels: needs-triage
 
 **What it might look like on a slide**
 
-Kiosk Slides has no manual layout editing on purpose. Ideas that make decks read better on a shared screen fit best.
+Kiosk Slides has no manual layout editing on purpose. Ideas that make presentations read better on a shared screen fit best.

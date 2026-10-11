@@ -8,7 +8,7 @@ labels: needs-triage
 
 **What you expected**
 
-**Deck Markdown that shows it**
+**Presentation Markdown that shows it**
 
 ```md
 

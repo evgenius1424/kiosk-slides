@@ -1,5 +1,5 @@
 ---
-title: Kiosk Slides — example deck
+title: Kiosk Slides — example presentation
 theme: room-dark
 autoplay:
   duration: 12s
@@ -67,7 +67,7 @@ label: Chart
 footer: A small table can become a bar or line chart.
 -->
 
-# Shorter decks get **more attention**
+# Shorter presentations get **more attention**
 
 <!-- chart: type=bar x=Slides y=Recall -->
 | Slides | Recall | Viewers |
@@ -85,7 +85,7 @@ label: Metric
 footer: One number, one caption, readable from across the room.
 -->
 
-# Short decks **hold attention**
+# Short presentations **hold attention**
 
 <!-- metric -->
 **3x**
@@ -143,11 +143,11 @@ label: Flow
 footer: A box named in both chains is marked as shared.
 -->
 
-# Two inputs, **one deck**
+# Two inputs, **one presentation**
 
 <!-- flow -->
-- Notes -> Draft -> Deck
-- Data -> Deck
+- Notes -> Draft -> Slides
+- Data -> Slides
 
 ---
 

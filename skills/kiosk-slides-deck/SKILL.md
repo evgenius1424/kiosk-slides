@@ -1,15 +1,15 @@
 ---
 name: kiosk-slides-deck
-description: Turn a conversation, notes, or a document into a Kiosk Slides deck, the Markdown format that presents one clear idea per slide on a TV, in a room, or on a call. Use when the user wants slides, a deck, or a kiosk loop written or revised, and to check a deck against the format.
+description: Turn a conversation, notes, or a document into a Kiosk Slides presentation, the Markdown format that presents one clear idea per slide on a TV, in a room, or on a call. Use when the user wants a presentation, slides, a deck, or a kiosk loop written or revised, and to check a presentation against the format.
 ---
 
-# Kiosk Slides deck
+# Kiosk Slides presentation
 
-A deck is one Markdown file. The full grammar is in `references/FORMAT.md` and a deck that uses every slide kind is `references/example.md`. Read both before writing the first deck in a conversation. A parser enforces every rule in FORMAT.md and rejects the whole deck on the first violation, so follow it exactly.
+A presentation is one Markdown file. The full grammar is in `references/FORMAT.md` and a presentation that uses every slide kind is `references/example.md`. Read both before writing the first presentation in a conversation. A parser enforces every rule in FORMAT.md and rejects the whole presentation on the first violation, so follow it exactly.
 
 ## Workflow
 
-1. Find out what the deck is for: the audience, the one thing they should remember, and where it plays (a room, a call, an unattended screen). If the user already said, don't ask again. If a detail is missing and a sensible default exists, use the default and say which.
+1. Find out what the presentation is for: the audience, the one thing they should remember, and where it plays (a room, a call, an unattended screen). If the user already said, don't ask again. If a detail is missing and a sensible default exists, use the default and say which.
 2. Outline before writing: one idea per slide, 5–12 slides, a closing slide that restates the message.
 3. Pick a widget for each slide from what the content is, not for variety:
 
@@ -26,14 +26,14 @@ A deck is one Markdown file. The full grammar is in `references/FORMAT.md` and a
    | A screenshot, logo, or photo    | image                                   |
    | Where to go next                | buttons                                 |
 
-4. Write the deck to a `.md` file. Put the key phrase of every heading in `**bold**`. Give each slide a settings comment with a short `title`, a `label`, and a `footer` that adds one useful line.
+4. Write the presentation to a `.md` file. Put the key phrase of every heading in `**bold**`. Give each slide a settings comment with a short `title`, a `label`, and a `footer` that adds one useful line.
 5. Validate:
 
    ```bash
-   node scripts/render.mjs deck.md --check
+   node scripts/render.mjs slides.md --check
    ```
 
-   It prints one line per slide (number, kind, heading) or a `Line N:` error. Fix every error and run it again until it passes. Never hand back a deck that fails the check.
+   It prints one line per slide (number, kind, heading) or a `Line N:` error. Fix every error and run it again until it passes. Never hand back a presentation that fails the check.
 
 6. Reply with one or two sentences about what you made, the slide list from the check, and the file. If the user wants HTML, hand the file to the `kiosk-slides-render` skill.
 
@@ -53,4 +53,4 @@ When the user asks for changes, edit the file in place and validate again. Keep 
 
 ## Writing well
 
-Write for the last row of the room. Short headlines that state the point, not the topic ("Short decks **hold attention**", not "Attention span"). Plain words. Cut any body text the heading already says.
+Write for the last row of the room. Short headlines that state the point, not the topic ("Short presentations **hold attention**", not "Attention span"). Plain words. Cut any body text the heading already says.

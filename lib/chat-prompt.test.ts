@@ -10,7 +10,7 @@ describe('chat system prompt', () => {
     const prompt = await systemPrompt()
     expect(prompt).toContain(read('FORMAT.md'))
     expect(prompt).toContain(`<example>\n${read('public/example.md')}\n</example>`)
-    expect(prompt).toContain('<deck></deck>')
+    expect(prompt).toContain('<presentation></presentation>')
   })
 
   it('has no leftover colon-fence directive syntax', async () => {
@@ -24,6 +24,6 @@ describe('copyable prompt', () => {
     expect(prompt).toContain(read('FORMAT.md'))
     expect(prompt).toContain(read('public/example.md'))
     expect(prompt).toContain('```markdown')
-    expect(prompt).not.toContain('<deck>')
+    expect(prompt).not.toContain('<presentation>')
   })
 })
