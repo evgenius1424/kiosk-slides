@@ -87,7 +87,7 @@ describe('paste anywhere', () => {
   it('replaces the blank starter instead of adding another', () => {
     renderWorkspace()
     fireEvent.click(document.querySelector('.presentation-selector')!)
-    fireEvent.click(screen.getByRole('menuitem', { name: /New presentation/ }))
+    fireEvent.click(screen.getByRole('button', { name: /New presentation/ }))
     paste('# Fresh\n')
     const saved = JSON.parse(localStorage.getItem('kiosk-presentations')!)
     expect(saved.items.map((p: { name: string }) => p.name)).toEqual(['One', 'Fresh'])
