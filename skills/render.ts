@@ -36,7 +36,7 @@ async function main() {
   const tone = tones.find(t => t.name.toLowerCase() === values.tone!.toLowerCase())?.color ?? values.tone!
   if (!/^#[0-9a-f]{3,8}$/i.test(tone)) throw new Error(`Unknown tone “${values.tone}”. Use ${tones.map(t => t.name.toLowerCase()).join(', ')} or a #hex color.`)
   const transition = values['no-motion'] ? 'none' : values.transition!
-  if (!isTransition(transition)) throw new Error(`Unknown transition “${transition}”. Use ${transitions.map(t => t.id).join(', ')}.`)
+  if (!isTransition(transition)) throw new Error(`Unknown transition “${transition}”. Use ${transitions.join(', ')}.`)
   const imageDir = values.images ?? path.dirname(path.resolve(input))
   const html = await deckHtml(deck, { theme, tone, transition, shareSafe: values['share-safe'], embedImage: src => embed(src, imageDir), embedFont })
   const out = values.out ?? input.replace(/\.(md|markdown)$/i, '') + '.html'

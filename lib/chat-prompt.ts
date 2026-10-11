@@ -15,7 +15,6 @@ The deck format is specified below. A parser enforces every rule and rejects the
 
 let cached: Promise<string> | undefined
 
-/** The chat model's instructions: how to reply, the format spec from FORMAT.md, and public/example.md as an example. */
 export function systemPrompt(): Promise<string> {
   cached ??= reference().then(spec => `${CHAT_GUIDE}\n\n${spec}`).catch(err => { cached = undefined; throw err })
   return cached
@@ -23,10 +22,6 @@ export function systemPrompt(): Promise<string> {
 
 export async function copyPrompt() {
   return `${COPY_GUIDE}\n\n${await reference()}\n\nWhat should the deck be about?`
-}
-
-export function formatGuide() {
-  return read('FORMAT.md')
 }
 
 async function reference() {

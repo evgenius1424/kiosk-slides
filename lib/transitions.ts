@@ -1,20 +1,14 @@
-export const transitions = [
-  { id: 'gentle', name: 'Gentle', help: 'A soft rise and fade. Calm enough for any room.' },
-  { id: 'fade', name: 'Crossfade', help: 'A clean crossfade. Smooth when you share a tab on a good connection.' },
-  { id: 'slide', name: 'Slide', help: 'Slides glide sideways in the direction you move.' },
-  { id: 'none', name: 'None · instant cut', help: 'Instant cuts. Nothing moves.' },
-] as const
+export const transitions = ['gentle', 'fade', 'slide', 'none'] as const
 
-export type Transition = (typeof transitions)[number]['id']
+export type Transition = (typeof transitions)[number]
 export type ActiveTransition = Transition | 'share'
 
 export const DEFAULT_TRANSITION: Transition = 'gentle'
-export const SHARE_SAFE_HELP = 'Quick flat fades with no movement, blur or glow. Stays crisp in Google Meet and on meeting-room TVs.'
 
 export const TRANSITION_MS: Record<ActiveTransition, number> = { gentle: 880, fade: 600, slide: 700, share: 160, none: 0 }
 
 export function isTransition(value: string): value is Transition {
-  return transitions.some(t => t.id === value)
+  return transitions.includes(value as Transition)
 }
 
 export function activeTransition(transition: Transition, shareSafe: boolean): ActiveTransition {

@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseDeck } from '@/lib/deck'
-import { BLANK_DECK, DEFAULT_NAME, createPresentation, deckName, uniqueName } from '@/lib/presentations'
+import { blankDeck, createPresentation, deckName, uniqueName } from '@/lib/presentations'
+import messages from '@/messages/en.json'
+
+const DEFAULT_NAME = messages.Presentations.untitled
+const BLANK_DECK = blankDeck(messages.Presentations.blank.heading, messages.Presentations.blank.body)
 
 describe('presentations', () => {
   it('starts new presentations from a valid one-slide deck', () => {

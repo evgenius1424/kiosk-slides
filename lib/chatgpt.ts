@@ -2,6 +2,7 @@ import { createHash, createPublicKey, randomBytes, randomUUID, verify, type Json
 import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import { serverT } from '@/i18n/server'
 
 export type ChatGPTStatus =
   | { available: false; reason: string }
@@ -25,13 +26,13 @@ export class ChatGPTError extends Error {
 }
 
 export function checkLocalRequest(request: Request, { mutating = false } = {}) {
-  if (process.env.VERCEL) return 'ChatGPT plan usage works only when you run Kiosk Slides on your own computer.'
+  if (process.env.VERCEL) return serverT('hostedOnly')
   const url = new URL(request.url)
   const host = request.headers.get('host') || url.host
-  if (!isLoopbackHost(host)) return 'Open Kiosk Slides at http://127.0.0.1 on your own computer to use your ChatGPT plan.'
+  if (!isLoopbackHost(host)) return serverT('openLocally')
   if (mutating) {
     const origin = request.headers.get('origin')
-    if (!origin || new URL(origin).host !== host) return 'This request must come from the Kiosk Slides page.'
+    if (!origin || new URL(origin).host !== host) return serverT('wrongOrigin')
   }
   return ''
 }
@@ -77,14 +78,14 @@ export async function finishSignIn(params: URLSearchParams) {
   const state = params.get('state') || ''
   const attempt = pending().get(state)
   pending().delete(state)
-  if (!attempt || Date.now() - attempt.createdAt > PENDING_TTL) throw new ChatGPTError('This sign-in link expired. Try connecting again.', 'invalid_state')
-  if (params.get('error')) throw new ChatGPTError(params.get('error') === 'access_denied' ? 'ChatGPT sign-in was cancelled.' : 'ChatGPT sign-in failed. Try again.', params.get('error')!)
+  if (!attempt || Date.now() - attempt.createdAt > PENDING_TTL) throw new ChatGPTError(serverT('signIn.expired'), 'invalid_state')
+  if (params.get('error')) throw new ChatGPTError(serverT(params.get('error') === 'access_denied' ? 'signIn.cancelled' : 'signIn.failed'), params.get('error')!)
   const returnedClient = params.get('client_id')
-  if (attempt.clientId !== 'dynamic_agent_client' && returnedClient && returnedClient !== attempt.clientId) throw new ChatGPTError('ChatGPT returned a different app registration. Try again.', 'client_mismatch')
+  if (attempt.clientId !== 'dynamic_agent_client' && returnedClient && returnedClient !== attempt.clientId) throw new ChatGPTError(serverT('signIn.clientMismatch'), 'client_mismatch')
   const clientId = attempt.clientId === 'dynamic_agent_client' ? returnedClient : attempt.clientId
-  if (!clientId || clientId === 'dynamic_agent_client') throw new ChatGPTError('ChatGPT did not finish registering Kiosk Slides. Try again.', 'registration_incomplete')
+  if (!clientId || clientId === 'dynamic_agent_client') throw new ChatGPTError(serverT('signIn.registrationIncomplete'), 'registration_incomplete')
   const code = params.get('code')
-  if (!code) throw new ChatGPTError('ChatGPT sign-in returned no code. Try again.', 'missing_code')
+  if (!code) throw new ChatGPTError(serverT('signIn.missingCode'), 'missing_code')
   const tokens = await tokenRequest({ grant_type: 'authorization_code', client_id: clientId, code, code_verifier: attempt.verifier, redirect_uri: attempt.redirectUri, resource: RESOURCE })
   const claims = await verifyIdToken(tokens.id_token, clientId, attempt.nonce)
   const store = await readStore()
@@ -147,11 +148,11 @@ export async function streamResponse(body: { model: string; instructions: string
       if (event.type === 'response.output_text.delta') { text += event.delta; onText(event.delta) }
       if (event.type === 'response.completed') completed = true
       if (event.type === 'response.failed') throw errorFor(event.response?.error?.code || 'unknown_error', event.response?.error?.message)
-      if (event.type === 'response.incomplete') throw new ChatGPTError('The reply was cut off before it finished. Try a shorter request.', 'incomplete')
+      if (event.type === 'response.incomplete') throw new ChatGPTError(serverT('response.incomplete'), 'incomplete')
       if (event.type === 'error') throw errorFor(event.code || event.error?.code || 'unknown_error', event.message || event.error?.message)
     }
   }
-  if (!completed) throw new ChatGPTError('The connection to ChatGPT ended early. Try again.', 'stream_interrupted', 502)
+  if (!completed) throw new ChatGPTError(serverT('response.interrupted'), 'stream_interrupted', 502)
   return text
 }
 
@@ -160,25 +161,14 @@ type Store = { hostId?: string; clientId?: string; lastIdToken?: string; lastEma
 type Pending = { nonce: string; verifier: string; redirectUri: string; clientId: string; returnTo: string; createdAt: number }
 type TokenResponse = { access_token: string; refresh_token?: string; id_token: string; expires_in?: number; scope?: string }
 
-const ERROR_MESSAGES: Record<string, string> = {
-  subscription_sharing_user_not_eligible: 'ChatGPT plan usage isn’t available for this account or workspace.',
-  subscription_sharing_usage_limit_exceeded: 'You’ve reached a ChatGPT plan usage limit. Check your usage in ChatGPT settings.',
-  subscription_sharing_usage_unavailable: 'ChatGPT usage couldn’t be checked right now. Try again shortly.',
-  subscription_sharing_unsupported_capability: 'This request uses a feature that isn’t supported with ChatGPT plan usage.',
-  subscription_sharing_route_not_supported: 'This request type isn’t supported with ChatGPT plan usage.',
-  subscription_sharing_invalid_user: 'Your ChatGPT sign-in needs to be renewed. Disconnect and connect again.',
-  subscription_sharing_user_unavailable: 'ChatGPT account information is temporarily unavailable. Try again shortly.',
-  chatpass_v2_scope_not_authorized: 'Kiosk Slides isn’t authorized for this operation.',
-  chatpass_v2_invalid_authorization_context: 'Kiosk Slides isn’t authorized for this operation.',
-}
 const TERMINAL_REFRESH_ERRORS = ['invalid_grant', 'invalid_refresh_token', 'token_expired', 'refresh_token_expired', 'refresh_token_invalidated', 'refresh_token_reused']
 
 let refreshing: Promise<string> | null = null
 
 async function accessToken() {
   const store = await readStore()
-  if (!store.account) throw new ChatGPTError('Connect ChatGPT to generate decks.', 'not_connected', 401)
-  if (!hasPlanScope(store.account.scopes)) throw new ChatGPTError('ChatGPT plan usage isn’t enabled for this sign-in. Disconnect and connect again to allow it.', 'plan_usage_disabled', 403)
+  if (!store.account) throw new ChatGPTError(serverT('session.notConnected'), 'not_connected', 401)
+  if (!hasPlanScope(store.account.scopes)) throw new ChatGPTError(serverT('session.planDisabled'), 'plan_usage_disabled', 403)
   if (store.account.expiresAt - REFRESH_MARGIN * 1000 > Date.now()) return store.account.accessToken
   refreshing ||= refresh().finally(() => { refreshing = null })
   return refreshing
@@ -187,8 +177,8 @@ async function accessToken() {
 async function refresh() {
   const store = await readStore()
   const account = store.account
-  if (!account || !store.clientId) throw new ChatGPTError('Connect ChatGPT to generate decks.', 'not_connected', 401)
-  if (!account.refreshToken) throw new ChatGPTError('Your ChatGPT session expired. Connect again.', 'session_expired', 401)
+  if (!account || !store.clientId) throw new ChatGPTError(serverT('session.notConnected'), 'not_connected', 401)
+  if (!account.refreshToken) throw new ChatGPTError(serverT('session.expired'), 'session_expired', 401)
   try {
     const tokens = await tokenRequest({ grant_type: 'refresh_token', client_id: store.clientId, refresh_token: account.refreshToken, resource: RESOURCE })
     const next: Account = { ...account, accessToken: tokens.access_token, refreshToken: tokens.refresh_token || account.refreshToken, expiresAt: Date.now() + (tokens.expires_in || 3600) * 1000, scopes: tokens.scope || account.scopes, idToken: tokens.id_token || account.idToken }
@@ -197,7 +187,7 @@ async function refresh() {
   } catch (err) {
     if (err instanceof ChatGPTError && TERMINAL_REFRESH_ERRORS.includes(err.code)) {
       await writeStore({ ...store, account: undefined })
-      throw new ChatGPTError('Your ChatGPT session has expired. Connect again.', 'session_expired', 401)
+      throw new ChatGPTError(serverT('session.expired'), 'session_expired', 401)
     }
     throw err
   }
@@ -208,24 +198,24 @@ async function tokenRequest(fields: Record<string, string>): Promise<TokenRespon
   const body = await response.json().catch(() => ({}))
   if (!response.ok) {
     const code = typeof body.error === 'string' ? body.error : body.error?.code || 'token_error'
-    if (code === 'invalid_client') throw new ChatGPTError('Kiosk Slides’ ChatGPT registration is invalid. Disconnect and connect again.', code, 500)
-    throw new ChatGPTError('ChatGPT sign-in could not be completed. Try again.', code, 400)
+    if (code === 'invalid_client') throw new ChatGPTError(serverT('signIn.invalidClient'), code, 500)
+    throw new ChatGPTError(serverT('signIn.notCompleted'), code, 400)
   }
   return body
 }
 
 async function verifyIdToken(idToken: string, clientId: string, nonce: string) {
   const [header64, payload64, signature64] = (idToken || '').split('.')
-  if (!signature64) throw new ChatGPTError('ChatGPT returned an invalid ID token.', 'invalid_id_token')
+  if (!signature64) throw new ChatGPTError(serverT('signIn.invalidToken'), 'invalid_id_token')
   const header = JSON.parse(Buffer.from(header64, 'base64url').toString())
   const claims = JSON.parse(Buffer.from(payload64, 'base64url').toString())
-  if (header.alg !== 'RS256') throw new ChatGPTError('ChatGPT returned an unsupported ID token.', 'invalid_id_token')
+  if (header.alg !== 'RS256') throw new ChatGPTError(serverT('signIn.invalidToken'), 'invalid_id_token')
   const jwks = await fetch(`${AUTH_ORIGIN}/.well-known/jwks.json`).then(r => r.json()) as { keys: (JsonWebKey & { kid?: string })[] }
   const jwk = jwks.keys.find(key => key.kid === header.kid)
-  if (!jwk) throw new ChatGPTError('ChatGPT ID token key not found.', 'invalid_id_token')
+  if (!jwk) throw new ChatGPTError(serverT('signIn.invalidToken'), 'invalid_id_token')
   const valid = verify('RSA-SHA256', Buffer.from(`${header64}.${payload64}`), createPublicKey({ key: jwk, format: 'jwk' }), Buffer.from(signature64, 'base64url'))
   const audience = Array.isArray(claims.aud) ? claims.aud : [claims.aud]
-  if (!valid || claims.iss !== ISSUER || !audience.includes(clientId) || claims.exp * 1000 < Date.now() || claims.nonce !== nonce || !claims.sub) throw new ChatGPTError('ChatGPT ID token failed validation.', 'invalid_id_token')
+  if (!valid || claims.iss !== ISSUER || !audience.includes(clientId) || claims.exp * 1000 < Date.now() || claims.nonce !== nonce || !claims.sub) throw new ChatGPTError(serverT('signIn.invalidToken'), 'invalid_id_token')
   return claims
 }
 
@@ -233,14 +223,14 @@ async function apiError(response: Response) {
   const body = await response.json().catch(() => null)
   const code = body?.error?.code || body?.code
   if (code) return errorFor(code, body?.error?.message)
-  if (response.status === 401) return new ChatGPTError('ChatGPT did not accept this sign-in. Disconnect and connect again.', 'unauthorized', 401)
-  if (response.status === 403) return new ChatGPTError(body?.detail || 'ChatGPT blocked this request.', 'forbidden', 403)
-  if (response.status === 503) return new ChatGPTError('ChatGPT plan usage is unavailable right now. Try again shortly.', 'unavailable', 503)
-  return new ChatGPTError(`ChatGPT request failed (${response.status}).`, 'request_failed', response.status)
+  if (response.status === 401) return new ChatGPTError(serverT('response.unauthorized'), 'unauthorized', 401)
+  if (response.status === 403) return new ChatGPTError(body?.detail || serverT('response.forbidden'), 'forbidden', 403)
+  if (response.status === 503) return new ChatGPTError(serverT('response.unavailable'), 'unavailable', 503)
+  return new ChatGPTError(serverT('response.failed', { status: response.status }), 'request_failed', response.status)
 }
 
 function errorFor(code: string, message?: string) {
-  return new ChatGPTError(ERROR_MESSAGES[code] || message || 'ChatGPT could not complete this request.', code, 502)
+  return new ChatGPTError(knownError(code) || message || serverT('response.unknown'), code, 502)
 }
 
 function hasPlanScope(scopes: string) {
@@ -278,4 +268,9 @@ async function writeStore(store: Store) {
 
 function base64url(buffer: Buffer) {
   return buffer.toString('base64url')
+}
+
+function knownError(code: string) {
+  const key = `codes.${code}` as Parameters<typeof serverT.has>[0]
+  return serverT.has(key) ? serverT(key) : ''
 }
