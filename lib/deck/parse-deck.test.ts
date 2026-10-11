@@ -106,6 +106,34 @@ describe('parseDeck: widgets', () => {
   })
 })
 
+describe('parseDeck: metric', () => {
+  const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
+
+  it('turns an annotated bold value and caption line into a metric', () => {
+    const [slide] = parseDeck(md(
+      '# Short decks ==land==',
+      '',
+      '<!-- metric -->',
+      '**3x**',
+      'more questions answered at the booth',
+    )).slides
+    expect(slide).toEqual({
+      kind: 'metric', title: '', label: '', footer: '', layout: 'auto',
+      heading: 'Short decks ==land==', body: '',
+      value: '3x', caption: 'more questions answered at the booth',
+    })
+  })
+
+  it('requires a bold value line', () => {
+    expect(error(md('# M', '', '<!-- metric -->', '3x', 'caption'))).toBe('Line 4: A metric starts with a bold value line, such as **3x**.')
+    expect(error(md('# M', '', '<!-- metric -->', '- a'))).toBe('Line 4: A metric starts with a bold value line, such as **3x**.')
+  })
+
+  it('requires a caption line right after the value', () => {
+    expect(error(md('# M', '', '<!-- metric -->', '**3x**'))).toBe('Line 4: Add a caption line directly below the metric’s bold value.')
+  })
+})
+
 describe('parseDeck: errors', () => {
   const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
 

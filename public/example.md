@@ -62,6 +62,20 @@ footer: Images can be HTTPS URLs, /images/ paths, or embedded data.
 ---
 
 <!--
+title: Results
+label: Metric
+footer: One number, one caption, readable from across the room.
+-->
+
+# Short decks ==hold attention==
+
+<!-- metric -->
+**3x**
+more visitors stayed for the whole loop
+
+---
+
+<!--
 title: Closing
 label: Takeaway
 footer: Press P for unattended looping; any click or manual move pauses it.
