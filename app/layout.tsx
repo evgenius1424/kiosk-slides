@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { ServiceWorker } from '@/components/service-worker'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
@@ -64,6 +65,7 @@ export default async function RootLayout({
     <html lang={await getLocale()}>
       <body className="antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <ServiceWorker />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

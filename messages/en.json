@@ -291,6 +291,11 @@
       "privacy": "Your sign-in stays on your computer and never reaches this website.",
       "then": "Then open <strong>{url}</strong> and choose Ask AI."
     },
+    "offline": {
+      "title": "Ask AI needs a connection",
+      "body": "Everything else works offline: your presentations are saved on this device, and you can edit, present and download them.",
+      "retry": "Try again"
+    },
     "progress": {
       "fixing": "Fixing a small formatting issue…",
       "polishing": "Polishing the slides…",
@@ -302,7 +307,8 @@
       "noModels": "No ChatGPT models are available for this account.",
       "signOutUnconfirmed": "Signed out here, but ChatGPT didn’t confirm it. You can also disconnect Kiosk Slides in ChatGPT settings.",
       "stopped": "Generation stopped.",
-      "requestFailed": "The request failed ({status}). Try again."
+      "requestFailed": "The request failed ({status}). Try again.",
+      "offline": "Ask AI needs a connection. Check the internet and try again."
     }
   },
   "Server": {
