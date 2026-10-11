@@ -10,6 +10,8 @@ import { slideStyles } from '@/lib/slide-styles'
 import {
   IDLE_MS,
   PLAYER_KEYS,
+  PLAYER_WORDS,
+  SLIDE_HASH,
   SWIPE,
   TRANSITION_MS,
   WHEEL,
@@ -59,6 +61,8 @@ export async function presentationHtml(
     swipe: SWIPE,
     wheel: WHEEL,
     idle: IDLE_MS,
+    words: PLAYER_WORDS,
+    hash: SLIDE_HASH.source,
   })
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${face}${slideStyles}${pageStyles(theme)}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><script>const config=${config};${player}</script></body></html>`
 }
@@ -84,21 +88,26 @@ const controls = `<button id="full" type="button" aria-label="Toggle full screen
 
 const player = `const slides=[...document.querySelectorAll('.portable-slide')],full=document.querySelector('#full');
 const root=document.documentElement,canFull=!!(root.requestFullscreen||root.webkitRequestFullscreen);
-let index=0,shown=0,timer,leaving,idle,playing=false,safe=config.shareSafe,locked=false,total=0,gesture,start=null;
+const fromHash=()=>{const m=new RegExp(config.hash).exec(location.hash);return m?Math.max(0,Math.min(slides.length-1,m[1]-1)):null};
+let index=fromHash()??0,shown=index,timer,leaving,idle,playing=false,safe=config.shareSafe,locked=false,total=0,gesture,start=null,lock=null,asking=false;
 const fullElement=()=>document.fullscreenElement||document.webkitFullscreenElement;
+const mark=()=>{const h='#'+(index+1);if(location.hash===h)return;try{history.replaceState(history.state,'',h)}catch{location.replace(h)}};
+const keep=()=>{const want=playing||!!fullElement();if(!want){if(lock){lock.release().catch(()=>{});lock=null}return}if(asking||lock&&!lock.released||document.visibilityState!=='visible'||!navigator.wakeLock)return;asking=true;navigator.wakeLock.request('screen').then(l=>{lock=l;asking=false;keep()},()=>{asking=false})};
 const mode=()=>safe&&config.transition!=='none'?'share':config.transition;
-const show=()=>{const from=shown,t=mode();shown=index;root.dataset.transition=t;if(from!==index)root.style.setProperty('--kt-dir',index<from?-1:1);slides.forEach(s=>s.classList.remove('kt-enter','kt-leave'));void root.offsetWidth;slides.forEach((s,i)=>s.classList.toggle('active',i===index));clearTimeout(leaving);if(from!==index&&t!=='none'){slides[index].classList.add('kt-enter');slides[from].classList.add('kt-leave');leaving=setTimeout(()=>slides.forEach(s=>s.classList.remove('kt-enter','kt-leave')),config.ms[t])}schedule()};
+const show=()=>{const from=shown,t=mode();shown=index;root.dataset.transition=t;if(from!==index)root.style.setProperty('--kt-dir',index<from?-1:1);slides.forEach(s=>s.classList.remove('kt-enter','kt-leave'));void root.offsetWidth;slides.forEach((s,i)=>s.classList.toggle('active',i===index));clearTimeout(leaving);if(from!==index&&t!=='none'){slides[index].classList.add('kt-enter');slides[from].classList.add('kt-leave');leaving=setTimeout(()=>slides.forEach(s=>s.classList.remove('kt-enter','kt-leave')),config.ms[t])}mark();schedule()};
 const say=m=>{const n=document.querySelector('#notice');n.textContent=m;clearTimeout(say.t);say.t=setTimeout(()=>n.textContent='',1800)};
-const pause=()=>{playing=false;clearTimeout(timer)};
-const schedule=()=>{clearTimeout(timer);if(playing)timer=setTimeout(()=>{if(index===slides.length-1&&!config.loop){pause();return}index=(index+1)%slides.length;show()},config.durations[index]*1000)};
+const pause=()=>{playing=false;clearTimeout(timer);keep()};
+const schedule=()=>{clearTimeout(timer);if(playing)timer=setTimeout(()=>{if(index===slides.length-1&&!config.loop){pause();say(config.words.end);return}index=(index+1)%slides.length;show()},config.durations[index]*1000);keep()};
 const go=i=>{pause();index=Math.max(0,Math.min(slides.length-1,i));show()};
 const move=d=>go(index+d);
 const wake=()=>{full.classList.remove('idle');clearTimeout(idle);idle=setTimeout(()=>full.classList.add('idle'),config.idle)};
 const toggleFull=()=>{if(fullElement())(document.exitFullscreen||document.webkitExitFullscreen).call(document);else{const r=(root.requestFullscreen||root.webkitRequestFullscreen).call(root);if(r&&r.catch)r.catch(()=>{})}};
-const syncFull=()=>root.classList.toggle('fullscreen',!!fullElement());
-const actions={next:()=>move(1),previous:()=>move(-1),first:()=>go(0),last:()=>go(slides.length-1),fullscreen:()=>{if(canFull)toggleFull()},autoplay:()=>{playing=!playing;schedule();say(playing?'Autoscroll on':'Autoscroll off')},shareSafe:()=>{safe=!safe;root.dataset.transition=mode();say(safe?'Screen-share safe on':'Screen-share safe off')}};
+const syncFull=()=>{root.classList.toggle('fullscreen',!!fullElement());keep()};
+const actions={next:()=>move(1),previous:()=>move(-1),first:()=>go(0),last:()=>go(slides.length-1),fullscreen:()=>{if(canFull)toggleFull()},autoplay:()=>{playing=!playing;schedule();say(config.words.autoplay[playing?'on':'off'])},shareSafe:()=>{safe=!safe;root.dataset.transition=mode();say(config.words.shareSafe[safe?'on':'off'])}};
 full.hidden=!canFull;
 full.addEventListener('click',e=>{e.stopPropagation();toggleFull();wake()});
+document.addEventListener('visibilitychange',keep);
+addEventListener('hashchange',()=>{const i=fromHash();if(i!==null&&i!==index)go(i)});
 document.addEventListener('fullscreenchange',syncFull);document.addEventListener('webkitfullscreenchange',syncFull);
 document.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,button'))return;const a=config.keys[e.key.length===1?e.key.toLowerCase():e.key];if(!a)return;e.preventDefault();actions[a]()});
 document.addEventListener('click',pause);

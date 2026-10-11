@@ -49,6 +49,8 @@ import {
   WHEEL,
   activeTransition,
   playerAction,
+  slideFromHash,
+  slideHash,
   slideSeconds,
   swipeDelta,
   transitions,
@@ -68,6 +70,7 @@ import { PresentationChat } from './presentation-chat'
 import { downloadFile } from './download'
 import { PresentationMenu } from './presentation-menu'
 import { SlideView } from './slide'
+import { useWakeLock } from './use-wake-lock'
 
 const BASICS = ['newSlide', 'heading', 'highlight', 'text', 'extras'] as const
 const SHORTCUTS = [
@@ -160,10 +163,12 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     setDraft(d => setFrontMatter(d, key, value))
   }
   const setTheme = (next: Theme) => setFront('theme', next)
-  const slide = slides[Math.min(index, slides.length - 1)]
+  const at = Math.min(index, slides.length - 1)
+  const slide = slides[at]
   const motion = activeTransition(transition, safe)
   const change = useSlideChange(index, slide, motion)
   const notice = useCallback((message: string) => setToast(message), [])
+  useWakeLock(presenting || playing)
   const toggleSafe = useCallback(() => {
     notice(t('toast.shareSafe', { on: String(!safe) }))
     setSafe(!safe)
@@ -195,9 +200,22 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
   useEffect(() => {
     const next = loadLibrary(example, untitled)
     setLibrary(next)
-    show(next.items.find(p => p.id === next.current)!.source)
+    show(next.items.find(p => p.id === next.current)!.source, location.hash)
     setLoaded(true)
   }, [example, untitled])
+  useEffect(() => {
+    if (loaded && location.hash !== slideHash(at)) history.replaceState(null, '', slideHash(at))
+  }, [at, loaded])
+  useEffect(() => {
+    const follow = () => {
+      const target = slideFromHash(location.hash, slides.length)
+      if (target === undefined) return
+      setPlaying(false)
+      setIndex(target)
+    }
+    window.addEventListener('hashchange', follow)
+    return () => window.removeEventListener('hashchange', follow)
+  }, [slides.length])
   useEffect(() => {
     if (loaded) saveLibrary(library)
   }, [library, loaded])
@@ -341,7 +359,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
     check()
     return () => observer.disconnect()
   }, [index, tab, presenting, slide])
-  function show(value: string) {
+  function show(value: string, hash = '') {
     try {
       const next = parsePresentation(value)
       setSource(value)
@@ -349,13 +367,14 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
       setDuration(next.duration)
       setLoop(next.loop)
       setError('')
+      setIndex(slideFromHash(hash, next.slides.length) ?? 0)
     } catch (err) {
       setSource(blank)
       setDraft(value)
       setTab('markdown')
       setError((err as Error).message)
+      setIndex(0)
     }
-    setIndex(0)
     setPlaying(false)
   }
   const keepsDraft = () => draft === source || confirm(t('editor.discard'))
