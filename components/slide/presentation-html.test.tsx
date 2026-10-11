@@ -33,6 +33,15 @@ describe('presentationHtml', () => {
     expect(html).toContain('"transition":"fade","shareSafe":true')
   })
 
+  it('prints one 16:9 page per slide with its background and no controls', async () => {
+    const html = await render()
+    expect(html).toContain('@page{size:16in 9in;margin:0}')
+    const print = html.slice(html.indexOf('@media print'))
+    expect(print).toContain('print-color-adjust:exact')
+    expect(print).toContain('.portable-slide+.portable-slide{break-before:page}')
+    expect(print).toContain('#full,#notice{display:none!important}')
+  })
+
   it('embeds images through the given function', async () => {
     const html = await render()
     expect(html).toContain('src="data:image/png;base64,')

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  ArrowDownToLine,
   ArrowRight,
   BookOpen,
   Check,
@@ -68,7 +67,8 @@ import {
   type Library,
 } from '@/lib/presentations'
 import { PresentationChat } from './presentation-chat'
-import { downloadFile } from './download'
+import { downloadFile, printHtml } from './download'
+import { DownloadMenu, type DownloadFormat } from './download-menu'
 import { PresentationMenu } from './presentation-menu'
 import { SlideView } from './slide'
 import { useWakeLock } from './use-wake-lock'
@@ -481,23 +481,25 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
       notice(t('toast.copyFailed'))
     }
   }
-  const exportHTML = async () => {
+  const exportPresentation = async (format: DownloadFormat) => {
     setExporting(true)
     try {
       const { presentationHtml, fetchAsDataUrl } = await import('./slide/presentation-html')
-      downloadFile(
-        await presentationHtml(
-          { ...presentation, title: current.name },
-          {
-            shareSafe: safe,
-            embedImage: fetchAsDataUrl,
-            embedFont: file => fetchAsDataUrl(`/fonts/${file}`),
-          },
-        ),
-        `${fileName(current.name)}.html`,
-        'text/html',
+      const html = await presentationHtml(
+        { ...presentation, title: current.name },
+        {
+          shareSafe: safe,
+          embedImage: fetchAsDataUrl,
+          embedFont: file => fetchAsDataUrl(`/fonts/${file}`),
+        },
       )
-      notice(t('toast.downloaded'))
+      if (format === 'pdf') {
+        notice(t('toast.printing'))
+        await printHtml(html)
+      } else {
+        downloadFile(html, `${fileName(current.name)}.html`, 'text/html')
+        notice(t('toast.downloaded'))
+      }
     } catch (err) {
       notice((err as Error).message)
     } finally {
@@ -542,15 +544,7 @@ export function KioskWorkspace({ example, prompt }: { example: string; prompt: s
             <Settings2 size={16} />
             <span>{t('settings')}</span>
           </button>
-          <button
-            className="btn export-btn"
-            title={t('downloadHint')}
-            onClick={exportHTML}
-            disabled={exporting}
-          >
-            <ArrowDownToLine size={15} />
-            {exporting ? t('preparing') : t('download')}
-          </button>
+          <DownloadMenu busy={exporting} onDownload={exportPresentation} />
           <button className="btn primary" onClick={present}>
             <Play size={14} fill="currentColor" />
             <span>{t('present')}</span>

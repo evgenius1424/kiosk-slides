@@ -26,7 +26,13 @@
     "savedHere": "Saved in this browser",
     "settings": "Settings",
     "download": "Download",
-    "downloadHint": "Download as one file that opens in any browser",
+    "downloadHint": "Download as a web page or a PDF",
+    "downloadAs": {
+      "html": "Web page",
+      "htmlHint": "One file that opens in any browser, even offline",
+      "pdf": "PDF",
+      "pdfHint": "One page per slide, for email and chat"
+    },
     "preparing": "Preparing…",
     "present": "Present",
     "tabs": {
@@ -86,6 +92,7 @@
       "slideAdded": "New slide added at the end. Edit it, then update your slides.",
       "updated": "Slides updated and saved",
       "downloaded": "Downloaded · opens in any browser, even offline",
+      "printing": "Choose Save as PDF in the print dialog",
       "promptCopied": "Prompt copied · paste it into any AI chat",
       "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there."
     }

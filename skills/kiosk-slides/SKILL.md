@@ -55,6 +55,8 @@ Options:
 - `--check` only validates and prints the slide list and any warnings, without writing HTML.
 - `--format` tidies the Markdown file in place without changing what it shows.
 
+For a PDF, open the HTML in a browser and print it with Save as PDF: every slide prints on its own 16:9 page, in the same theme, tone and font, with selectable text. No other tool is needed.
+
 If it fails, the message starts with `Line N:` and names the rule; fix the Markdown and run it again. An image error means a URL could not be fetched or a `/images/` file is missing; ask the user for the file or remove that slide's image.
 
 Use `room-dark` for screens in dim rooms, TVs, and kiosks, and `room-light` for bright rooms and projectors that wash out dark backgrounds. Keep graphite unless the user asks for color or names a brand color; then set it with `tone:` in the front matter or `--tone`. For an unattended screen or a big room, pass `--scale kiosk`.
