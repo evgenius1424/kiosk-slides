@@ -90,6 +90,8 @@
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
       "slideAdded": "New slide added at the end",
       "tidied": "Text cleaned up",
+      "pasted": "Pasted as “{name}”",
+      "undo": "Undo",
       "downloaded": "Downloaded · opens in any browser, even offline",
       "promptCopied": "Prompt copied · paste it into any AI chat",
       "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there.",
@@ -189,7 +191,7 @@
     "title": "Getting your slides in",
     "intro": "The quickest way is to let AI write your slides. Use Ask AI here, or any AI chat you like.",
     "promptTitle": "Use any AI chat",
-    "promptBody": "Copy this prompt into your AI chat and say what your talk is about. Paste its answer in Edit.",
+    "promptBody": "Copy this prompt into your AI chat and say what your talk is about. Paste its answer anywhere on this page.",
     "copyPrompt": "Copy prompt",
     "basicsTitle": "For quick fixes",
     "basics": {
@@ -312,7 +314,7 @@
     },
     "local": {
       "title": "Use any AI chat to write your slides.",
-      "body": "Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer in Edit.",
+      "body": "Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer anywhere on this page.",
       "copyPrompt": "Copy prompt",
       "runHere": "Chat with your ChatGPT plan right here",
       "privacy": "Your sign-in stays on your computer and never reaches this website.",
