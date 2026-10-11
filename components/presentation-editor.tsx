@@ -80,7 +80,12 @@ export function PresentationEditor({
               <BookOpen size={14} />
               {t('help')}
             </button>
-            <button className="btn primary" onClick={onTidy} disabled={!!error}>
+            <button
+              className="btn primary"
+              title={t('tidyHint')}
+              onClick={onTidy}
+              disabled={!!error}
+            >
               <Wand2 size={14} />
               {t('tidy')}
             </button>

@@ -43,7 +43,7 @@ describe('live editing', () => {
     act(() => vi.advanceTimersByTime(LIVE_MS))
     expect(screen.getByRole('status').textContent).toContain('Line 6:')
     expect(preview()).toContain('One')
-    expect(screen.getByRole('button', { name: 'Tidy' })).toHaveProperty('disabled', true)
+    expect(screen.getByRole('button', { name: 'Clean up' })).toHaveProperty('disabled', true)
     fireEvent.click(screen.getByRole('button', { name: 'Go to line' }))
     expect(textarea.selectionStart).toBe('# One\n\n---\n\n# Two\n'.length)
     expect(localStorage.getItem('kiosk-presentations')).toContain('# Three')

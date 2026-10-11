@@ -61,9 +61,10 @@
     },
     "editor": {
       "help": "Help",
-      "tidy": "Tidy",
+      "tidy": "Clean up",
+      "tidyHint": "Lines up tables and spacing in your text",
       "label": "Slide text",
-      "status": "Slides follow your text as you type. Tidy lines up tables and spacing.",
+      "status": "Slides follow your text as you type. Clean up lines up tables and spacing.",
       "goToLine": "Go to line"
     },
     "tip": "Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<extra> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</extra>",
@@ -85,7 +86,7 @@
       "created": "{name} created · write, paste, or ask AI",
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
       "slideAdded": "New slide added at the end",
-      "tidied": "Text tidied",
+      "tidied": "Text cleaned up",
       "downloaded": "Downloaded · opens in any browser, even offline",
       "promptCopied": "Prompt copied · paste it into any AI chat",
       "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there."
@@ -221,7 +222,7 @@
         "keys": "Home / End"
       },
       "tidy": {
-        "name": "Tidy the text while editing",
+        "name": "Clean up the text while editing",
         "keys": "Ctrl / ⌘ S"
       }
     },
