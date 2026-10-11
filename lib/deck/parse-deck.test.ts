@@ -351,6 +351,11 @@ describe('parseDeck: buttons', () => {
     })
   })
 
+  it('flattens formatted link text into the button label', () => {
+    const [slide] = parseDeck(md('# Go', '', '<!-- buttons -->', '- [*Go* now `today`](https://x.com)')).slides
+    expect(slide).toMatchObject({ buttons: [{ label: 'Go now today', url: 'https://x.com' }] })
+  })
+
   it('caps buttons at three', () => {
     const links = ['a', 'b', 'c', 'd'].map(x => `- [${x}](https://example.com/${x})`)
     expect(error(md('# Go', '', '<!-- buttons -->', ...links))).toBe('Line 4: Use at most 3 buttons.')

@@ -1,3 +1,4 @@
+import { toString } from 'mdast-util-to-string'
 import { defineWidget } from './types'
 
 export type Button = { label: string; url: string }
@@ -17,7 +18,7 @@ export const buttons = defineWidget<ButtonsWidget>({
       const link = parts.length === 1 && parts[0].type === 'link' ? parts[0] : undefined
       if (!link) return fail('Each button must be a single [Label](https://...) link.', itemLine)
       if (!link.url.startsWith('https://')) fail('Button links must be https:// URLs.', itemLine)
-      const label = link.children.map(child => ('value' in child ? child.value : '')).join('').trim()
+      const label = toString(link).trim()
       if (!label) fail('Give each button a label: [Label](https://...).', itemLine)
       if (label.length > 40) fail('Shorten the button label to 40 characters.', itemLine)
       return { label, url: link.url }
