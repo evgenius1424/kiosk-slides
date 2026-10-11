@@ -14,7 +14,7 @@ describe('parseDeck: deck and message slides', () => {
       '  loop: false',
       '---',
       '',
-      '# Make your point ==impossible to miss==',
+      '# Make your point **impossible to miss**',
       '',
       'Big type. One idea.',
     ))
@@ -22,7 +22,7 @@ describe('parseDeck: deck and message slides', () => {
       title: 'Demo deck', duration: 20, loop: false,
       slides: [{
         kind: 'message', title: '', label: '', footer: '', layout: 'auto',
-        heading: 'Make your point ==impossible to miss==', body: 'Big type. One idea.',
+        heading: [{ text: 'Make your point ' }, { text: 'impossible to miss', highlight: true }], body: 'Big type. One idea.',
       }],
     })
   })
@@ -42,20 +42,20 @@ describe('parseDeck: deck and message slides', () => {
     ))
     expect(deck.slides[1]).toEqual({
       kind: 'message', title: 'Opening', label: 'Core concept', footer: 'One point per slide.',
-      layout: 'split-left', duration: 8, heading: 'Second', body: '',
+      layout: 'split-left', duration: 8, heading: [{ text: 'Second' }], body: '',
     })
   })
 
   it('splits slides on bare --- lines but not inside code fences', () => {
     const deck = parseDeck(md('# One', '---', '# Two', '---', '', '# Three'))
-    expect(deck.slides.map(s => s.heading)).toEqual(['One', 'Two', 'Three'])
+    expect(deck.slides.map(s => s.heading[0].text)).toEqual(['One', 'Two', 'Three'])
   })
 })
 
 describe('parseDeck: widgets', () => {
   it('turns a flat numbered list into steps', () => {
     const [slide] = parseDeck(md(
-      '# Three ==steps==',
+      '# Three **steps**',
       '',
       'Intro.',
       '',
@@ -65,14 +65,14 @@ describe('parseDeck: widgets', () => {
     )).slides
     expect(slide).toEqual({
       kind: 'steps', title: '', label: '', footer: '', layout: 'auto',
-      heading: 'Three ==steps==', body: 'Intro.',
+      heading: [{ text: 'Three ' }, { text: 'steps', highlight: true }], body: 'Intro.',
       steps: ['Gather the **material**.', 'Generate a deck.', 'Present.'],
     })
   })
 
   it('turns a fenced code block into code, even when it contains ---', () => {
     const [slide] = parseDeck(md(
-      '# Keep it ==simple==',
+      '# Keep it **simple**',
       '',
       '```html',
       '<h1>One idea.</h1>',
@@ -82,20 +82,20 @@ describe('parseDeck: widgets', () => {
     )).slides
     expect(slide).toEqual({
       kind: 'code', title: '', label: '', footer: '', layout: 'auto',
-      heading: 'Keep it ==simple==', body: '',
+      heading: [{ text: 'Keep it ' }, { text: 'simple', highlight: true }], body: '',
       language: 'html', code: '<h1>One idea.</h1>\n---\n<p>Make it count.</p>',
     })
   })
 
   it('turns a markdown image into image', () => {
     const [slide] = parseDeck(md(
-      '# Look at ==this==',
+      '# Look at **this**',
       '',
       '![A kiosk screen](https://example.com/kiosk.png "Seen from the back row")',
     )).slides
     expect(slide).toEqual({
       kind: 'image', title: '', label: '', footer: '', layout: 'auto',
-      heading: 'Look at ==this==', body: '',
+      heading: [{ text: 'Look at ' }, { text: 'this', highlight: true }], body: '',
       src: 'https://example.com/kiosk.png', alt: 'A kiosk screen', caption: 'Seen from the back row',
     })
   })
@@ -111,7 +111,7 @@ describe('parseDeck: metric', () => {
 
   it('turns an annotated bold value and caption line into a metric', () => {
     const [slide] = parseDeck(md(
-      '# Short decks ==land==',
+      '# Short decks **land**',
       '',
       '<!-- metric -->',
       '**3x**',
@@ -119,7 +119,7 @@ describe('parseDeck: metric', () => {
     )).slides
     expect(slide).toEqual({
       kind: 'metric', title: '', label: '', footer: '', layout: 'auto',
-      heading: 'Short decks ==land==', body: '',
+      heading: [{ text: 'Short decks ' }, { text: 'land', highlight: true }], body: '',
       value: '3x', caption: 'more questions answered at the booth',
     })
   })
@@ -151,8 +151,41 @@ describe('parseDeck: errors', () => {
     expect(error(md('# One', '', '# Two'))).toBe('Line 3: Each slide needs exactly one # heading.')
   })
 
-  it('requires ==highlight== spans to be closed', () => {
-    expect(error(md('', '# Make it ==count'))).toBe('Line 2: Close the ==highlight== span.')
+  const heading = (line: string) => parseDeck(line).slides[0].heading
+
+  it('reads bold, italic, code and links in the heading as parts', () => {
+    expect(heading('# Ship **fast**, *often*, with `pnpm` and [docs](https://example.com)')).toEqual([
+      { text: 'Ship ' }, { text: 'fast', highlight: true }, { text: ', ' }, { text: 'often', italic: true },
+      { text: ', with ' }, { text: 'pnpm', code: true }, { text: ' and ' }, { text: 'docs', url: 'https://example.com' },
+    ])
+  })
+
+  it('combines nested heading markup on one part', () => {
+    expect(heading('# **Read [*the* guide](https://example.com)**')).toEqual([
+      { text: 'Read ', highlight: true },
+      { text: 'the', highlight: true, italic: true, url: 'https://example.com' },
+      { text: ' guide', highlight: true, url: 'https://example.com' },
+    ])
+  })
+
+  it('treats == as plain text', () => {
+    expect(heading('# Make it ==count==')).toEqual([{ text: 'Make it ==count==' }])
+  })
+
+  it('requires https heading links', () => {
+    expect(error(md('', '# See [docs](http://example.com)'))).toBe('Line 2: Heading links must be https:// URLs.')
+  })
+
+  it('rejects other inline markdown in the heading', () => {
+    const hint = 'Headings support **highlight**, *italic*, `code` and [links](https://...) only.'
+    expect(error(md('# Old ~~news~~'))).toBe(`Line 1: ${hint}`)
+    expect(error(md('# Logo ![x](https://example.com/x.png)'))).toBe(`Line 1: ${hint}`)
+  })
+
+  it('counts visible heading text, not markup, against the cap', () => {
+    const words = 'a'.repeat(113)
+    expect(heading(`# **${words}**`)).toEqual([{ text: words, highlight: true }])
+    expect(error(md(`# **${'a'.repeat(116)}**`))).toBe('Line 1: Shorten the headline to 115 characters or split the slide.')
   })
 
   it('caps code at 12 lines', () => {
@@ -233,7 +266,7 @@ describe('parseDeck: table and before/after', () => {
 
   it('turns a GFM table into a table with its header and rows', () => {
     const [slide] = parseDeck(md(
-      '# Where the ==time== goes',
+      '# Where the **time** goes',
       '',
       '| Task | Hours |',
       '| --- | ---: |',
@@ -242,7 +275,7 @@ describe('parseDeck: table and before/after', () => {
     )).slides
     expect(slide).toEqual({
       kind: 'table', title: '', label: '', footer: '', layout: 'auto',
-      heading: 'Where the ==time== goes', body: '',
+      heading: [{ text: 'Where the ' }, { text: 'time', highlight: true }, { text: ' goes' }], body: '',
       header: ['Task', 'Hours'],
       rows: [['Writing', '3'], ['**Review**', '1']],
     })
@@ -262,7 +295,7 @@ describe('parseDeck: table and before/after', () => {
 
   it('turns a Before | After table into before/after, ignoring case', () => {
     const [slide] = parseDeck(md(
-      '# One ==idea== per slide',
+      '# One **idea** per slide',
       '',
       '| before | AFTER |',
       '| --- | --- |',
@@ -270,7 +303,7 @@ describe('parseDeck: table and before/after', () => {
     )).slides
     expect(slide).toEqual({
       kind: 'before-after', title: '', label: '', footer: '', layout: 'auto',
-      heading: 'One ==idea== per slide', body: '',
+      heading: [{ text: 'One ' }, { text: 'idea', highlight: true }, { text: ' per slide' }], body: '',
       before: 'Dense slides nobody reads', after: 'One idea, **big** type',
     })
   })
@@ -288,7 +321,7 @@ describe('parseDeck: chart', () => {
 
   it('turns an annotated table into a chart, first column as labels and the rest as series', () => {
     const [slide] = parseDeck(md(
-      '# Visits ==doubled==',
+      '# Visits **doubled**',
       '',
       '<!-- chart: type=bar -->',
       '| Month | Visits | Signups |',
@@ -298,7 +331,7 @@ describe('parseDeck: chart', () => {
     )).slides
     expect(slide).toEqual({
       kind: 'chart', title: '', label: '', footer: '', layout: 'auto',
-      heading: 'Visits ==doubled==', body: '',
+      heading: [{ text: 'Visits ' }, { text: 'doubled', highlight: true }], body: '',
       type: 'bar', labels: ['Jan', 'Feb'],
       series: [{ name: 'Visits', values: [120, 1450] }, { name: 'Signups', values: [8, 12.5] }],
     })
@@ -382,7 +415,7 @@ describe('parseDeck: buttons', () => {
 
   it('turns an annotated bullet list of links into buttons', () => {
     const [slide] = parseDeck(md(
-      '# Try it ==yourself==',
+      '# Try it **yourself**',
       '',
       '<!-- buttons -->',
       '- [View the repo](https://github.com/example/repo)',
@@ -390,7 +423,7 @@ describe('parseDeck: buttons', () => {
     )).slides
     expect(slide).toEqual({
       kind: 'buttons', title: '', label: '', footer: '', layout: 'auto',
-      heading: 'Try it ==yourself==', body: '',
+      heading: [{ text: 'Try it ' }, { text: 'yourself', highlight: true }], body: '',
       buttons: [
         { label: 'View the repo', url: 'https://github.com/example/repo' },
         { label: 'See the product', url: 'https://example.com' },
@@ -426,7 +459,7 @@ describe('parseDeck: buttons', () => {
 
 describe('parseDeck: flow', () => {
   const error = (source: string) => { try { parseDeck(source) } catch (e) { return (e as Error).message } return 'no error' }
-  const flow = (...bullets: string[]) => md('# How it ==moves==', '', '<!-- flow -->', ...bullets)
+  const flow = (...bullets: string[]) => md('# How it **moves**', '', '<!-- flow -->', ...bullets)
 
   it('turns an annotated bullet list of arrow chains into a flow', () => {
     expect(parseDeck(flow('- Write -> Parse -> Present')).slides[0]).toMatchObject({ kind: 'flow', lines: [['Write', 'Parse', 'Present']] })

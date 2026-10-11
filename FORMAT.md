@@ -13,7 +13,7 @@ autoplay:
   loop: true
 ---
 
-# First slide's ==big idea==
+# First slide's **big idea**
 
 ---
 
@@ -39,7 +39,7 @@ layout: split-left
 duration: 20s
 -->
 
-# Make your point ==impossible to miss==
+# Make your point **impossible to miss**
 
 Big type. One idea. No visual clutter.
 ````
@@ -51,7 +51,7 @@ In order, a slide has:
    - `layout` is `auto` (default), `stacked`, or `split-left`.
    - `duration` overrides the deck's autoplay time for this slide, written like `20s`.
    - Any other key is an error.
-2. **Exactly one `#` heading** of at most 115 characters. Wrap the key phrase in `==double equals==` to highlight it, and close every highlight. Other heading levels (`##` and deeper) are not supported.
+2. **Exactly one `#` heading** of at most 115 characters. Wrap the key phrase in `**bold**` to highlight it. Headings may also use `*italic*`, `` `code` `` and `[links](https://...)`; nothing else, and the 115 characters count the visible text, not the markup. Other heading levels (`##` and deeper) are not supported.
 3. **Body paragraphs** (optional): plain paragraphs, with inline Markdown kept as written. All the body text together must be at most 320 characters.
 4. **At most one supporting widget** (optional). It can go before, between, or after the body paragraphs. A slide with no widget is a *message* slide.
 
@@ -95,7 +95,7 @@ A slide may have **one** of these widgets. A second one is an error (`Use one su
 ### Steps
 
 ````markdown
-# Go from source to story in ==three steps==
+# Go from source to story in **three steps**
 
 1. Gather the material and name the audience.
 2. Generate a short Markdown deck.
@@ -107,7 +107,7 @@ The list must be flat. A nested list under a step is an error (`Flatten the list
 ### Code
 
 ````markdown
-# Keep the source ==simple==
+# Keep the source **simple**
 
 ```html
 <h1>One clear idea.</h1>
@@ -117,7 +117,7 @@ The list must be flat. A nested list under a step is an error (`Flatten the list
 ### Image
 
 ````markdown
-# Show it, ==don't describe it==
+# Show it, **don't describe it**
 
 ![Team photo](https://example.com/team.jpg "The launch team")
 ````
@@ -125,7 +125,7 @@ The list must be flat. A nested list under a step is an error (`Flatten the list
 ### Table
 
 ````markdown
-# Pick the ==right widget==
+# Pick the **right widget**
 
 | You have | Write | You get |
 | --- | --- | --- |
@@ -138,7 +138,7 @@ Cells keep their inline Markdown as written.
 ### Before / after
 
 ````markdown
-# One idea ==per slide==
+# One idea **per slide**
 
 | Before | After |
 | --- | --- |
@@ -150,7 +150,7 @@ This is a single comparison. A second body row is an error, so use a plain table
 ### Chart
 
 ````markdown
-# Shorter decks get ==more attention==
+# Shorter decks get **more attention**
 
 <!-- chart: type=bar x=Slides y=Recall -->
 | Slides | Recall | Viewers |
@@ -169,7 +169,7 @@ This is a single comparison. A second body row is an error, so use a plain table
 ### Metric
 
 ````markdown
-# Short decks ==hold attention==
+# Short decks **hold attention**
 
 <!-- metric -->
 **3x**
@@ -181,7 +181,7 @@ The first line is the bold value (`**…**` or `__…__`). The caption is on the
 ### Flow
 
 ````markdown
-# Two inputs, ==one deck==
+# Two inputs, **one deck**
 
 <!-- flow -->
 - Notes -> Draft -> Deck
@@ -195,7 +195,7 @@ The first line is the bold value (`**…**` or `__…__`). The caption is on the
 ### Buttons
 
 ````markdown
-# Take it ==further==
+# Take it **further**
 
 <!-- buttons -->
 - [View the source](https://github.com/evgenius1424/kiosk-slides)

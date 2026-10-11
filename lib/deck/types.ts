@@ -1,4 +1,5 @@
 import type { Widget } from './components'
+import type { HeadingPart } from './heading'
 
 export type Layout = 'auto' | 'stacked' | 'split-left'
 
@@ -7,7 +8,7 @@ export type SlideChrome = {
   title: string
   label: string
   footer: string
-  heading: string
+  heading: HeadingPart[]
   body: string
   layout: Layout
   duration?: number

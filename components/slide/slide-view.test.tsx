@@ -6,17 +6,25 @@ import { SlideView } from '@/components/slide'
 
 afterEach(cleanup)
 
-const chrome: SlideChrome = { title: 'Title', label: 'Label', footer: 'Footer', layout: 'auto', heading: 'Make it ==count==', body: 'Body text.' }
+const chrome: SlideChrome = { title: 'Title', label: 'Label', footer: 'Footer', layout: 'auto', heading: [{ text: 'Make it ' }, { text: 'count', highlight: true }], body: 'Body text.' }
 const view = (slide: Slide) => render(<SlideView slide={slide} />).container.querySelector('article')!
 
 describe('SlideView', () => {
   it('renders the chrome, highlighted heading, and body of a message slide', () => {
     const article = view({ ...chrome, kind: 'message' })
     expect(article.className).toContain('kind-message')
-    expect(article.querySelector('h2 em')?.textContent).toBe('count')
+    expect(article.querySelector('h2 strong')?.textContent).toBe('count')
     expect(article.querySelector('.slide-body')?.textContent).toBe('Body text.')
     expect(article.querySelector('.slide-meta')?.textContent).toContain('Title')
     expect(article.querySelector('.slide-footer')?.textContent).toContain('Footer')
+  })
+
+  it('renders italic, code and links in the heading', () => {
+    const article = view({ ...chrome, kind: 'message', heading: [{ text: 'calm', italic: true }, { text: 'pnpm', code: true }, { text: 'docs', url: 'https://example.com' }] })
+    expect(article.querySelector('h2 em')?.textContent).toBe('calm')
+    expect(article.querySelector('h2 code')?.textContent).toBe('pnpm')
+    const link = article.querySelector('h2 a')!
+    expect([link.textContent, link.getAttribute('href'), link.getAttribute('target')]).toEqual(['docs', 'https://example.com', '_blank'])
   })
 
   it('renders numbered steps', () => {

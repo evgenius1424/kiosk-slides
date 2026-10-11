@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { parseAnnotation, type Annotation } from './annotation'
 import { defaultChrome, parseChrome } from './chrome'
 import { widgetComponents, type Widget } from './components'
+import { headingLength, parseHeading } from './heading'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
 import type { Deck, MessageWidget, Slide } from './types'
@@ -86,10 +87,9 @@ function parseSlide(chunk: Chunk): Slide {
   const headings = nodes.filter((n): n is Heading => n.type === 'heading' && n.depth === 1)
   if (headings.length !== 1) fail('Each slide needs exactly one # heading.', headings[1] ? lineOf(headings[1].position) : chunk.line)
   const headingNode = headings[0]
-  const heading = raw(headingNode).replace(/^#\s+/, '').replace(/\s+#*\s*$/, '')
   const headingLine = lineOf(headingNode.position)
-  if (heading.length > 115) fail('Shorten the headline to 115 characters or split the slide.', headingLine)
-  if ((heading.match(/==/g)?.length || 0) % 2) fail('Close the ==highlight== span.', headingLine)
+  const heading = parseHeading(headingNode, message => fail(message, headingLine))
+  if (headingLength(heading) > 115) fail('Shorten the headline to 115 characters or split the slide.', headingLine)
 
   // The settings comment is the slide's first node, directly followed by the heading.
   const first = nodes[0]
