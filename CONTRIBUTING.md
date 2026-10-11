@@ -16,20 +16,28 @@ Good contributions make decks read better from across a room, make the Markdown 
 
 ## Local setup
 
-You need Node 18 or later and pnpm.
+You need Node 20.9 or later and pnpm (`corepack enable` picks the version pinned in `package.json`).
 
 ```bash
 pnpm install
 pnpm dev
-pnpm test
 ```
+
+| Command             | What it does                                                                 |
+| ------------------- | ---------------------------------------------------------------------------- |
+| `pnpm check`        | Everything CI runs except the build: format, lint, types, unused code, tests |
+| `pnpm format`       | Format every file with Prettier                                              |
+| `pnpm lint:fix`     | Lint with Oxlint and apply safe fixes                                        |
+| `pnpm test`         | Run the Vitest suite                                                         |
+| `pnpm build`        | Production build of the site                                                 |
+| `pnpm build:skills` | Package the two Claude skills from the shared renderer                       |
 
 Open http://127.0.0.1:3000. Ask AI only works on 127.0.0.1, signed in with your own ChatGPT plan.
 
 ## Pull requests
 
 - Keep each pull request to one change.
-- Run `pnpm test` and `pnpm build` before you push.
+- Run `pnpm check` and `pnpm build` before you push. CI runs the same steps.
 - If you change the renderer, also run `pnpm build:skills` and check that a deck rendered by the skill looks the same as one downloaded from the site. The two must never drift.
 - If you change the deck format, update [FORMAT.md](FORMAT.md) and [public/example.md](public/example.md) in the same pull request.
 - Keep site copy plain and non-technical. People come here to get a deck in a minute.

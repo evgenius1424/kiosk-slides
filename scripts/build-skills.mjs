@@ -30,7 +30,8 @@ for (const file of REFERENCES)
 const fonts = (await readdir('public/fonts')).filter(file => file.endsWith('.woff2'))
 for (const skill of SKILLS) {
   await mkdir(`${skill}/assets/fonts`, { recursive: true })
-  for (const file of [...fonts, 'LICENSE.md']) await copyFile(`public/fonts/${file}`, `${skill}/assets/fonts/${file}`)
+  for (const file of [...fonts, 'LICENSE.md'])
+    await copyFile(`public/fonts/${file}`, `${skill}/assets/fonts/${file}`)
 }
 
 console.log(`Built ${SKILLS.join(', ')}`)
