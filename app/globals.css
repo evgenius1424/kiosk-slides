@@ -1350,6 +1350,58 @@ html:has(.is-presenting .room-light) {
   opacity: 1;
   background: #0000000d;
 }
+.download-menu {
+  position: relative;
+}
+.download-chevron {
+  opacity: 0.6;
+}
+.download-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  width: 270px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 45px #0002;
+}
+.download-popover button {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--foreground);
+  text-align: left;
+}
+.download-popover button:hover,
+.download-popover button:focus-visible {
+  background: var(--muted);
+}
+.download-popover svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--muted-foreground);
+}
+.download-popover span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.download-popover strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.download-popover small {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
 .presentation-item {
   flex: 1;
   min-width: 0;

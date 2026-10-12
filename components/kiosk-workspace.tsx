@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  ArrowDownToLine,
   ArrowRight,
   Check,
   CheckCheck,
@@ -72,6 +71,7 @@ import { decodeShare, readShareHash, shareSlideHash } from '@/lib/share'
 import { requestPrompt } from '@/lib/talk'
 import { PresentationChat } from './presentation-chat'
 import { downloadFile } from './download'
+import { DownloadMenu, type DownloadFormat } from './download-menu'
 import { PresentationEditor, selectSlide, useLiveSource } from './presentation-editor'
 import { PresentationMenu } from './presentation-menu'
 import { SharePanel } from './share-panel'
@@ -640,24 +640,27 @@ export function KioskWorkspace({
       notice(t('toast.copyFailed'))
     }
   }
-  const exportHTML = async () => {
+  const exportPresentation = async (format: DownloadFormat) => {
     setExporting(true)
     try {
       const { presentationHtml, fetchAsDataUrl } = await import('./slide/presentation-html')
-      downloadFile(
-        await presentationHtml(
-          { ...presentation, title: current.name },
-          {
-            shareSafe: safe,
-            site,
-            embedImage: fetchAsDataUrl,
-            embedFont: file => fetchAsDataUrl(`/fonts/${file}`),
-          },
-        ),
-        `${fileName(current.name)}.html`,
-        'text/html',
+      const html = await presentationHtml(
+        { ...presentation, title: current.name },
+        {
+          shareSafe: safe,
+          site,
+          embedImage: fetchAsDataUrl,
+          embedFont: file => fetchAsDataUrl(`/fonts/${file}`),
+        },
       )
-      notice(t('toast.downloaded'))
+      if (format === 'pdf') {
+        const { presentationPdf } = await import('./presentation-pdf')
+        downloadFile(await presentationPdf(html, current.name), `${fileName(current.name)}.pdf`)
+        notice(t('toast.pdfDownloaded'))
+      } else {
+        downloadFile(html, `${fileName(current.name)}.html`, 'text/html')
+        notice(t('toast.downloaded'))
+      }
     } catch (err) {
       notice((err as Error).message)
     } finally {
@@ -744,15 +747,11 @@ export function KioskWorkspace({
                   <Share2 size={15} />
                   <span>{t('share')}</span>
                 </button>
-                <button
-                  className="btn export-btn"
-                  title={t('downloadHint')}
-                  onClick={exportHTML}
-                  disabled={exporting || !slides.length}
-                >
-                  <ArrowDownToLine size={15} />
-                  {exporting ? t('preparing') : t('download')}
-                </button>
+                <DownloadMenu
+                  busy={exporting}
+                  disabled={!slides.length}
+                  onDownload={exportPresentation}
+                />
               </>
             )}
             <button className="btn primary" onClick={present} disabled={!slides.length}>
@@ -1225,7 +1224,7 @@ export function KioskWorkspace({
           onCopied={() => notice(t('toast.linkCopied'))}
           onDownload={() => {
             setSharing(false)
-            exportHTML()
+            exportPresentation('html')
           }}
         />
         <dialog

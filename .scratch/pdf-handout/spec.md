@@ -18,8 +18,8 @@ Use the browser's own print-to-PDF. No PDF library and no server: text stays sha
   - Controls and notices are hidden.
   - Transitions are off.
   - Container-query sizing keeps working, because the page width is fixed.
-- **Downloaded file:** Ctrl/⌘ P on it gives the same PDF.
-- **Site:** Download becomes a small menu with **Web page** (today's file) and **PDF**. PDF renders the same HTML into a hidden iframe and calls `print()`. The toast says "Choose Save as PDF in the print dialog".
+- **Downloaded file:** Ctrl/⌘ P on it in a desktop browser gives a PDF with selectable text. Printing uses a flat background, since the gradient prints badly.
+- **Site:** Download becomes a small menu with **Web page** (today's file) and **PDF**. PDF draws each slide of the same HTML onto a canvas at 3840×2160 and writes the images into a 16:9 PDF in the browser, so phones get landscape pages too. iOS printing ignores `@page` size and mangles the background gradient, which ruled out `print()` for the site. The trade-off: text in the site's PDF is a sharp image, not selectable.
 - **Skill:** `SKILL.md` notes that printing the HTML gives a PDF. No headless-browser dependency.
 - Charts, flows, code and images must not split across pages, and each slide fills its page edge to edge.
 
