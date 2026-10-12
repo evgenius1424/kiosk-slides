@@ -4,8 +4,8 @@ export async function presentationPdf(html: string, title: string): Promise<Blob
   const page = new DOMParser().parseFromString(html, 'text/html')
   const css = [...page.querySelectorAll('style')].map(style => style.textContent).join('')
   const canvas = document.createElement('canvas')
-  canvas.width = WIDTH * SCALE
-  canvas.height = HEIGHT * SCALE
+  canvas.width = PIXEL_WIDTH
+  canvas.height = PIXEL_HEIGHT
   const context = canvas.getContext('2d')!
   const frames = [...page.querySelectorAll('.slide-frame')]
   const pages: PdfPage[] = []
@@ -20,7 +20,9 @@ export async function presentationPdf(html: string, title: string): Promise<Blob
 
 const WIDTH = 1920
 const HEIGHT = 1080
-const SCALE = 2
+const PIXEL_WIDTH = 5120
+const PIXEL_HEIGHT = 2880
+const QUALITY = 0.95
 const PAGE_POINTS: [number, number] = [960, 540]
 
 function slideSvg(page: Document, css: string, frame: Element) {
@@ -36,7 +38,7 @@ function slideSvg(page: Document, css: string, frame: Element) {
   slide.style.cssText = `width:${WIDTH}px;height:${HEIGHT}px;container-type:inline-size`
   root.append(style, slide)
   const markup = new XMLSerializer().serializeToString(root)
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH * SCALE}" height="${HEIGHT * SCALE}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><foreignObject width="${WIDTH}" height="${HEIGHT}">${markup}</foreignObject></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${PIXEL_WIDTH}" height="${PIXEL_HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><foreignObject width="${WIDTH}" height="${HEIGHT}">${markup}</foreignObject></svg>`
 }
 
 async function loadImage(svg: string) {
@@ -48,7 +50,9 @@ async function loadImage(svg: string) {
 }
 
 async function jpeg(canvas: HTMLCanvasElement) {
-  const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92))
+  const blob = await new Promise<Blob | null>(resolve =>
+    canvas.toBlob(resolve, 'image/jpeg', QUALITY),
+  )
   if (!blob) throw new Error('Could not draw the slides. Try again.')
   return new Uint8Array(await blob.arrayBuffer())
 }
