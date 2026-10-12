@@ -24,6 +24,7 @@ import {
   Share2,
   ShieldCheck,
   Sparkles,
+  Trash2,
   X,
 } from 'lucide-react'
 import {
@@ -32,7 +33,9 @@ import {
   presentationLook,
   fonts,
   formatPresentation,
+  insertSlide,
   parsePresentation,
+  removeSlide,
   setFrontMatter,
   slideLines,
   themes,
@@ -258,6 +261,36 @@ export function KioskWorkspace({
     setIndex(at)
     notice(t('toast.changed', { number: at + 1, count }), undoAction)
   }
+  const addSlide = (after: number) => {
+    const added = Math.min(after, slideLines(source).length - 1) + 1
+    const blank = [
+      '<!--',
+      `title: ${t('newSlide.title')}`,
+      `label: ${t('newSlide.label')}`,
+      `footer: ${t('newSlide.footer')}`,
+      '-->',
+      '',
+      `# ${t('newSlide.heading')}`,
+      '',
+      t('newSlide.body'),
+    ].join('\n')
+    const next = insertSlide(source, after, blank)
+    remember(current.id, source)
+    live.replace(next)
+    setPlaying(false)
+    setIndex(added)
+    setTab('markdown')
+    focusSlide(next, added)
+    notice(t('toast.slideAdded', { number: added + 1 }), undoAction)
+  }
+  const deleteSlide = (i: number) => {
+    if (slides.length < 2) return notice(t('toast.lastSlide'))
+    remember(current.id, source)
+    live.replace(removeSlide(source, i))
+    setPlaying(false)
+    setIndex(Math.min(i, slides.length - 2))
+    notice(t('toast.slideDeleted', { number: i + 1 }), undoAction)
+  }
   const slideActions = useSlideActions({
     prompt: slidePrompt,
     sourceRef,
@@ -422,11 +455,10 @@ export function KioskWorkspace({
         setModal(null)
         return
       }
-      if (
-        (event.target as HTMLElement).closest('input,textarea,select,button,dialog') ||
-        tab !== 'preview'
-      )
-        return
+      const target = event.target as HTMLElement
+      const fromList = !!target.closest('.slide-list')
+      if (target.closest('input,textarea,select,dialog')) return
+      if ((target.closest('button') && !fromList) || (tab !== 'preview' && !fromList)) return
       if (
         (event.metaKey || event.ctrlKey) &&
         !event.shiftKey &&
@@ -437,6 +469,7 @@ export function KioskWorkspace({
         if (!shared) undoRef.current()
         return
       }
+      if (fromList) return
       const action = playerAction(event)
       if (!action) return
       event.preventDefault()
@@ -855,48 +888,57 @@ export function KioskWorkspace({
           </div>
           <nav className="slide-list" aria-label={t('sidebar.list')}>
             {slides.map((item, i) => (
-              <button
-                className={`slide-nav ${index === i ? 'selected' : ''} ${slideActions.working?.index === i ? 'is-changing' : ''}`}
-                key={i}
-                onClick={() => select(i)}
-                onContextMenu={e => {
-                  if (shared || error) return
-                  e.preventDefault()
-                  const box = e.currentTarget.getBoundingClientRect()
-                  setSlideMenu({
-                    x: e.clientX || box.left + 24,
-                    y: e.clientY || box.top + 24,
-                    index: i,
-                  })
-                }}
-                aria-current={index === i ? 'step' : undefined}
-              >
-                <span className="slide-number" aria-hidden="true">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span className="sr-only">{t('sidebar.slide', { number: i + 1 })}</span>
-                <span className="thumb-group">
-                  <span className="thumbnail" aria-hidden="true" inert>
-                    <SlideView slide={item} theme={theme} accent={accent} look={look} miniature />
+              <div className="slide-item" key={i}>
+                <button
+                  className={`slide-nav ${index === i ? 'selected' : ''} ${slideActions.working?.index === i ? 'is-changing' : ''}`}
+                  onClick={() => select(i)}
+                  onKeyDown={e => {
+                    if (shared || error || (e.key !== 'Delete' && e.key !== 'Backspace')) return
+                    e.preventDefault()
+                    deleteSlide(i)
+                  }}
+                  onContextMenu={e => {
+                    if (shared || error) return
+                    e.preventDefault()
+                    const box = e.currentTarget.getBoundingClientRect()
+                    setSlideMenu({
+                      x: e.clientX || box.left + 24,
+                      y: e.clientY || box.top + 24,
+                      index: i,
+                    })
+                  }}
+                  aria-current={index === i ? 'step' : undefined}
+                >
+                  <span className="slide-number" aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')}
                   </span>
-                  <span className="thumb-name">
-                    {item.title || t('sidebar.untitledSlide', { number: i + 1 })}
+                  <span className="sr-only">{t('sidebar.slide', { number: i + 1 })}</span>
+                  <span className="thumb-group">
+                    <span className="thumbnail" aria-hidden="true" inert>
+                      <SlideView slide={item} theme={theme} accent={accent} look={look} miniature />
+                    </span>
+                    <span className="thumb-name">
+                      {item.title || t('sidebar.untitledSlide', { number: i + 1 })}
+                    </span>
                   </span>
-                </span>
-              </button>
+                </button>
+                {!shared && !error && slides.length > 1 && (
+                  <button
+                    className="slide-delete"
+                    aria-label={t('sidebar.delete', { number: i + 1 })}
+                    title={t('sidebar.delete', { number: i + 1 })}
+                    onClick={() => deleteSlide(i)}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
             ))}
           </nav>
           <button
             className="add-slide"
             hidden={!!shared}
-            onClick={() => {
-              const text = `${source.trimEnd()}\n\n---\n\n# ${t('newSlide.heading')}\n\n${t('newSlide.body')}\n`
-              live.replace(text)
-              setIndex(slides.length)
-              setTab('markdown')
-              focusSlide(text, slides.length)
-              notice(t('toast.slideAdded'))
-            }}
+            onClick={() => addSlide(error ? Infinity : at)}
           >
             <Plus size={15} />
             {t('sidebar.add')}
@@ -1326,6 +1368,8 @@ export function KioskWorkspace({
               setIndex(i)
               slideActions.run(action, i)
             }}
+            onAdd={addSlide}
+            onDelete={slides.length > 1 ? deleteSlide : undefined}
             onClose={closeSlideMenu}
           />
         )}

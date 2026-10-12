@@ -206,6 +206,31 @@ kbd {
   text-align: left;
   margin-bottom: 6px;
 }
+.slide-item {
+  position: relative;
+}
+.slide-delete {
+  position: absolute;
+  top: 14px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--muted-foreground);
+  opacity: 0;
+}
+.slide-item:hover .slide-delete,
+.slide-nav.selected + .slide-delete,
+.slide-delete:focus-visible {
+  opacity: 1;
+}
+.slide-delete:hover {
+  color: var(--foreground);
+}
 .slide-nav.selected {
   border-color: #a1a1aa;
   background: #f4f4f5;
@@ -420,6 +445,11 @@ kbd {
   background: none;
   text-align: left;
   font-size: 14px;
+}
+.slide-menu hr {
+  margin: 6px 4px;
+  border: 0;
+  border-top: 1px solid var(--border);
 }
 .slide-menu button:hover,
 .slide-menu button:focus-visible {

@@ -53,9 +53,13 @@
       "list": "Slides",
       "slide": "Slide {number}: ",
       "untitledSlide": "Slide {number}",
-      "add": "Add a slide"
+      "add": "Add a slide",
+      "delete": "Delete slide {number}"
     },
     "newSlide": {
+      "title": "New slide",
+      "label": "Your label",
+      "footer": "One short line with a fact or the takeaway.",
       "heading": "Make your next **great point**",
       "body": "Keep it short. Make it matter."
     },
@@ -94,7 +98,9 @@
       "end": "End of presentation",
       "created": "{name} created · write, paste, or ask AI",
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
-      "slideAdded": "New slide added at the end",
+      "slideAdded": "Slide {number} added · change its words in Edit",
+      "slideDeleted": "Slide {number} deleted",
+      "lastSlide": "A presentation needs at least one slide",
       "tidied": "Text cleaned up",
       "pasted": "Pasted as “{name}”",
       "undo": "Undo",
@@ -479,6 +485,8 @@
   "SlideActions": {
     "label": "Change this slide with AI",
     "menu": "Slide {number} actions",
+    "add": "Add a slide after",
+    "delete": "Delete slide",
     "working": "Changing this slide…",
     "copied": "Prompt copied · paste it into any AI chat",
     "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there.",

@@ -1,4 +1,12 @@
-export { parsePresentation, replaceSlide, slideLines, slideSource, UNTITLED } from './parse'
+export {
+  insertSlide,
+  parsePresentation,
+  removeSlide,
+  replaceSlide,
+  slideLines,
+  slideSource,
+  UNTITLED,
+} from './parse'
 export { formatPresentation } from './format'
 export { reviewPresentation } from './review'
 export { setFrontMatter } from './front-matter'

@@ -7,8 +7,10 @@ import {
   Heading1,
   Minimize2,
   PieChart,
+  Plus,
   Shuffle,
   SplitSquareHorizontal,
+  Trash2,
   X,
 } from 'lucide-react'
 import {
@@ -149,10 +151,14 @@ export function SlideActionBar({
 export function SlideActionMenu({
   at,
   onAction,
+  onAdd,
+  onDelete,
   onClose,
 }: {
   at: { x: number; y: number; index: number }
   onAction: (action: SlideAction, index: number) => void
+  onAdd: (index: number) => void
+  onDelete?: (index: number) => void
   onClose: () => void
 }) {
   const t = useTranslations('SlideActions')
@@ -205,6 +211,29 @@ export function SlideActionMenu({
           </button>
         )
       })}
+      <hr />
+      <button
+        role="menuitem"
+        onClick={() => {
+          onClose()
+          onAdd(at.index)
+        }}
+      >
+        <Plus size={14} />
+        {t('add')}
+      </button>
+      {onDelete && (
+        <button
+          role="menuitem"
+          onClick={() => {
+            onClose()
+            onDelete(at.index)
+          }}
+        >
+          <Trash2 size={14} />
+          {t('delete')}
+        </button>
+      )}
     </div>
   )
 }

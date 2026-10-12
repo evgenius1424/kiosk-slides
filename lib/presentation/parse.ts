@@ -64,6 +64,30 @@ export function replaceSlide(source: string, index: number, replacement: string)
   return [...lines.slice(0, range.start), ...next, ...lines.slice(range.end)].join('\n')
 }
 
+export function insertSlide(source: string, after: number, slide: string) {
+  const ranges = slideRanges(source)
+  const lines = source.replace(/\r/g, '').split('\n')
+  const next = slide.replace(/\r/g, '').trim().split('\n')
+  const range = ranges[Math.min(after, ranges.length - 1)]
+  if (!range) return `${source.trimEnd()}\n\n${next.join('\n')}\n`
+  return [...lines.slice(0, range.end), '', '---', '', ...next, ...lines.slice(range.end)].join(
+    '\n',
+  )
+}
+
+export function removeSlide(source: string, index: number) {
+  const ranges = slideRanges(source)
+  const range = ranges[index]
+  if (!range) throw new Error(`There is no slide ${index + 1}.`)
+  if (ranges.length === 1) throw new Error('A presentation needs at least one slide.')
+  const lines = source.replace(/\r/g, '').split('\n')
+  const [from, to] =
+    index < ranges.length - 1
+      ? [range.start, ranges[index + 1].start]
+      : [ranges[index - 1].end, range.end]
+  return [...lines.slice(0, from), ...lines.slice(to)].join('\n')
+}
+
 function parseFrontMatter(lines: string[]) {
   let title = UNTITLED
   let theme: Theme = 'room-dark'
