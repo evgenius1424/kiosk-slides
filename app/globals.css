@@ -1403,7 +1403,17 @@ html:has(.is-presenting .room-light) {
   flex-shrink: 0;
 }
 .header-actions .btn {
+  height: 40px;
+  padding: 0 14px;
+  line-height: 1;
   white-space: nowrap;
+}
+.header-actions .btn svg {
+  width: 16px;
+  height: 16px;
+}
+.header-actions kbd {
+  padding: 2px 5px;
 }
 .presentation-menu {
   position: relative;
@@ -1488,7 +1498,10 @@ html:has(.is-presenting .room-light) {
 .download-menu {
   position: relative;
 }
-.download-chevron {
+.header-actions .download-chevron {
+  width: 14px;
+  height: 14px;
+  margin-right: -4px;
   opacity: 0.6;
 }
 .download-popover {
@@ -1720,20 +1733,18 @@ html:has(.is-presenting .room-light) {
   .btn {
     padding: 10px;
   }
-  .header-actions .btn > span,
-  .header-actions kbd {
-    display: none;
+  .header-actions .btn {
+    width: 40px;
+    padding: 0;
   }
-  .export-btn {
-    font-size: 0;
-    gap: 0;
+  .header-actions .btn > span,
+  .header-actions kbd,
+  .header-actions .download-chevron {
+    display: none;
   }
   .shared-bar > span,
   .shared-credit {
     display: none;
-  }
-  .export-btn svg {
-    width: 18px;
   }
   .editor-body {
     padding: 22px 16px;
@@ -1880,7 +1891,9 @@ html:has(.is-presenting .room-light) {
     font-size: 26px;
   }
   .workspace:not(.is-presenting) .header-actions .primary {
-    padding: 14px 26px;
+    width: auto;
+    height: 52px;
+    padding: 0 26px;
     font-size: 17px;
   }
 }

@@ -865,7 +865,7 @@ export function KioskWorkspace({
                   onClick={() => setSharing(true)}
                   disabled={!slides.length}
                 >
-                  <Share2 size={15} />
+                  <Share2 size={16} />
                   <span>{t('share')}</span>
                 </button>
                 <DownloadMenu
@@ -876,7 +876,7 @@ export function KioskWorkspace({
               </>
             )}
             <button className="btn primary" onClick={present} disabled={!slides.length}>
-              <Play size={14} fill="currentColor" />
+              <Play size={16} fill="currentColor" />
               <span>{t('present')}</span>
               <kbd>F</kbd>
             </button>

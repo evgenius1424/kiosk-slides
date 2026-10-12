@@ -39,16 +39,16 @@ export function DownloadMenu({ busy, disabled, onDownload }: Props) {
   return (
     <div className="download-menu" ref={rootRef}>
       <button
-        className="btn export-btn"
+        className="btn"
         title={t('downloadHint')}
         aria-haspopup="true"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
         disabled={busy || disabled}
       >
-        <ArrowDownToLine size={15} />
-        {busy ? t('preparing') : t('download')}
-        <ChevronDown size={13} className="download-chevron" />
+        <ArrowDownToLine size={16} />
+        <span>{busy ? t('preparing') : t('download')}</span>
+        <ChevronDown size={14} className="download-chevron" />
       </button>
       {open && (
         <div className="download-popover" role="menu" aria-label={t('download')}>
