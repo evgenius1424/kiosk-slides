@@ -53,8 +53,7 @@
       "list": "Slides",
       "slide": "Slide {number}: ",
       "untitledSlide": "Slide {number}",
-      "add": "Add a slide",
-      "delete": "Delete slide {number}"
+      "add": "Add a slide"
     },
     "newSlide": {
       "title": "New slide",
