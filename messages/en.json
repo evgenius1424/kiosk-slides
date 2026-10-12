@@ -26,7 +26,13 @@
     "savedHere": "Saved in this browser",
     "settings": "Settings",
     "download": "Download",
-    "downloadHint": "Download as one file that opens in any browser",
+    "downloadHint": "Download as a web page or a PDF",
+    "downloadAs": {
+      "html": "Web page",
+      "htmlHint": "One file that opens in any browser, even offline",
+      "pdf": "PDF",
+      "pdfHint": "One page per slide, for email and chat"
+    },
     "share": "Share",
     "shareHint": "Send these slides as a link",
     "preparing": "Preparing…",
@@ -93,6 +99,7 @@
       "pasted": "Pasted as “{name}”",
       "undo": "Undo",
       "downloaded": "Downloaded · opens in any browser, even offline",
+      "pdfDownloaded": "PDF downloaded · one page per slide",
       "promptCopied": "Prompt copied · paste it into any AI chat",
       "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there.",
       "linkCopied": "Link copied · anyone who opens it sees these slides",
