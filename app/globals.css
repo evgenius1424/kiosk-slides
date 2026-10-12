@@ -711,7 +711,7 @@ kbd {
   overflow: auto;
   overscroll-behavior: contain;
   border: 0;
-  padding: 16px;
+  padding: 16px 16px 70vh;
   font: 15px/1.55 monospace;
   tab-size: 2;
   background: #fafafa;
