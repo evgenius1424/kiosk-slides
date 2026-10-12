@@ -17,9 +17,11 @@ import {
 } from '@/lib/presentation'
 import { presentationHtml, fetchAsDataUrl } from '@/components/slide/presentation-html'
 import { isTransition, transitions } from '@/lib/player'
+import { shareLink } from '@/lib/share'
+import { SITE_URL } from '@/lib/site'
 
 const usage =
-  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--check] [--format]'
+  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--no-credit] [--no-link] [--check] [--format]'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -34,6 +36,8 @@ const { values, positionals } = parseArgs({
     transition: { type: 'string' },
     'share-safe': { type: 'boolean' },
     'no-motion': { type: 'boolean', default: false },
+    'no-credit': { type: 'boolean', default: false },
+    'no-link': { type: 'boolean', default: false },
     check: { type: 'boolean', default: false },
     format: { type: 'boolean', default: false },
   },
@@ -68,12 +72,15 @@ async function main() {
     tone,
     transition,
     shareSafe: values['share-safe'] ?? presentation.shareSafe,
+    site: SITE_URL,
     embedImage: src => embed(src, imageDir),
     embedFont,
   })
   const out = values.out ?? input.replace(/\.(md|markdown)$/i, '') + '.html'
   await writeFile(out, html)
   console.log(`${summary(presentation)}\nWrote ${out}`)
+  const link = values['no-link'] ? undefined : await openLink(source)
+  if (link) console.log(`Open in your browser: ${link}`)
 }
 
 function withLook(presentation: Presentation): Presentation {
@@ -84,7 +91,13 @@ function withLook(presentation: Presentation): Presentation {
   if (!isScale(scale)) throw new Error(`Unknown scale “${scale}”. Use ${scales.join(', ')}.`)
   const brand =
     values.brand === undefined ? presentation.brand : values.brand === 'none' ? '' : values.brand
-  return { ...presentation, font, scale, brand }
+  const credit = presentation.credit && !values['no-credit']
+  return { ...presentation, font, scale, brand, credit }
+}
+
+async function openLink(source: string) {
+  const link = await shareLink(source, SITE_URL).catch(() => undefined)
+  return link && 'url' in link ? link.url : undefined
 }
 
 function summary(presentation: Presentation) {

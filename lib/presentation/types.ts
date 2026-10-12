@@ -30,6 +30,7 @@ export type Presentation = PresentationLook & {
   tone: string
   transition: Transition
   shareSafe: boolean
+  credit: boolean
   duration: number
   loop: boolean
   slides: Slide[]

@@ -716,13 +716,6 @@ kbd {
 .share-link .btn {
   flex-shrink: 0;
 }
-.share-code {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
-  border-radius: 8px;
-}
 .workspace-dialog .share-note {
   font-size: 14px;
   text-align: center;
@@ -933,6 +926,12 @@ kbd {
   align-items: center;
   gap: 6px;
   font-size: 14px;
+}
+.shared-credit {
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
 }
 .shared-broken {
   display: grid;
@@ -1542,7 +1541,8 @@ html:has(.is-presenting .room-light) {
     font-size: 0;
     gap: 0;
   }
-  .shared-bar > span {
+  .shared-bar > span,
+  .shared-credit {
     display: none;
   }
   .export-btn svg {

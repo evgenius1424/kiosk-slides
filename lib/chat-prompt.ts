@@ -32,10 +32,9 @@ export async function copyPrompt() {
 }
 
 async function reference() {
-  const [format, example] = await Promise.all([read('FORMAT.md'), read('public/example.md')])
+  const [format, example] = await Promise.all([
+    readFile(path.join(process.cwd(), 'FORMAT.md'), 'utf8'),
+    readFile(path.join(process.cwd(), 'public/example.md'), 'utf8'),
+  ])
   return `<format>\n${format.trim()}\n</format>\n\nHere is an example presentation that follows every rule:\n<example>\n${example.trim()}\n</example>`
-}
-
-function read(file: string) {
-  return readFile(path.join(process.cwd(), file), 'utf8')
 }

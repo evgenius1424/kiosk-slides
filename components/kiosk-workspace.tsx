@@ -649,6 +649,7 @@ export function KioskWorkspace({
           { ...presentation, title: current.name },
           {
             shareSafe: safe,
+            site,
             embedImage: fetchAsDataUrl,
             embedFont: file => fetchAsDataUrl(`/fonts/${file}`),
           },
@@ -697,6 +698,11 @@ export function KioskWorkspace({
                 <Plus size={15} />
                 {t('shared.keep')}
               </button>
+              {presentation.credit && (
+                <a className="shared-credit" href="/">
+                  {t('shared.credit')}
+                </a>
+              )}
             </div>
           ) : (
             <>
@@ -1085,6 +1091,15 @@ export function KioskWorkspace({
               />
             )}
             <p className="setting-help">{ts('brandHelp')}</p>
+            <div className="setting-row">
+              <span>{ts('credit')}</span>
+              <Toggle
+                checked={presentation.credit}
+                onChange={() => setFront('credit', presentation.credit ? 'false' : undefined)}
+                label={ts('credit')}
+              />
+            </div>
+            <p className="setting-help">{ts('creditHelp')}</p>
           </section>
           <section className="settings-section">
             <h3>{ts('playback')}</h3>

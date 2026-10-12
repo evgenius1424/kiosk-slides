@@ -115,6 +115,26 @@ describe('exported presentation player', () => {
   })
 })
 
+describe('credit', () => {
+  it('links to the site from the end notice only', async () => {
+    const page = await open('#' + (last + 1), { site: 'https://kiosk.test' })
+    expect(page.slideText()).not.toContain(PLAYER_WORDS.credit)
+    page.press({ key: 'p' })
+    await vi.waitFor(() =>
+      expect(page.notice()).toBe(`${PLAYER_WORDS.end} · ${PLAYER_WORDS.credit}`),
+    )
+    const link = page.link()!
+    expect([link.href, link.target]).toEqual(['https://kiosk.test/', '_blank'])
+  })
+
+  it('leaves it out when the presentation turns it off', async () => {
+    const page = await open('#' + (last + 1), { site: 'https://kiosk.test', credit: false })
+    page.press({ key: 'p' })
+    await vi.waitFor(() => expect(page.notice()).toBe(PLAYER_WORDS.end))
+    expect(page.link()).toBeNull()
+  })
+})
+
 describe('player words', () => {
   it('match the site messages', () => {
     const t = createTranslator({ locale: 'en', messages, namespace: 'Workspace.toast' })
@@ -122,6 +142,7 @@ describe('player words', () => {
       autoplay: { on: t('autoplay', { on: 'true' }), off: t('autoplay', { on: 'false' }) },
       shareSafe: { on: t('shareSafe', { on: 'true' }), off: t('shareSafe', { on: 'false' }) },
       end: t('end'),
+      credit: createTranslator({ locale: 'en', messages, namespace: 'Workspace.shared' })('credit'),
       slide: createTranslator({ locale: 'en', messages, namespace: 'Workspace.canvas' })('slide', {
         number: '{number}',
         count: '{count}',
@@ -152,13 +173,22 @@ describe('slide in the address', () => {
   })
 })
 
-async function open(hash = '') {
-  const html = await presentationHtml(presentation, {
-    tone: '#74747e',
-    transition: 'none',
-    embedImage: async src => src,
-    embedFont: async file => file,
-  })
+async function open(hash = '', { site = '', credit = true } = {}) {
+  const ending = site ? { loop: false, duration: 0.01, credit } : {}
+  const html = await presentationHtml(
+    {
+      ...presentation,
+      ...ending,
+      slides: presentation.slides.map(slide => (site ? { ...slide, duration: undefined } : slide)),
+    },
+    {
+      tone: '#74747e',
+      site,
+      transition: 'none',
+      embedImage: async src => src,
+      embedFont: async file => file,
+    },
+  )
   const release = vi.fn<() => Promise<void>>(async () => {})
   const wakeLock = {
     release,
@@ -180,6 +210,8 @@ async function open(hash = '') {
     history: () => window.history.length,
     active: () => slides.findIndex(s => s.classList.contains('active')),
     notice: () => document.querySelector('#notice')!.textContent,
+    link: () => document.querySelector<HTMLAnchorElement>('#notice a'),
+    slideText: () => slides.map(s => s.textContent).join(''),
     spoken: () => document.querySelector('#spoken')!.textContent,
     hidden: () =>
       slides.map(s => (s as HTMLElement).inert && s.getAttribute('aria-hidden') === 'true'),

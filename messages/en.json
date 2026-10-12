@@ -103,7 +103,8 @@
       "keep": "Keep a copy",
       "keepHint": "Add it to your presentations so you can change it",
       "broken": "This link is incomplete. Ask for it again.",
-      "home": "Go to my presentations"
+      "home": "Go to my presentations",
+      "credit": "Made with Kiosk Slides"
     }
   },
   "Share": {
@@ -112,8 +113,6 @@
     "making": "Making the link…",
     "link": "Link to these slides",
     "copy": "Copy link",
-    "code": "Code to open these slides on a phone",
-    "tooLongForCode": "Too long for a code; send the link instead.",
     "private": "Anyone with the link can see these slides. Nothing is uploaded.",
     "tooBig": "This presentation is too big to share by link. Download it and send the file instead.",
     "download": "Download"
@@ -142,6 +141,8 @@
     "brand": "Brand",
     "showBrand": "Show brand",
     "brandHelp": "Shown in the corner of every slide.",
+    "credit": "Credit Kiosk Slides",
+    "creditHelp": "Adds “Made with Kiosk Slides” to the end of downloads and to shared links. Never on a slide.",
     "playback": "Playback",
     "autoplay": "Autoplay",
     "autoplayHelp": "Let your story tell itself.",
