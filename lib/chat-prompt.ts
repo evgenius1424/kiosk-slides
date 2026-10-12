@@ -1,7 +1,10 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
+import { SLIDES_CLOSE, SLIDES_OPEN } from './slide-actions'
 
 const QUALITY = `Follow "Writing a good presentation" just as strictly. Every slide needs its settings comment with a title, label and footer, and most slides need a widget such as steps, before/after, a metric, a chart, a table or a flow. A presentation that is only one heading per slide, or that skips the settings comments, is wrong even when it parses. Run the checklist at the end of the format before you reply.`
+
+const SLIDE_RULES = `The presentation format is specified below. A parser enforces every grammar rule and rejects the slide otherwise. Keep the slide's settings comment with a title, a label and a footer, and follow "Writing a good presentation".`
 
 const CHAT_GUIDE = `You write presentations for Kiosk Slides, a tool for presenting one clear idea per slide on a TV, in a room, or on a call.
 
@@ -15,6 +18,18 @@ I'll tell you what the presentation is about and who it is for. Then reply with 
 
 The presentation format is specified below. A parser enforces every grammar rule and rejects the presentation otherwise, so follow it exactly. ${QUALITY}`
 
+const SLIDE_GUIDE = `You change one slide of a Kiosk Slides presentation. You get the whole presentation for context, the slide to change, and what to do with it.
+
+Reply with only the new slide inside ${SLIDES_OPEN}${SLIDES_CLOSE} tags: its settings comment and its content, with no front matter and none of the other slides. When the change makes more than one slide, separate them with a line holding only ---.
+
+${SLIDE_RULES}`
+
+const SLIDE_COPY_GUIDE = `You change one slide of a Kiosk Slides presentation. Below I give you the whole presentation for context, the slide to change, and what to do with it.
+
+Reply with only the new slide in a single \`\`\`markdown code block so I can paste it back: its settings comment and its content, with no front matter and none of the other slides. When the change makes more than one slide, separate them with a line holding only ---.
+
+${SLIDE_RULES}`
+
 let cached: Promise<string> | undefined
 
 export function systemPrompt(): Promise<string> {
@@ -27,8 +42,16 @@ export function systemPrompt(): Promise<string> {
   return cached
 }
 
+export async function slideSystemPrompt() {
+  return `${SLIDE_GUIDE}\n\n${await reference()}`
+}
+
 export async function copyPrompt() {
   return `${COPY_GUIDE}\n\n${await reference()}`
+}
+
+export async function slideCopyPrompt() {
+  return `${SLIDE_COPY_GUIDE}\n\n${await reference()}`
 }
 
 async function reference() {

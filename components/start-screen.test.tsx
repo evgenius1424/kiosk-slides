@@ -139,7 +139,12 @@ function signedIn() {
 function workspace() {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <KioskWorkspace example={example} prompt="GUIDE" site="https://example.com" />
+      <KioskWorkspace
+        example={example}
+        prompt="GUIDE"
+        slidePrompt="SLIDE GUIDE"
+        site="https://example.com"
+      />
     </NextIntlClientProvider>,
   )
 }

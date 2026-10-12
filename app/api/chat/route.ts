@@ -1,10 +1,19 @@
 import { CLOSE_TAG, OPEN_TAG, type ChatEvent, type ChatMessage } from '@/lib/chat'
-import { systemPrompt } from '@/lib/chat-prompt'
+import { slideSystemPrompt, systemPrompt } from '@/lib/chat-prompt'
 import { ChatGPTError, checkLocalRequest, streamResponse } from '@/lib/chatgpt'
-import { parsePresentation, reviewPresentation } from '@/lib/presentation'
+import { parsePresentation, replaceSlide, reviewPresentation } from '@/lib/presentation'
+import {
+  SLIDES_CLOSE,
+  SLIDES_OPEN,
+  extractSlides,
+  isSlideAction,
+  slideRequest,
+  type SlideAction,
+} from '@/lib/slide-actions'
 import { serverT } from '@/i18n/server'
 
 const MAX_ATTEMPTS = 3
+const SLIDE_ATTEMPTS = 2
 const MAX_MESSAGES = 40
 const MAX_MESSAGE_LENGTH = 20_000
 const MAX_SOURCE_LENGTH = 200_000
@@ -14,17 +23,20 @@ export async function POST(request: Request) {
   if (reason) return Response.json({ error: reason }, { status: 403 })
   if (!request.headers.get('content-type')?.startsWith('application/json'))
     return Response.json({ error: serverT('jsonBody') }, { status: 415 })
-  let body: { messages?: ChatMessage[]; source?: string; model?: string }
+  let body: Body
   try {
     body = await request.json()
   } catch {
     return Response.json({ error: serverT('jsonBody') }, { status: 400 })
   }
-  const problem = validate(body)
+  const problem = body.mode === 'slide' ? validateSlide(body) : validate(body)
   if (problem) return Response.json({ error: problem }, { status: 400 })
 
-  const instructions = await systemPrompt()
-  const input = toInput(body.messages!, body.source || '')
+  const slide = body.mode === 'slide'
+  const instructions = await (slide ? slideSystemPrompt() : systemPrompt())
+  const input = slide
+    ? [{ role: 'user' as const, content: slideRequest(body.action!, body.source!, body.index!) }]
+    : toInput(body.messages!, body.source || '')
   const encoder = new TextEncoder()
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -38,7 +50,9 @@ export async function POST(request: Request) {
           }
       }
       try {
-        await generate(body.model!, instructions, input, send, request.signal)
+        if (slide)
+          await generateSlides(body as SlideBody, instructions, input, send, request.signal)
+        else await generate(body.model!, instructions, input, send, request.signal)
       } catch (err) {
         send({ type: 'error', message: describeError(err, request.signal) })
       } finally {
@@ -50,6 +64,16 @@ export async function POST(request: Request) {
     headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' },
   })
 }
+
+type Body = {
+  mode?: 'slide'
+  messages?: ChatMessage[]
+  source?: string
+  model?: string
+  action?: SlideAction
+  index?: number
+}
+type SlideBody = Body & { source: string; model: string; action: SlideAction; index: number }
 
 async function generate(
   model: string,
@@ -105,6 +129,46 @@ async function generate(
   }
 }
 
+async function generateSlides(
+  { model, source, index }: SlideBody,
+  instructions: string,
+  input: ChatMessage[],
+  send: (event: ChatEvent) => void,
+  signal: AbortSignal,
+) {
+  for (let attempt = 1; attempt <= SLIDE_ATTEMPTS; attempt++) {
+    const reply = await streamResponse({ model, instructions, input }, () => {}, signal)
+    const markdown = reply.includes(SLIDES_OPEN) ? extractSlides(reply) : ''
+    const error = markdown
+      ? slideError(source, index, markdown)
+      : `Return the slide inside ${SLIDES_OPEN}${SLIDES_CLOSE} tags.`
+    if (!error) {
+      send({ type: 'slides', markdown })
+      send({ type: 'done', reply })
+      return
+    }
+    if (attempt === SLIDE_ATTEMPTS) {
+      send({ type: 'error', message: serverT('stillBroken', { attempts: SLIDE_ATTEMPTS, error }) })
+      return
+    }
+    send({ type: 'retry', error })
+    input.push({ role: 'assistant', content: reply })
+    input.push({
+      role: 'user',
+      content: `The new slide failed validation: ${error}\n\nFix that problem and return only the new slide inside ${SLIDES_OPEN}${SLIDES_CLOSE} tags.`,
+    })
+  }
+}
+
+function slideError(source: string, index: number, markdown: string) {
+  try {
+    parsePresentation(replaceSlide(source, index, markdown))
+    return ''
+  } catch (err) {
+    return (err as Error).message
+  }
+}
+
 function extractPresentation(
   reply: string,
 ):
@@ -138,9 +202,9 @@ function toInput(history: ChatMessage[], source: string): ChatMessage[] {
   })
 }
 
-function validate(body: { messages?: ChatMessage[]; source?: string; model?: string }) {
+function validate(body: Body) {
   const { messages, source, model } = body
-  if (typeof model !== 'string' || !/^[\w.:-]{1,100}$/.test(model)) return serverT('chooseModel')
+  if (!validModel(model)) return serverT('chooseModel')
   if (!Array.isArray(messages) || !messages.length) return serverT('noMessages')
   if (messages.length > MAX_MESSAGES) return serverT('tooLong')
   if (
@@ -158,6 +222,24 @@ function validate(body: { messages?: ChatMessage[]; source?: string; model?: str
   if (source !== undefined && (typeof source !== 'string' || source.length > MAX_SOURCE_LENGTH))
     return serverT('presentationTooLarge')
   return ''
+}
+
+function validateSlide({ source, model, action, index }: Body) {
+  if (!validModel(model)) return serverT('chooseModel')
+  if (typeof source !== 'string' || source.length > MAX_SOURCE_LENGTH)
+    return serverT('presentationTooLarge')
+  if (!isSlideAction(action)) return serverT('badAction')
+  try {
+    const count = parsePresentation(source).slides.length
+    if (!Number.isInteger(index) || index! < 0 || index! >= count) return serverT('badSlide')
+  } catch (err) {
+    return (err as Error).message
+  }
+  return ''
+}
+
+function validModel(model: unknown) {
+  return typeof model === 'string' && /^[\w.:-]{1,100}$/.test(model)
 }
 
 function describeError(err: unknown, signal: AbortSignal) {

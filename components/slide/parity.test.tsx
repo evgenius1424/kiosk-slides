@@ -37,7 +37,12 @@ describe('site preview and exported presentation', () => {
   it('render the same slide markup', async () => {
     const { container } = render(
       <NextIntlClientProvider locale="en" messages={messages}>
-        <KioskWorkspace example={example} prompt="" site="https://example.com" />
+        <KioskWorkspace
+          example={example}
+          prompt=""
+          slidePrompt="SLIDE GUIDE"
+          site="https://example.com"
+        />
       </NextIntlClientProvider>,
     )
     fireEvent.click(screen.getByRole('button', { name: /Open this example/ }))

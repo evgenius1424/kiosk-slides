@@ -20,6 +20,7 @@ import {
   type ChatGPTStatus,
   type ChatMessage,
   MANAGE_USAGE_URL,
+  MODEL_KEY,
   RequestError,
   connectChatGPT,
   disconnectChatGPT,
@@ -33,7 +34,6 @@ import { useOnline } from './use-online'
 
 type Entry = ChatMessage & { presentation?: string; notes?: string[]; error?: string }
 
-const MODEL_KEY = 'kiosk-chatgpt-model'
 const WELCOME_KEY = 'kiosk-chatgpt-welcomed'
 const REPO_URL = 'https://github.com/evgenius1424/kiosk-slides'
 const LOCAL_URL = 'http://127.0.0.1:3000'

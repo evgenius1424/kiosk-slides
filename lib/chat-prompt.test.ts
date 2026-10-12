@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { copyPrompt, systemPrompt } from '@/lib/chat-prompt'
+import { copyPrompt, slideCopyPrompt, slideSystemPrompt, systemPrompt } from '@/lib/chat-prompt'
 
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), 'utf8').trim()
 
@@ -27,5 +27,21 @@ describe('copyable prompt', () => {
     expect(prompt).toContain('```markdown')
     expect(prompt).not.toContain('<presentation>')
     expect(prompt).toContain('Follow "Writing a good presentation" just as strictly')
+  })
+})
+
+describe('slide prompts', () => {
+  it('asks the chat for only the new slide inside slides tags', async () => {
+    const prompt = await slideSystemPrompt()
+    expect(prompt).toContain(read('FORMAT.md'))
+    expect(prompt).toContain('<slides></slides>')
+    expect(prompt).toContain('none of the other slides')
+  })
+
+  it('asks any AI chat for a pasteable code block with only the new slide', async () => {
+    const prompt = await slideCopyPrompt()
+    expect(prompt).toContain(read('public/example.md'))
+    expect(prompt).toContain('```markdown')
+    expect(prompt).not.toContain('<slides>')
   })
 })

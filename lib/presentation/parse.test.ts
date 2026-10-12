@@ -3,7 +3,9 @@ import {
   parsePresentation,
   setPresentationTheme,
   setFrontMatter,
+  replaceSlide,
   slideLines,
+  slideSource,
 } from '@/lib/presentation'
 
 const md = (...lines: string[]) => lines.join('\n')
@@ -960,5 +962,33 @@ describe('slideLines', () => {
 
   it('works on text that does not parse', () => {
     expect(slideLines('# One\n\n---\n\n```\nopen')).toEqual([1, 5])
+  })
+})
+
+describe('replaceSlide', () => {
+  const source =
+    '---\ntitle: T\n---\n\n# One\n\nWordy text.\n\n---\n\n# Two\n\n---\n\n```\n---\n```\n# Three\n'
+
+  it('reads one slide without the separators around it', () => {
+    expect(slideSource(source, 0)).toBe('# One\n\nWordy text.')
+    expect(slideSource(source, 2)).toBe('```\n---\n```\n# Three')
+    expect(slideSource(source, 3)).toBe('')
+  })
+
+  it('swaps one slide by index and leaves every other byte alone', () => {
+    const next = replaceSlide(source, 0, '\n# Short\n')
+    expect(next).toBe(source.replace('# One\n\nWordy text.', '# Short'))
+    expect(parsePresentation(next).slides).toHaveLength(3)
+  })
+
+  it('splits one slide into two', () => {
+    const next = replaceSlide(source, 1, '# Two A\n\n---\n\n# Two B')
+    expect(parsePresentation(next).slides).toHaveLength(4)
+    expect(slideSource(next, 2)).toBe('# Two B')
+    expect(slideSource(next, 3)).toBe(slideSource(source, 2))
+  })
+
+  it('refuses a slide that is not there', () => {
+    expect(() => replaceSlide(source, 5, '# Five')).toThrow('There is no slide 6.')
   })
 })

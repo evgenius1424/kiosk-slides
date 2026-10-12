@@ -35,6 +35,7 @@ import {
   formatPresentation,
   parsePresentation,
   setFrontMatter,
+  slideLines,
   themes,
   tones,
   type Scale,
@@ -68,6 +69,14 @@ import {
   uniqueName,
   type Library,
 } from '@/lib/presentations'
+import {
+  addVersion,
+  forgetVersions,
+  loadHistory,
+  saveHistory,
+  takeVersion,
+  type History,
+} from '@/lib/history'
 import { decodeShare, readShareHash, shareSlideHash } from '@/lib/share'
 import { requestPrompt } from '@/lib/talk'
 import { PresentationChat } from './presentation-chat'
@@ -75,6 +84,13 @@ import { downloadFile } from './download'
 import { PresentationEditor, selectSlide, useLiveSource } from './presentation-editor'
 import { PresentationMenu } from './presentation-menu'
 import { SharePanel } from './share-panel'
+import {
+  SlideActionBar,
+  SlideActionMenu,
+  SlidePasteDialog,
+  useSlideActions,
+  type SlideChange,
+} from './slide-actions'
 import { SlideView } from './slide'
 import { StartScreen, resumingStart } from './start-screen'
 import { useWakeLock } from './use-wake-lock'
@@ -89,6 +105,7 @@ const SHORTCUTS = [
   'leave',
   'ends',
   'tidy',
+  'undo',
 ] as const
 const SCALES: Scale[] = ['normal', 'large', 'kiosk']
 const TOAST_MS = 2600
@@ -122,16 +139,19 @@ function Toggle({
 export function KioskWorkspace({
   example,
   prompt,
+  slidePrompt,
   site,
 }: {
   example: string
   prompt: string
+  slidePrompt: string
   site: string
 }) {
   const t = useTranslations('Workspace')
   const ts = useTranslations('Settings')
   const th = useTranslations('Help')
   const tk = useTranslations('Shortcuts')
+  const ta = useTranslations('SlideActions')
   const tp = useTranslations('Presentations')
   const untitled = tp('untitled')
   const blank = useMemo(() => blankPresentation(tp('blank.heading'), tp('blank.body')), [tp])
@@ -171,10 +191,13 @@ export function KioskWorkspace({
   const [sharing, setSharing] = useState(false)
   const [start, setStart] = useState<'first' | 'new' | null>(null)
   const [request, setRequest] = useState<string>()
+  const [slideMenu, setSlideMenu] = useState<{ x: number; y: number; index: number } | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const pasteRef = useRef((_value: string) => {})
+  const sourceRef = useRef(source)
+  const historyRef = useRef<History>({})
   const settingsRef = useRef<HTMLElement>(null)
   const settingsButtonRef = useRef<HTMLButtonElement>(null)
   const slides = presentation.slides
@@ -209,7 +232,39 @@ export function KioskWorkspace({
     (message: string, action?: Toast['action']) => setToast({ message, action }),
     [],
   )
+  const closeSlideMenu = useCallback(() => setSlideMenu(null), [])
   useWakeLock(presenting || playing)
+  const remember = (id: string, value: string) => {
+    historyRef.current = addVersion(historyRef.current, id, value)
+    saveHistory(historyRef.current)
+  }
+  const undo = () => {
+    let taken = takeVersion(historyRef.current, current.id)
+    while (taken && taken.source === source) taken = takeVersion(taken.history, current.id)
+    if (!taken) return notice(t('toast.nothingToUndo'))
+    const { history, source: previous } = taken
+    historyRef.current = history
+    saveHistory(history)
+    live.replace(previous)
+    setIndex(i => Math.min(i, Math.max(0, slideLines(previous).length - 1)))
+    notice(t('toast.undone'))
+  }
+  const undoAction = { label: t('toast.undo'), run: () => undoRef.current() }
+  const undoRef = useRef(undo)
+  const changeSlide = ({ source: next, index: at, count }: SlideChange) => {
+    remember(current.id, sourceRef.current)
+    live.replace(next)
+    setPlaying(false)
+    setIndex(at)
+    notice(t('toast.changed', { number: at + 1, count }), undoAction)
+  }
+  const slideActions = useSlideActions({
+    prompt: slidePrompt,
+    sourceRef,
+    onChange: change => changeRef.current(change),
+    onNotice: notice,
+  })
+  const changeRef = useRef(changeSlide)
   const toggleSafe = useCallback(() => {
     notice(t('toast.shareSafe', { on: String(!safe) }))
     setSafeKey(!safe)
@@ -244,7 +299,13 @@ export function KioskWorkspace({
     if (fullscreenElement()) exitFullscreen()
   }, [])
   useEffect(() => {
+    sourceRef.current = source
+    undoRef.current = undo
+    changeRef.current = changeSlide
+  })
+  useEffect(() => {
     const next = loadLibrary(blank, untitled)
+    historyRef.current = loadHistory()
     setLibrary(next)
     const link = readShareHash(location.hash)
     if (!link) {
@@ -366,6 +427,16 @@ export function KioskWorkspace({
         tab !== 'preview'
       )
         return
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        !event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === 'z'
+      ) {
+        event.preventDefault()
+        if (!shared) undoRef.current()
+        return
+      }
       const action = playerAction(event)
       if (!action) return
       event.preventDefault()
@@ -401,6 +472,7 @@ export function KioskWorkspace({
     settingsOpen,
     modal,
     start,
+    shared,
   ])
   useEffect(() => {
     const target = canvasRef.current
@@ -536,6 +608,8 @@ export function KioskWorkspace({
       ),
     }))
   const deletePresentation = (id: string) => {
+    historyRef.current = forgetVersions(historyRef.current, id)
+    saveHistory(historyRef.current)
     const rest = library.items.filter(p => p.id !== id)
     if (id !== current.id) {
       setLibrary(l => ({ ...l, items: rest }))
@@ -560,6 +634,7 @@ export function KioskWorkspace({
     const previous = current
     const name = presentationName(value) || untitled
     const reuse = previous.source === blank
+    if (reuse) remember(previous.id, source)
     const target = reuse
       ? {
           ...previous,
@@ -593,6 +668,7 @@ export function KioskWorkspace({
     const value = formatPresentation(generated)
     const name = presentationName(value) || untitled
     const reuse = !fresh || current.source === blank
+    if (reuse) remember(current.id, sourceRef.current)
     const target = reuse
       ? {
           ...current,
@@ -616,7 +692,10 @@ export function KioskWorkspace({
     }))
     const next = live.load(value)
     setIndex(0)
-    notice(t('toast.loaded', { name: target.name, count: next.presentation?.slides.length ?? 0 }))
+    notice(
+      t('toast.loaded', { name: target.name, count: next.presentation?.slides.length ?? 0 }),
+      reuse ? undoAction : undefined,
+    )
     return target.name
   }
   const keepCopy = () => {
@@ -778,9 +857,19 @@ export function KioskWorkspace({
           <nav className="slide-list" aria-label={t('sidebar.list')}>
             {slides.map((item, i) => (
               <button
-                className={`slide-nav ${index === i ? 'selected' : ''}`}
+                className={`slide-nav ${index === i ? 'selected' : ''} ${slideActions.working?.index === i ? 'is-changing' : ''}`}
                 key={i}
                 onClick={() => select(i)}
+                onContextMenu={e => {
+                  if (shared || error) return
+                  e.preventDefault()
+                  const box = e.currentTarget.getBoundingClientRect()
+                  setSlideMenu({
+                    x: e.clientX || box.left + 24,
+                    y: e.clientY || box.top + 24,
+                    index: i,
+                  })
+                }}
                 aria-current={index === i ? 'step' : undefined}
               >
                 <span className="slide-number" aria-hidden="true">
@@ -900,6 +989,12 @@ export function KioskWorkspace({
                       <p className="canvas-empty">{t('canvas.empty')}</p>
                     )}
                   </div>
+                  {slideActions.working?.index === at && (
+                    <div className="slide-working" role="status">
+                      <span className="chat-spinner" />
+                      {ta('working')}
+                    </div>
+                  )}
                 </div>
                 <div className="canvas-controls">
                   <span>
@@ -934,6 +1029,13 @@ export function KioskWorkspace({
                     <Expand size={16} />
                   </button>
                 </div>
+                {!shared && slide && (
+                  <SlideActionBar
+                    disabled={!!error}
+                    working={!!slideActions.working}
+                    onAction={action => slideActions.run(action, at)}
+                  />
+                )}
                 {presenting && (
                   <button className="present-exit" aria-label={t('canvas.leave')} onClick={leave}>
                     <X size={20} />
@@ -1217,6 +1319,23 @@ export function KioskWorkspace({
             )}
           </div>
         )}
+        {slideMenu && (
+          <SlideActionMenu
+            at={slideMenu}
+            onAction={(action, i) => {
+              if (slideActions.working) return
+              setIndex(i)
+              slideActions.run(action, i)
+            }}
+            onClose={closeSlideMenu}
+          />
+        )}
+        <SlidePasteDialog
+          prompt={slideActions.pasting?.prompt ?? null}
+          onPaste={slideActions.paste}
+          onCopied={() => notice(ta('copied'))}
+          onClose={slideActions.cancel}
+        />
         <SharePanel
           open={sharing}
           source={source}

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { getTranslations } from 'next-intl/server'
 import { KioskWorkspace } from '@/components/kiosk-workspace'
-import { copyPrompt } from '@/lib/chat-prompt'
+import { copyPrompt, slideCopyPrompt } from '@/lib/chat-prompt'
 import { fontFace, fontFiles, fonts } from '@/lib/presentation'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 import { slideStyles } from '@/lib/slide-styles'
@@ -19,9 +19,10 @@ const STRUCTURED_DATA = {
 }
 
 export default async function Page() {
-  const [example, prompt, t] = await Promise.all([
+  const [example, prompt, slidePrompt, t] = await Promise.all([
     readFile(path.join(process.cwd(), 'public/example.md'), 'utf8'),
     copyPrompt(),
+    slideCopyPrompt(),
     getTranslations('Metadata'),
   ])
   const structuredData = JSON.stringify({ ...STRUCTURED_DATA, description: t('description') })
@@ -33,7 +34,7 @@ export default async function Page() {
           .map(f => fontFace(f, `/fonts/${f.file}`))
           .join('') + slideStyles}
       </style>
-      <KioskWorkspace example={example} prompt={prompt} site={SITE_URL} />
+      <KioskWorkspace example={example} prompt={prompt} slidePrompt={slidePrompt} site={SITE_URL} />
     </>
   )
 }

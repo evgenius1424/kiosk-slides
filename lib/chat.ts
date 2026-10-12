@@ -1,6 +1,8 @@
 import type { ChatGPTModel, ChatGPTStatus } from './chatgpt'
+import type { SlideAction } from './slide-actions'
 
 export type { ChatGPTModel, ChatGPTStatus }
+export const MODEL_KEY = 'kiosk-chatgpt-model'
 export const MANAGE_USAGE_URL = 'https://chatgpt.com/#settings'
 export const OPEN_TAG = '<presentation>'
 export const CLOSE_TAG = '</presentation>'
@@ -19,6 +21,7 @@ export type ChatEvent =
   | { type: 'text'; text: string }
   | { type: 'retry'; error: string; polish?: boolean }
   | { type: 'presentation'; source: string }
+  | { type: 'slides'; markdown: string }
   | { type: 'done'; reply: string }
   | { type: 'error'; message: string }
 
@@ -46,10 +49,40 @@ export async function streamChat(
   onEvent: (event: ChatEvent) => void,
   signal: AbortSignal,
 ) {
+  await stream({ messages, source, model }, onEvent, signal)
+}
+
+export async function changeSlide(
+  request: { action: SlideAction; source: string; index: number; model: string },
+  signal?: AbortSignal,
+) {
+  let markdown = ''
+  let error = ''
+  await stream(
+    { mode: 'slide', ...request },
+    event => {
+      if (event.type === 'slides') markdown = event.markdown
+      if (event.type === 'error') error = event.message
+    },
+    signal,
+  )
+  if (!markdown) throw new Error(error)
+  return markdown
+}
+
+export function visibleReply(text: string) {
+  const open = text.indexOf(OPEN_TAG)
+  if (open < 0) return { text: text.trim(), writing: false }
+  const close = text.indexOf(CLOSE_TAG, open)
+  const rest = close < 0 ? '' : text.slice(close + CLOSE_TAG.length)
+  return { text: (text.slice(0, open) + rest).trim(), writing: close < 0 }
+}
+
+async function stream(body: object, onEvent: (event: ChatEvent) => void, signal?: AbortSignal) {
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, source, model }),
+    body: JSON.stringify(body),
     signal,
   })
   if (!response.ok || !response.body) {
@@ -67,14 +100,6 @@ export async function streamChat(
     lines.filter(Boolean).forEach(line => onEvent(JSON.parse(line)))
   }
   if (buffer.trim()) onEvent(JSON.parse(buffer))
-}
-
-export function visibleReply(text: string) {
-  const open = text.indexOf(OPEN_TAG)
-  if (open < 0) return { text: text.trim(), writing: false }
-  const close = text.indexOf(CLOSE_TAG, open)
-  const rest = close < 0 ? '' : text.slice(close + CLOSE_TAG.length)
-  return { text: (text.slice(0, open) + rest).trim(), writing: close < 0 }
 }
 
 async function request(url: string, init?: RequestInit) {
