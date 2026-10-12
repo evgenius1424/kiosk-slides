@@ -62,6 +62,7 @@ import {
   createPresentation,
   presentationName,
   loadLibrary,
+  pastedPresentation,
   saveLibrary,
   uniqueName,
   type Library,
@@ -88,6 +89,10 @@ const SHORTCUTS = [
   'tidy',
 ] as const
 const SCALES: Scale[] = ['normal', 'large', 'kiosk']
+const TOAST_MS = 2600
+const UNDO_MS = 8000
+
+type Toast = { message: string; action?: { label: string; run: () => void } }
 
 function Toggle({
   checked,
@@ -152,7 +157,7 @@ export function KioskWorkspace({
   const [playing, setPlaying] = useState(false)
   const [presenting, setPresenting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [toast, setToast] = useState('')
+  const [toast, setToast] = useState<Toast | null>(null)
   const [exporting, setExporting] = useState(false)
   const [sidebar, setSidebar] = useState(true)
   const [modal, setModal] = useState<'help' | 'format' | null>(null)
@@ -165,6 +170,7 @@ export function KioskWorkspace({
   const canvasRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const pasteRef = useRef((_value: string) => {})
   const settingsRef = useRef<HTMLElement>(null)
   const settingsButtonRef = useRef<HTMLButtonElement>(null)
   const slides = presentation.slides
@@ -195,7 +201,10 @@ export function KioskWorkspace({
   const change = useSlideChange(index, slide, motion)
   const slideName =
     slide && t('canvas.slide', { number: at + 1, count: slides.length, title: slideTitle(slide) })
-  const notice = useCallback((message: string) => setToast(message), [])
+  const notice = useCallback(
+    (message: string, action?: Toast['action']) => setToast({ message, action }),
+    [],
+  )
   useWakeLock(presenting || playing)
   const toggleSafe = useCallback(() => {
     notice(t('toast.shareSafe', { on: String(!safe) }))
@@ -281,9 +290,24 @@ export function KioskWorkspace({
   }, [source, shared])
   useEffect(() => {
     if (!toast) return
-    const timer = setTimeout(() => setToast(''), 2600)
+    const timer = setTimeout(() => setToast(null), toast.action ? UNDO_MS : TOAST_MS)
     return () => clearTimeout(timer)
   }, [toast])
+  useEffect(() => {
+    pasteRef.current = pastePresentation
+  })
+  useEffect(() => {
+    const handler = (event: ClipboardEvent) => {
+      const target = event.target as HTMLElement
+      if (target.closest?.('input,textarea,select,dialog,[contenteditable]')) return
+      const value = pastedPresentation(event.clipboardData?.getData('text/plain') ?? '')
+      if (value === null) return
+      event.preventDefault()
+      pasteRef.current(value)
+    }
+    document.addEventListener('paste', handler)
+    return () => document.removeEventListener('paste', handler)
+  }, [])
   useEffect(() => {
     if (modal) dialogRef.current?.showModal()
     else dialogRef.current?.close()
@@ -492,6 +516,39 @@ export function KioskWorkspace({
     }
     notice(t('toast.tidied'))
   }
+  const pastePresentation = (value: string) => {
+    const previous = current
+    const name = presentationName(value) || untitled
+    const reuse = previous.source === blank
+    const target = reuse
+      ? {
+          ...previous,
+          name: previous.userNamed ? previous.name : uniqueName(name, library.items, previous.id),
+          source: value,
+          updatedAt: Date.now(),
+        }
+      : createPresentation(name, value, library.items)
+    setLibrary(l => ({
+      current: target.id,
+      items: reuse ? l.items.map(p => (p.id === target.id ? target : p)) : [...l.items, target],
+    }))
+    setTab('preview')
+    show(value)
+    setChatKey(k => k + 1)
+    notice(t('toast.pasted', { name: target.name }), {
+      label: t('toast.undo'),
+      run: () => {
+        setLibrary(l => ({
+          current: previous.id,
+          items: reuse
+            ? l.items.map(p => (p.id === previous.id ? previous : p))
+            : l.items.filter(p => p.id !== target.id),
+        }))
+        show(previous.source)
+        setChatKey(k => k + 1)
+      },
+    })
+  }
   const loadGenerated = (generated: string, fresh: boolean) => {
     const value = formatPresentation(generated)
     const name = presentationName(value) || untitled
@@ -548,6 +605,7 @@ export function KioskWorkspace({
         { ...presentation, title: current.name },
         {
           shareSafe: safe,
+          site,
           embedImage: fetchAsDataUrl,
           embedFont: file => fetchAsDataUrl(`/fonts/${file}`),
         },
@@ -598,6 +656,11 @@ export function KioskWorkspace({
               <Plus size={15} />
               {t('shared.keep')}
             </button>
+            {presentation.credit && (
+              <a className="shared-credit" href="/">
+                {t('shared.credit')}
+              </a>
+            )}
           </div>
         ) : (
           <>
@@ -977,6 +1040,15 @@ export function KioskWorkspace({
             />
           )}
           <p className="setting-help">{ts('brandHelp')}</p>
+          <div className="setting-row">
+            <span>{ts('credit')}</span>
+            <Toggle
+              checked={presentation.credit}
+              onChange={() => setFront('credit', presentation.credit ? 'false' : undefined)}
+              label={ts('credit')}
+            />
+          </div>
+          <p className="setting-help">{ts('creditHelp')}</p>
         </section>
         <section className="settings-section">
           <h3>{ts('playback')}</h3>
@@ -1078,7 +1150,18 @@ export function KioskWorkspace({
       {toast && (
         <div className="toast" role="status">
           <Check size={15} />
-          {toast}
+          {toast.message}
+          {toast.action && (
+            <button
+              className="toast-action"
+              onClick={() => {
+                toast.action!.run()
+                setToast(null)
+              }}
+            >
+              {toast.action.label}
+            </button>
+          )}
         </div>
       )}
       <SharePanel

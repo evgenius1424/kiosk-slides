@@ -96,6 +96,8 @@
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
       "slideAdded": "New slide added at the end",
       "tidied": "Text cleaned up",
+      "pasted": "Pasted as “{name}”",
+      "undo": "Undo",
       "downloaded": "Downloaded · opens in any browser, even offline",
       "pdfDownloaded": "PDF downloaded · one page per slide",
       "promptCopied": "Prompt copied · paste it into any AI chat",
@@ -108,7 +110,8 @@
       "keep": "Keep a copy",
       "keepHint": "Add it to your presentations so you can change it",
       "broken": "This link is incomplete. Ask for it again.",
-      "home": "Go to my presentations"
+      "home": "Go to my presentations",
+      "credit": "Made with Kiosk Slides"
     }
   },
   "Share": {
@@ -117,8 +120,6 @@
     "making": "Making the link…",
     "link": "Link to these slides",
     "copy": "Copy link",
-    "code": "Code to open these slides on a phone",
-    "tooLongForCode": "Too long for a code; send the link instead.",
     "private": "Anyone with the link can see these slides. Nothing is uploaded.",
     "tooBig": "This presentation is too big to share by link. Download it and send the file instead.",
     "download": "Download"
@@ -147,6 +148,8 @@
     "brand": "Brand",
     "showBrand": "Show brand",
     "brandHelp": "Shown in the corner of every slide.",
+    "credit": "Credit Kiosk Slides",
+    "creditHelp": "Adds “Made with Kiosk Slides” to the end of downloads and to shared links. Never on a slide.",
     "playback": "Playback",
     "autoplay": "Autoplay",
     "autoplayHelp": "Let your story tell itself.",
@@ -193,7 +196,7 @@
     "title": "Getting your slides in",
     "intro": "The quickest way is to let AI write your slides. Use Ask AI here, or any AI chat you like.",
     "promptTitle": "Use any AI chat",
-    "promptBody": "Copy this prompt into your AI chat and say what your talk is about. Paste its answer in Edit.",
+    "promptBody": "Copy this prompt into your AI chat and say what your talk is about. Paste its answer anywhere on this page.",
     "copyPrompt": "Copy prompt",
     "basicsTitle": "For quick fixes",
     "basics": {
@@ -316,7 +319,7 @@
     },
     "local": {
       "title": "Use any AI chat to write your slides.",
-      "body": "Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer in Edit.",
+      "body": "Copy the prompt, paste it into your AI chat, and say what your talk is about. Then paste its answer anywhere on this page.",
       "copyPrompt": "Copy prompt",
       "runHere": "Chat with your ChatGPT plan right here",
       "privacy": "Your sign-in stays on your computer and never reaches this website.",

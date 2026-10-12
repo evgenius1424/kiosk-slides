@@ -4,7 +4,6 @@
 
 export const SHARE_PREFIX = '#s='
 export const SHARE_LIMIT = 16_000
-export const QR_LIMIT = 2_000
 
 const VERSION = '1'
 const BROKEN_LINK = 'Broken share link'

@@ -642,6 +642,17 @@ kbd {
   z-index: 30;
   font-size: 14px;
 }
+.toast-action {
+  margin-left: 6px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: #ffffff1f;
+  color: inherit;
+  font-weight: 600;
+}
+.toast-action:hover {
+  background: #ffffff33;
+}
 .workspace-dialog {
   position: fixed;
   inset: 0;
@@ -705,13 +716,6 @@ kbd {
 .share-link .btn {
   flex-shrink: 0;
 }
-.share-code {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
-  border-radius: 8px;
-}
 .workspace-dialog .share-note {
   font-size: 14px;
   text-align: center;
@@ -731,6 +735,12 @@ kbd {
 }
 .shared-bar .btn {
   padding: 8px 12px;
+}
+.shared-credit {
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
 }
 .shared-broken {
   display: grid;
@@ -1391,7 +1401,8 @@ html:has(.is-presenting .room-light) {
     font-size: 0;
     gap: 0;
   }
-  .shared-bar > span {
+  .shared-bar > span,
+  .shared-credit {
     display: none;
   }
   .export-btn svg {

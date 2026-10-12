@@ -32,6 +32,7 @@ autoplay:
   - `font:` is `classic` (default, Arial), `inter`, `figtree`, `bricolage-grotesque`, `space-grotesk`, `archivo-expanded`, or `golos-text`. The font's name works too, like `Space Grotesk`. Every font also covers Russian and other Cyrillic text.
   - `scale:` is `normal` (default), `large`, or `kiosk`. `large` and `kiosk` size every heading to its length, so a one-word slide fills the screen and a long one still fits, and `kiosk` also enlarges the body for reading from across a room.
   - `brand:` is the word in the corner of every slide, at most 24 characters. The default is `kiosk`; `none` hides it.
+  - `credit: false` drops the “Made with Kiosk Slides” line from the end of a downloaded presentation and from shared links. It never appears on a slide. It is on by default.
 - **Slides** are separated by a line containing only `---`. A `---` line inside a ```` ``` ```` code fence does not split slides.
 - A presentation has 1–40 slides. Prefer 5–12.
 

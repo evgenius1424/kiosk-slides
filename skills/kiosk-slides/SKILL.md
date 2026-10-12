@@ -31,7 +31,7 @@ The full grammar is in `references/FORMAT.md` and a presentation that uses every
    It prints one line per slide (number, kind, heading) or a `Line N:` error, then a `Warning:` line for each missing slide setting or for too many plain slides. `--format` also tidies the file (aligned tables, consistent spacing) without changing what it shows. Fix every error and every warning and run it again until it is clean. Never hand back a presentation that fails the check.
 
 6. Render the HTML next to it, as in "Render", unless the user asked for Markdown only.
-7. Reply with one or two sentences about what you made, the slide list from the check, and both files. Say the Markdown is the source: they can edit it and ask for the HTML again.
+7. Reply with one or two sentences about what you made, the slide list from the check, both files, and the share link if the render printed one. Say the Markdown is the source: they can edit it and ask for the HTML again.
 
 When the user asks for changes, edit the Markdown in place, validate, and render again. Keep slides they didn't mention as they were.
 
@@ -52,8 +52,12 @@ Options:
 - `--transition gentle|fade|slide|none` overrides the presentation's `transition:`. `gentle` is a soft rise and fade; `none` cuts instantly.
 - `--share-safe` (or `share-safe: true` in the front matter) starts the presentation in screen-share safe mode: every transition becomes a quick flat fade that stays crisp on video calls and meeting-room TVs. Pressing `S` in the exported presentation toggles it.
 - `--no-motion` is the same as `--transition none`.
+- `--no-credit` (or `credit: false` in the front matter) drops the “Made with Kiosk Slides” link from the end-of-presentation notice. It never appears on a slide.
+- `--no-link` skips the share link described below.
 - `--check` only validates and prints the slide list and any warnings, without writing HTML.
 - `--format` tidies the Markdown file in place without changing what it shows.
+
+After writing the HTML, the renderer prints `Open in your browser: https://…` when the presentation is small enough to share by link. The whole presentation lives in that link, so it opens the same slides on a phone, a TV or another computer with nothing uploaded. Give the person that link next to the files in one sentence, exactly as printed; never shorten it with a link service. When no link is printed, the HTML file is the way to share it.
 
 For a PDF, open the HTML in a desktop browser and print it with Save as PDF: every slide prints on its own 16:9 page, in the same theme, tone and font, with selectable text. No other tool is needed.
 
