@@ -4,8 +4,12 @@ import { getTranslations } from 'next-intl/server'
 import { KioskWorkspace } from '@/components/kiosk-workspace'
 import { copyPrompt } from '@/lib/chat-prompt'
 import { fontFace, fontFiles, fonts } from '@/lib/presentation'
-import { SITE_NAME, SITE_URL, SKILL_INSTALL } from '@/lib/site'
+import { SITE_NAME, SITE_URL } from '@/lib/site'
 import { slideStyles } from '@/lib/slide-styles'
+
+const SKILL_INSTALL = process.env.SKILL_INSTALL
+  ? process.env.SKILL_INSTALL === 'on'
+  : process.env.VERCEL_ENV !== 'production'
 
 const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
