@@ -4,6 +4,7 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  poweredByHeader: false,
   async headers() {
     return [
       {
@@ -19,11 +20,6 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'no-cache' }],
       },
     ]
-  },
-  // lib/chat-prompt.ts reads these at runtime, which file tracing can't see.
-  outputFileTracingIncludes: {
-    '/': ['./FORMAT.md', './public/example.md'],
-    '/api/chat': ['./FORMAT.md', './public/example.md'],
   },
   images: {
     unoptimized: true,
