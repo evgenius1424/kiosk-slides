@@ -716,13 +716,6 @@ kbd {
 .share-link .btn {
   flex-shrink: 0;
 }
-.share-code {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
-  border-radius: 8px;
-}
 .workspace-dialog .share-note {
   font-size: 14px;
   text-align: center;

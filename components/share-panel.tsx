@@ -1,12 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ArrowDownToLine, Copy, X } from 'lucide-react'
-import { encode } from 'uqr'
-import { QR_LIMIT, shareLink, type ShareLink } from '@/lib/share'
-
-const QR_WIDTH = 340
+import { shareLink, type ShareLink } from '@/lib/share'
 
 export function SharePanel({
   open,
@@ -82,11 +79,6 @@ export function SharePanel({
               {t('copy')}
             </button>
           </div>
-          {ready.url.length <= QR_LIMIT ? (
-            <QrCode text={ready.url} label={t('code')} />
-          ) : (
-            <p className="share-note">{t('tooLongForCode')}</p>
-          )}
           <p className="share-note">{t('private')}</p>
         </>
       ) : (
@@ -100,32 +92,4 @@ export function SharePanel({
       )}
     </dialog>
   )
-}
-
-function QrCode({ text, label }: { text: string; label: string }) {
-  const { path, size } = useMemo(() => qrPath(text), [text])
-  return (
-    <svg
-      className="share-code"
-      viewBox={`0 0 ${size} ${size}`}
-      width={size * Math.max(1, Math.floor(QR_WIDTH / size))}
-      role="img"
-      aria-label={label}
-      shapeRendering="crispEdges"
-    >
-      <rect width={size} height={size} fill="#fff" />
-      <path d={path} fill="#000" />
-    </svg>
-  )
-}
-
-function qrPath(text: string) {
-  const { data, size } = encode(text, { ecc: 'L', border: 2 })
-  let path = ''
-  data.forEach((row, y) =>
-    row.forEach((dark, x) => {
-      if (dark) path += `M${x} ${y}h1v1h-1z`
-    }),
-  )
-  return { path, size }
 }

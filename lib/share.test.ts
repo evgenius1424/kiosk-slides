@@ -3,7 +3,6 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parsePresentation, presentationLook } from '@/lib/presentation'
 import {
-  QR_LIMIT,
   SHARE_PREFIX,
   decodeShare,
   encodeShare,
@@ -37,7 +36,7 @@ describe('share links', () => {
     const link = await shareLink(example, SITE)
     if (!('url' in link)) throw new Error('example should fit in a link')
     expect(link.url.startsWith(`${SITE}/${SHARE_PREFIX}1`)).toBe(true)
-    expect(link.url.length).toBeLessThan(QR_LIMIT * 2)
+    expect(link.url.length).toBeLessThan(4_000)
     const hash = new URL(link.url).hash
     const source = await decodeShare(readShareHash(hash)!.payload)
     expect(source).toBe(example)
