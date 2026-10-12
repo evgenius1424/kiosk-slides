@@ -29,11 +29,11 @@ import {
   streamChat,
   visibleReply,
 } from '@/lib/chat'
+import { STARTERS, selectGap } from '@/lib/talk'
 import { useOnline } from './use-online'
 
 type Entry = ChatMessage & { presentation?: string; notes?: string[]; error?: string }
 
-const SUGGESTIONS = ['pitch', 'onboarding', 'tighten'] as const
 const MODEL_KEY = 'kiosk-chatgpt-model'
 const WELCOME_KEY = 'kiosk-chatgpt-welcomed'
 const REPO_URL = 'https://github.com/evgenius1424/kiosk-slides'
@@ -45,14 +45,19 @@ export function PresentationChat({
   onOpen,
   onCopyPrompt,
   onAddSkill,
+  request,
+  onRequestTaken,
 }: {
   source: string
   onPresentation: (source: string, fresh: boolean) => string
   onOpen: () => void
   onCopyPrompt: () => void
   onAddSkill?: () => void
+  request?: string
+  onRequestTaken: () => void
 }) {
   const t = useTranslations('Chat')
+  const tst = useTranslations('Start.starters')
   const [status, setStatus] = useState<ChatGPTStatus | null>(null)
   const [models, setModels] = useState<ChatGPTModel[]>([])
   const [model, setModel] = useState('')
@@ -66,6 +71,7 @@ export function PresentationChat({
   const online = useOnline()
   const abortRef = useRef<AbortController | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
   const busy = live !== null
   const ready = status?.available && status.connected && status.planUsage
 
@@ -188,6 +194,11 @@ export function PresentationChat({
     abortRef.current = null
     if (/sign-in|session|connect again/i.test(error)) refresh()
   }
+  useEffect(() => {
+    if (!request || !ready || !model || busy) return
+    onRequestTaken()
+    send(request)
+  })
 
   if (!online || unreachable)
     return (
@@ -282,9 +293,17 @@ export function PresentationChat({
             <h2>{t('empty.title')}</h2>
             <p>{t('empty.body')}</p>
             <div className="chat-suggestions">
-              {SUGGESTIONS.map(id => (
-                <button key={id} onClick={() => send(t(`suggestions.${id}`))} disabled={!model}>
-                  {t(`suggestions.${id}`)}
+              {STARTERS.map(id => (
+                <button
+                  key={id}
+                  onClick={() => {
+                    setInput(tst(`${id}.text`))
+                    requestAnimationFrame(
+                      () => composerRef.current && selectGap(composerRef.current),
+                    )
+                  }}
+                >
+                  {tst(`${id}.label`)}
                 </button>
               ))}
             </div>
@@ -321,6 +340,7 @@ export function PresentationChat({
         }}
       >
         <textarea
+          ref={composerRef}
           aria-label={t('composer.label')}
           placeholder={entries.length ? t('composer.followUp') : t('composer.first')}
           value={input}

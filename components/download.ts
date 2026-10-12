@@ -1,5 +1,5 @@
-export function downloadFile(content: string, filename: string, type = 'text/plain') {
-  const url = URL.createObjectURL(new Blob([content], { type }))
+export function downloadFile(content: BlobPart, filename: string, type = 'text/plain') {
+  const url = URL.createObjectURL(content instanceof Blob ? content : new Blob([content], { type }))
   const link = document.createElement('a')
   link.href = url
   link.download = filename
