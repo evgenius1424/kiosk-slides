@@ -1,6 +1,6 @@
 # Spec: AI actions on a slide, with undo
 
-Status: ready-for-agent
+Status: done
 Blocked by: live-editing; start-from-the-talk (both change the chat component)
 Track: B (editor), step 4
 
