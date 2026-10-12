@@ -113,8 +113,6 @@
     "making": "Making the link…",
     "link": "Link to these slides",
     "copy": "Copy link",
-    "code": "Code to open these slides on a phone",
-    "tooLongForCode": "Too long for a code; send the link instead.",
     "private": "Anyone with the link can see these slides. Nothing is uploaded.",
     "tooBig": "This presentation is too big to share by link. Download it and send the file instead.",
     "download": "Download"
