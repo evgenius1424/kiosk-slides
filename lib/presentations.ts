@@ -18,7 +18,7 @@ export function blankPresentation(heading: string, body: string) {
   return `---\ntheme: room-dark\n---\n\n# ${heading}\n\n${body}\n`
 }
 
-export function loadLibrary(example: string, untitled: string): Library {
+export function loadLibrary(blank: string, untitled: string): Library {
   const stored = read()
   if (stored?.items.length)
     return {
@@ -27,10 +27,7 @@ export function loadLibrary(example: string, untitled: string): Library {
         : stored.items[0].id,
       items: stored.items,
     }
-  const first = {
-    ...createPresentation(presentationName(example) || untitled, example, []),
-    userNamed: true,
-  }
+  const first = createPresentation(untitled, blank, [])
   return { current: first.id, items: [first] }
 }
 

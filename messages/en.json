@@ -282,11 +282,6 @@
     }
   },
   "Chat": {
-    "suggestions": {
-      "pitch": "Make a 6-slide presentation that pitches a four-day work week to leadership",
-      "onboarding": "Explain how our onboarding works in five steps for new hires",
-      "tighten": "Tighten the current presentation and add a closing metric slide"
-    },
     "connect": {
       "title": "Write slides with your ChatGPT plan.",
       "intro": "Describe your talk and ChatGPT writes the slides for you. Your sign-in stays on this computer.",
@@ -395,6 +390,81 @@
       "subscription_sharing_user_unavailable": "ChatGPT account information is temporarily unavailable. Try again shortly.",
       "chatpass_v2_scope_not_authorized": "Kiosk Slides isn’t authorized for this operation.",
       "chatpass_v2_invalid_authorization_context": "Kiosk Slides isn’t authorized for this operation."
+    }
+  },
+  "Start": {
+    "tagline": "Slides made to be seen",
+    "title": "What’s your talk about?",
+    "body": "Say what you want to tell people. AI writes the slides, and you can change anything after.",
+    "topic": "Your talk",
+    "placeholder": "A short talk about why we’re moving to a four-day week, for the whole team",
+    "startersLabel": "Start from",
+    "starters": {
+      "pitch": {
+        "label": "Pitch",
+        "text": "A pitch for … to … The ask is …"
+      },
+      "update": {
+        "label": "Weekly update",
+        "text": "A weekly update for …: what we finished, what comes next, and what is blocking us."
+      },
+      "allHands": {
+        "label": "All-hands",
+        "text": "An all-hands for the whole company about … The big wins are … Next we focus on …"
+      },
+      "lesson": {
+        "label": "Lesson",
+        "text": "A lesson that teaches … to … By the end they can …"
+      },
+      "onboarding": {
+        "label": "Onboarding",
+        "text": "Onboarding for new …: who we are, how we work, and what their first week looks like."
+      },
+      "lobby": {
+        "label": "Lobby loop",
+        "text": "A loop for the screen in our … that shows … It plays on its own."
+      }
+    },
+    "audience": "Who is it for?",
+    "audiences": {
+      "team": "My team",
+      "leadership": "Leadership",
+      "customers": "Customers",
+      "class": "A class",
+      "screen": "A public screen"
+    },
+    "length": "How long?",
+    "lengths": {
+      "short": "Short ({count})",
+      "standard": "Standard ({count})",
+      "long": "Long ({count})"
+    },
+    "make": "Make slides",
+    "connect": "Continue with ChatGPT",
+    "connecting": "Opening ChatGPT…",
+    "copyPrompt": "Copy prompt",
+    "copyHint": "Paste it into any AI chat",
+    "blank": "Start blank",
+    "close": "Back to my presentation",
+    "paste": {
+      "title": "Now paste the answer here",
+      "copied": "The prompt is copied. Paste it into any AI chat.",
+      "copyFailed": "Couldn’t copy the prompt. Select it below and copy it yourself, then paste it into any AI chat.",
+      "steps": "When the AI answers, copy its reply and paste it anywhere on this page with Ctrl V or ⌘ V.",
+      "again": "Copy again",
+      "back": "Change the request"
+    },
+    "showcase": {
+      "label": "Example slides",
+      "previous": "Previous slide",
+      "next": "Next slide",
+      "count": "{number} / {count} · {title}",
+      "open": "Open this example",
+      "features": {
+        "room": "Readable from the back of the room",
+        "share": "Present, share a link, or download one file",
+        "saved": "Saved in your browser and works offline"
+      }
     }
   }
 }
