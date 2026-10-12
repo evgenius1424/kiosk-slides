@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server'
 import { KioskWorkspace } from '@/components/kiosk-workspace'
 import { copyPrompt } from '@/lib/chat-prompt'
 import { fontFace, fontFiles, fonts } from '@/lib/presentation'
-import { SITE_NAME, SITE_URL } from '@/lib/site'
+import { SITE_NAME, SITE_URL, SKILL_INSTALL } from '@/lib/site'
 import { slideStyles } from '@/lib/slide-styles'
 
 const STRUCTURED_DATA = {
@@ -33,7 +33,12 @@ export default async function Page() {
           .map(f => fontFace(f, `/fonts/${f.file}`))
           .join('') + slideStyles}
       </style>
-      <KioskWorkspace example={example} prompt={prompt} site={SITE_URL} />
+      <KioskWorkspace
+        example={example}
+        prompt={prompt}
+        site={SITE_URL}
+        skillInstall={SKILL_INSTALL}
+      />
     </>
   )
 }

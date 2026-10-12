@@ -128,6 +128,8 @@ pnpm dev
 
 Open http://127.0.0.1:3000. Running it on your own computer is what turns on Ask AI with your ChatGPT plan.
 
+The **Add to your AI** panel, which walks people through installing the skill, shows locally and on preview deployments. Set `SKILL_INSTALL=on` to show it in production, or `off` to hide it everywhere.
+
 The presentation format is described in [FORMAT.md](FORMAT.md), with a full example in [public/example.md](public/example.md).
 
 ## Made by

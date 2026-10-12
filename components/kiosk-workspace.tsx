@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   ArrowDownToLine,
   ArrowRight,
+  Blocks,
   Check,
   CheckCheck,
   ChevronDown,
@@ -74,6 +75,7 @@ import { downloadFile } from './download'
 import { PresentationEditor, selectSlide, useLiveSource } from './presentation-editor'
 import { PresentationMenu } from './presentation-menu'
 import { SharePanel } from './share-panel'
+import { SkillPanel } from './skill-panel'
 import { SlideView } from './slide'
 import { useWakeLock } from './use-wake-lock'
 
@@ -121,10 +123,12 @@ export function KioskWorkspace({
   example,
   prompt,
   site,
+  skillInstall = false,
 }: {
   example: string
   prompt: string
   site: string
+  skillInstall?: boolean
 }) {
   const t = useTranslations('Workspace')
   const ts = useTranslations('Settings')
@@ -167,6 +171,7 @@ export function KioskWorkspace({
   const [shared, setShared] = useState<string | null>(null)
   const [broken, setBroken] = useState(false)
   const [sharing, setSharing] = useState(false)
+  const [addingSkill, setAddingSkill] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -597,6 +602,10 @@ export function KioskWorkspace({
       notice(t('toast.copyFailed'))
     }
   }
+  const addSkill = () => {
+    setModal(null)
+    setAddingSkill(true)
+  }
   const exportHTML = async () => {
     setExporting(true)
     try {
@@ -814,6 +823,7 @@ export function KioskWorkspace({
               onPresentation={loadGenerated}
               onOpen={() => setTab('chat')}
               onCopyPrompt={copyPrompt}
+              onAddSkill={skillInstall ? addSkill : undefined}
             />
           </div>
           {tab === 'chat' ? null : tab === 'preview' ? (
@@ -1176,6 +1186,7 @@ export function KioskWorkspace({
           exportHTML()
         }}
       />
+      {skillInstall && <SkillPanel open={addingSkill} onClose={() => setAddingSkill(false)} />}
       <dialog
         ref={dialogRef}
         className={`workspace-dialog ${modal === 'format' ? 'wide' : ''}`}
@@ -1203,6 +1214,18 @@ export function KioskWorkspace({
                 {th('copyPrompt')}
               </button>
             </div>
+            {skillInstall && (
+              <div className="prompt-card">
+                <div>
+                  <strong>{th('skillTitle')}</strong>
+                  <p>{th('skillBody')}</p>
+                </div>
+                <button className="btn" onClick={addSkill}>
+                  <Blocks size={14} />
+                  {th('addSkill')}
+                </button>
+              </div>
+            )}
             <h3 className="format-heading">{th('basicsTitle')}</h3>
             <dl className="format-rules">
               {BASICS.map(id => (
