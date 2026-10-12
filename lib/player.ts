@@ -41,6 +41,7 @@ export const PLAYER_WORDS = {
   autoplay: { on: 'Autoplay on', off: 'Autoplay off' },
   shareSafe: { on: 'Screen-share safe on', off: 'Screen-share safe off' },
   end: 'End of presentation',
+  credit: 'Made with Kiosk Slides',
   slide: 'Slide {number} of {count}: {title}',
 }
 

@@ -31,6 +31,7 @@ describe('parsePresentation: presentation and message slides', () => {
       tone: '#74747e',
       transition: 'gentle',
       shareSafe: false,
+      credit: true,
       duration: 20,
       loop: false,
       font: 'classic',
@@ -72,6 +73,14 @@ describe('parsePresentation: presentation and message slides', () => {
       true,
     ])
     expect(parsePresentation(md('---', 'tone: #123abc', '---', '# Hi')).tone).toBe('#123abc')
+  })
+
+  it('reads the credit flag', () => {
+    expect(parsePresentation('# Hi').credit).toBe(true)
+    expect(parsePresentation(md('---', 'credit: false', '---', '# Hi')).credit).toBe(false)
+    expect(() => parsePresentation(md('---', 'credit: off', '---', '# Hi'))).toThrow(
+      'Line 2: Set credit to true or false, not “off”.',
+    )
   })
 
   it('defaults the theme to room-dark', () => {
