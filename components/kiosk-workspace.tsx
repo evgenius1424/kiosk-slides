@@ -25,6 +25,7 @@ import {
   Share2,
   ShieldCheck,
   Sparkles,
+  Trash2,
   X,
 } from 'lucide-react'
 import {
@@ -33,8 +34,11 @@ import {
   presentationLook,
   fonts,
   formatPresentation,
+  insertSlide,
   parsePresentation,
+  removeSlide,
   setFrontMatter,
+  slideLines,
   themes,
   tones,
   type Scale,
@@ -68,6 +72,14 @@ import {
   uniqueName,
   type Library,
 } from '@/lib/presentations'
+import {
+  addVersion,
+  forgetVersions,
+  loadHistory,
+  saveHistory,
+  takeVersion,
+  type History,
+} from '@/lib/history'
 import { decodeShare, readShareHash, shareSlideHash } from '@/lib/share'
 import { requestPrompt } from '@/lib/talk'
 import { PresentationChat } from './presentation-chat'
@@ -77,6 +89,13 @@ import { PresentationEditor, selectSlide, useLiveSource } from './presentation-e
 import { PresentationMenu } from './presentation-menu'
 import { SharePanel } from './share-panel'
 import { SkillPanel } from './skill-panel'
+import {
+  SlideActionBar,
+  SlideActionMenu,
+  SlidePasteDialog,
+  useSlideActions,
+  type SlideChange,
+} from './slide-actions'
 import { SlideView } from './slide'
 import { StartScreen, resumingStart } from './start-screen'
 import { useWakeLock } from './use-wake-lock'
@@ -91,6 +110,7 @@ const SHORTCUTS = [
   'leave',
   'ends',
   'tidy',
+  'undo',
 ] as const
 const SCALES: Scale[] = ['normal', 'large', 'kiosk']
 const TOAST_MS = 2600
@@ -124,11 +144,13 @@ function Toggle({
 export function KioskWorkspace({
   example,
   prompt,
+  slidePrompt,
   site,
   skillInstall = false,
 }: {
   example: string
   prompt: string
+  slidePrompt: string
   site: string
   skillInstall?: boolean
 }) {
@@ -136,6 +158,7 @@ export function KioskWorkspace({
   const ts = useTranslations('Settings')
   const th = useTranslations('Help')
   const tk = useTranslations('Shortcuts')
+  const ta = useTranslations('SlideActions')
   const tp = useTranslations('Presentations')
   const untitled = tp('untitled')
   const blank = useMemo(() => blankPresentation(tp('blank.heading'), tp('blank.body')), [tp])
@@ -176,10 +199,13 @@ export function KioskWorkspace({
   const [addingSkill, setAddingSkill] = useState(false)
   const [start, setStart] = useState<'first' | 'new' | null>(null)
   const [request, setRequest] = useState<string>()
+  const [slideMenu, setSlideMenu] = useState<{ x: number; y: number; index: number } | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const pasteRef = useRef((_value: string) => {})
+  const sourceRef = useRef(source)
+  const historyRef = useRef<History>({})
   const settingsRef = useRef<HTMLElement>(null)
   const settingsButtonRef = useRef<HTMLButtonElement>(null)
   const slides = presentation.slides
@@ -214,7 +240,69 @@ export function KioskWorkspace({
     (message: string, action?: Toast['action']) => setToast({ message, action }),
     [],
   )
+  const closeSlideMenu = useCallback(() => setSlideMenu(null), [])
   useWakeLock(presenting || playing)
+  const remember = (id: string, value: string) => {
+    historyRef.current = addVersion(historyRef.current, id, value)
+    saveHistory(historyRef.current)
+  }
+  const undo = () => {
+    let taken = takeVersion(historyRef.current, current.id)
+    while (taken && taken.source === source) taken = takeVersion(taken.history, current.id)
+    if (!taken) return notice(t('toast.nothingToUndo'))
+    const { history, source: previous } = taken
+    historyRef.current = history
+    saveHistory(history)
+    live.replace(previous)
+    setIndex(i => Math.min(i, Math.max(0, slideLines(previous).length - 1)))
+    notice(t('toast.undone'))
+  }
+  const undoAction = { label: t('toast.undo'), run: () => undoRef.current() }
+  const undoRef = useRef(undo)
+  const changeSlide = ({ source: next, index: at, count }: SlideChange) => {
+    remember(current.id, sourceRef.current)
+    live.replace(next)
+    setPlaying(false)
+    setIndex(at)
+    notice(t('toast.changed', { number: at + 1, count }), undoAction)
+  }
+  const addSlide = (after: number) => {
+    const added = Math.min(after, slideLines(source).length - 1) + 1
+    const blank = [
+      '<!--',
+      `title: ${t('newSlide.title')}`,
+      `label: ${t('newSlide.label')}`,
+      `footer: ${t('newSlide.footer')}`,
+      '-->',
+      '',
+      `# ${t('newSlide.heading')}`,
+      '',
+      t('newSlide.body'),
+    ].join('\n')
+    const next = insertSlide(source, after, blank)
+    remember(current.id, source)
+    live.replace(next)
+    setPlaying(false)
+    setIndex(added)
+    setTab('markdown')
+    focusSlide(next, added)
+    notice(t('toast.slideAdded', { number: added + 1 }), undoAction)
+  }
+  const deleteSlide = (i: number) => {
+    if (slides.length < 2) return notice(t('toast.lastSlide'))
+    remember(current.id, source)
+    live.replace(removeSlide(source, i))
+    setPlaying(false)
+    setIndex(Math.min(i, slides.length - 2))
+    notice(t('toast.slideDeleted', { number: i + 1 }), undoAction)
+  }
+  const slideActions = useSlideActions({
+    prompt: slidePrompt,
+    sourceRef,
+    onChange: change => changeRef.current(change),
+    onNotice: notice,
+  })
+  const changeRef = useRef(changeSlide)
   const toggleSafe = useCallback(() => {
     notice(t('toast.shareSafe', { on: String(!safe) }))
     setSafeKey(!safe)
@@ -249,7 +337,13 @@ export function KioskWorkspace({
     if (fullscreenElement()) exitFullscreen()
   }, [])
   useEffect(() => {
+    sourceRef.current = source
+    undoRef.current = undo
+    changeRef.current = changeSlide
+  })
+  useEffect(() => {
     const next = loadLibrary(blank, untitled)
+    historyRef.current = loadHistory()
     setLibrary(next)
     const link = readShareHash(location.hash)
     if (!link) {
@@ -366,11 +460,21 @@ export function KioskWorkspace({
         setModal(null)
         return
       }
+      const target = event.target as HTMLElement
+      const fromList = !!target.closest('.slide-list')
+      if (target.closest('input,textarea,select,dialog')) return
+      if ((target.closest('button') && !fromList) || (tab !== 'preview' && !fromList)) return
       if (
-        (event.target as HTMLElement).closest('input,textarea,select,button,dialog') ||
-        tab !== 'preview'
-      )
+        (event.metaKey || event.ctrlKey) &&
+        !event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === 'z'
+      ) {
+        event.preventDefault()
+        if (!shared) undoRef.current()
         return
+      }
+      if (fromList) return
       const action = playerAction(event)
       if (!action) return
       event.preventDefault()
@@ -406,6 +510,7 @@ export function KioskWorkspace({
     settingsOpen,
     modal,
     start,
+    shared,
   ])
   useEffect(() => {
     const target = canvasRef.current
@@ -541,6 +646,8 @@ export function KioskWorkspace({
       ),
     }))
   const deletePresentation = (id: string) => {
+    historyRef.current = forgetVersions(historyRef.current, id)
+    saveHistory(historyRef.current)
     const rest = library.items.filter(p => p.id !== id)
     if (id !== current.id) {
       setLibrary(l => ({ ...l, items: rest }))
@@ -565,6 +672,7 @@ export function KioskWorkspace({
     const previous = current
     const name = presentationName(value) || untitled
     const reuse = previous.source === blank
+    if (reuse) remember(previous.id, source)
     const target = reuse
       ? {
           ...previous,
@@ -598,6 +706,7 @@ export function KioskWorkspace({
     const value = formatPresentation(generated)
     const name = presentationName(value) || untitled
     const reuse = !fresh || current.source === blank
+    if (reuse) remember(current.id, sourceRef.current)
     const target = reuse
       ? {
           ...current,
@@ -621,7 +730,10 @@ export function KioskWorkspace({
     }))
     const next = live.load(value)
     setIndex(0)
-    notice(t('toast.loaded', { name: target.name, count: next.presentation?.slides.length ?? 0 }))
+    notice(
+      t('toast.loaded', { name: target.name, count: next.presentation?.slides.length ?? 0 }),
+      reuse ? undoAction : undefined,
+    )
     return target.name
   }
   const keepCopy = () => {
@@ -785,38 +897,57 @@ export function KioskWorkspace({
           </div>
           <nav className="slide-list" aria-label={t('sidebar.list')}>
             {slides.map((item, i) => (
-              <button
-                className={`slide-nav ${index === i ? 'selected' : ''}`}
-                key={i}
-                onClick={() => select(i)}
-                aria-current={index === i ? 'step' : undefined}
-              >
-                <span className="slide-number" aria-hidden="true">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span className="sr-only">{t('sidebar.slide', { number: i + 1 })}</span>
-                <span className="thumb-group">
-                  <span className="thumbnail" aria-hidden="true" inert>
-                    <SlideView slide={item} theme={theme} accent={accent} look={look} miniature />
+              <div className="slide-item" key={i}>
+                <button
+                  className={`slide-nav ${index === i ? 'selected' : ''} ${slideActions.working?.index === i ? 'is-changing' : ''}`}
+                  onClick={() => select(i)}
+                  onKeyDown={e => {
+                    if (shared || error || (e.key !== 'Delete' && e.key !== 'Backspace')) return
+                    e.preventDefault()
+                    deleteSlide(i)
+                  }}
+                  onContextMenu={e => {
+                    if (shared || error) return
+                    e.preventDefault()
+                    const box = e.currentTarget.getBoundingClientRect()
+                    setSlideMenu({
+                      x: e.clientX || box.left + 24,
+                      y: e.clientY || box.top + 24,
+                      index: i,
+                    })
+                  }}
+                  aria-current={index === i ? 'step' : undefined}
+                >
+                  <span className="slide-number" aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')}
                   </span>
-                  <span className="thumb-name">
-                    {item.title || t('sidebar.untitledSlide', { number: i + 1 })}
+                  <span className="sr-only">{t('sidebar.slide', { number: i + 1 })}</span>
+                  <span className="thumb-group">
+                    <span className="thumbnail" aria-hidden="true" inert>
+                      <SlideView slide={item} theme={theme} accent={accent} look={look} miniature />
+                    </span>
+                    <span className="thumb-name">
+                      {item.title || t('sidebar.untitledSlide', { number: i + 1 })}
+                    </span>
                   </span>
-                </span>
-              </button>
+                </button>
+                {!shared && !error && slides.length > 1 && (
+                  <button
+                    className="slide-delete"
+                    aria-label={t('sidebar.delete', { number: i + 1 })}
+                    title={t('sidebar.delete', { number: i + 1 })}
+                    onClick={() => deleteSlide(i)}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
             ))}
           </nav>
           <button
             className="add-slide"
             hidden={!!shared}
-            onClick={() => {
-              const text = `${source.trimEnd()}\n\n---\n\n# ${t('newSlide.heading')}\n\n${t('newSlide.body')}\n`
-              live.replace(text)
-              setIndex(slides.length)
-              setTab('markdown')
-              focusSlide(text, slides.length)
-              notice(t('toast.slideAdded'))
-            }}
+            onClick={() => addSlide(error ? Infinity : at)}
           >
             <Plus size={15} />
             {t('sidebar.add')}
@@ -909,6 +1040,12 @@ export function KioskWorkspace({
                       <p className="canvas-empty">{t('canvas.empty')}</p>
                     )}
                   </div>
+                  {slideActions.working?.index === at && (
+                    <div className="slide-working" role="status">
+                      <span className="chat-spinner" />
+                      {ta('working')}
+                    </div>
+                  )}
                 </div>
                 <div className="canvas-controls">
                   <span>
@@ -943,6 +1080,13 @@ export function KioskWorkspace({
                     <Expand size={16} />
                   </button>
                 </div>
+                {!shared && slide && (
+                  <SlideActionBar
+                    disabled={!!error}
+                    working={!!slideActions.working}
+                    onAction={action => slideActions.run(action, at)}
+                  />
+                )}
                 {presenting && (
                   <button className="present-exit" aria-label={t('canvas.leave')} onClick={leave}>
                     <X size={20} />
@@ -1226,6 +1370,25 @@ export function KioskWorkspace({
             )}
           </div>
         )}
+        {slideMenu && (
+          <SlideActionMenu
+            at={slideMenu}
+            onAction={(action, i) => {
+              if (slideActions.working) return
+              setIndex(i)
+              slideActions.run(action, i)
+            }}
+            onAdd={addSlide}
+            onDelete={slides.length > 1 ? deleteSlide : undefined}
+            onClose={closeSlideMenu}
+          />
+        )}
+        <SlidePasteDialog
+          prompt={slideActions.pasting?.prompt ?? null}
+          onPaste={slideActions.paste}
+          onCopied={() => notice(ta('copied'))}
+          onClose={slideActions.cancel}
+        />
         <SharePanel
           open={sharing}
           source={source}

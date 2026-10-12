@@ -36,7 +36,11 @@ export function useLiveSource(initial: string) {
 
 export function selectSlide(textarea: HTMLTextAreaElement, source: string, index: number) {
   const line = slideLines(source)[index]
-  if (line) selectLine(textarea, source, line, false)
+  if (!line) return
+  selectLine(textarea, source, line, false)
+  const lines = source.split('\n')
+  const separator = lines.slice(0, line - 1).findLastIndex(l => l.trim() === '---') + 1
+  textarea.scrollTop = index && separator ? lineTop(textarea, lines, separator) : 0
 }
 
 export function PresentationEditor({
@@ -144,4 +148,30 @@ function selectLine(textarea: HTMLTextAreaElement, source: string, line: number,
   textarea.setSelectionRange(start, end)
   const height = parseFloat(getComputedStyle(textarea).lineHeight) || 20
   textarea.scrollTop = Math.max(0, (line - 1) * height - textarea.clientHeight / 3)
+}
+
+function lineTop(textarea: HTMLTextAreaElement, lines: string[], line: number) {
+  const style = getComputedStyle(textarea)
+  const mirror = document.createElement('div')
+  Object.assign(mirror.style, {
+    position: 'absolute',
+    visibility: 'hidden',
+    top: '0',
+    left: '0',
+    width: `${textarea.clientWidth}px`,
+    boxSizing: 'border-box',
+    padding: `0 ${style.paddingRight} 0 ${style.paddingLeft}`,
+    font: style.font,
+    letterSpacing: style.letterSpacing,
+    tabSize: style.tabSize,
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'break-word',
+  })
+  const marker = document.createElement('span')
+  marker.textContent = '-'
+  mirror.append(lines.slice(0, line - 1).join('\n') + (line > 1 ? '\n' : ''), marker)
+  document.body.append(mirror)
+  const top = marker.offsetTop
+  mirror.remove()
+  return top
 }

@@ -53,9 +53,13 @@
       "list": "Slides",
       "slide": "Slide {number}: ",
       "untitledSlide": "Slide {number}",
-      "add": "Add a slide"
+      "add": "Add a slide",
+      "delete": "Delete slide {number}"
     },
     "newSlide": {
+      "title": "New slide",
+      "label": "Your label",
+      "footer": "One short line with a fact or the takeaway.",
       "heading": "Make your next **great point**",
       "body": "Keep it short. Make it matter."
     },
@@ -94,7 +98,9 @@
       "end": "End of presentation",
       "created": "{name} created · write, paste, or ask AI",
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
-      "slideAdded": "New slide added at the end",
+      "slideAdded": "Slide {number} added · change its words in Edit",
+      "slideDeleted": "Slide {number} deleted",
+      "lastSlide": "A presentation needs at least one slide",
       "tidied": "Text cleaned up",
       "pasted": "Pasted as “{name}”",
       "undo": "Undo",
@@ -103,7 +109,10 @@
       "promptCopied": "Prompt copied · paste it into any AI chat",
       "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there.",
       "linkCopied": "Link copied · anyone who opens it sees these slides",
-      "kept": "{name} added to your presentations"
+      "kept": "{name} added to your presentations",
+      "changed": "{count, plural, one {Slide {number} changed} other {Slide {number} is now # slides}}",
+      "undone": "Back to the previous version",
+      "nothingToUndo": "Nothing to undo"
     },
     "shared": {
       "label": "Shared presentation",
@@ -304,6 +313,10 @@
       "tidy": {
         "name": "Clean up the text while editing",
         "keys": "Ctrl / ⌘ S"
+      },
+      "undo": {
+        "name": "Undo the last AI change or paste",
+        "keys": "Ctrl / ⌘ Z"
       }
     },
     "note": "Scroll over the canvas to move one slide at a time. Click the presentation or navigate to pause autoplay. Presentations are saved in this browser; switch or create them from the menu at the top.",
@@ -437,7 +450,9 @@
       "subscription_sharing_user_unavailable": "ChatGPT account information is temporarily unavailable. Try again shortly.",
       "chatpass_v2_scope_not_authorized": "Kiosk Slides isn’t authorized for this operation.",
       "chatpass_v2_invalid_authorization_context": "Kiosk Slides isn’t authorized for this operation."
-    }
+    },
+    "badAction": "Choose one of the slide actions.",
+    "badSlide": "That slide isn’t in the presentation."
   },
   "Start": {
     "tagline": "Slides made to be seen",
@@ -512,6 +527,50 @@
         "share": "Present, share a link, or download one file",
         "saved": "Saved in your browser and works offline"
       }
+    }
+  },
+  "SlideActions": {
+    "label": "Change this slide with AI",
+    "menu": "Slide {number} actions",
+    "add": "Add a slide after",
+    "delete": "Delete slide",
+    "working": "Changing this slide…",
+    "copied": "Prompt copied · paste it into any AI chat",
+    "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there.",
+    "moved": "That slide changed while AI was working, so it was left as it is.",
+    "failed": "Couldn’t change the slide. Try again.",
+    "offline": "Couldn’t reach AI. Check your connection and try again.",
+    "actions": {
+      "shorter": {
+        "name": "Shorter",
+        "hint": "Fewer words, same point"
+      },
+      "visual": {
+        "name": "Make it visual",
+        "hint": "Turns the text into a chart, steps or another picture"
+      },
+      "split": {
+        "name": "Split in two",
+        "hint": "Two slides, one idea each"
+      },
+      "headline": {
+        "name": "Stronger headline",
+        "hint": "States the point, with the key words in bold"
+      },
+      "widget": {
+        "name": "Try another widget",
+        "hint": "Shows the same content another way"
+      }
+    },
+    "paste": {
+      "title": "Paste the new slide here",
+      "body": "The prompt is copied. Paste it into any AI chat, then paste its answer below to replace this slide.",
+      "label": "New slide",
+      "close": "Close",
+      "copyAgain": "Copy the prompt again",
+      "replace": "Replace slide",
+      "empty": "Paste the AI’s answer first.",
+      "showPrompt": "Show the prompt"
     }
   }
 }

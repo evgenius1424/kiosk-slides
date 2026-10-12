@@ -3,7 +3,11 @@ import {
   parsePresentation,
   setPresentationTheme,
   setFrontMatter,
+  insertSlide,
+  removeSlide,
+  replaceSlide,
   slideLines,
+  slideSource,
 } from '@/lib/presentation'
 
 const md = (...lines: string[]) => lines.join('\n')
@@ -960,5 +964,64 @@ describe('slideLines', () => {
 
   it('works on text that does not parse', () => {
     expect(slideLines('# One\n\n---\n\n```\nopen')).toEqual([1, 5])
+  })
+})
+
+describe('replaceSlide', () => {
+  const source =
+    '---\ntitle: T\n---\n\n# One\n\nWordy text.\n\n---\n\n# Two\n\n---\n\n```\n---\n```\n# Three\n'
+
+  it('reads one slide without the separators around it', () => {
+    expect(slideSource(source, 0)).toBe('# One\n\nWordy text.')
+    expect(slideSource(source, 2)).toBe('```\n---\n```\n# Three')
+    expect(slideSource(source, 3)).toBe('')
+  })
+
+  it('swaps one slide by index and leaves every other byte alone', () => {
+    const next = replaceSlide(source, 0, '\n# Short\n')
+    expect(next).toBe(source.replace('# One\n\nWordy text.', '# Short'))
+    expect(parsePresentation(next).slides).toHaveLength(3)
+  })
+
+  it('splits one slide into two', () => {
+    const next = replaceSlide(source, 1, '# Two A\n\n---\n\n# Two B')
+    expect(parsePresentation(next).slides).toHaveLength(4)
+    expect(slideSource(next, 2)).toBe('# Two B')
+    expect(slideSource(next, 3)).toBe(slideSource(source, 2))
+  })
+
+  it('refuses a slide that is not there', () => {
+    expect(() => replaceSlide(source, 5, '# Five')).toThrow('There is no slide 6.')
+  })
+})
+
+describe('insertSlide and removeSlide', () => {
+  const source =
+    '---\ntitle: T\n---\n\n# One\n\nWordy text.\n\n---\n\n# Two\n\n---\n\n```\n---\n```\n# Three\n'
+
+  it('adds a slide right after the given one', () => {
+    const next = insertSlide(source, 0, '# New\n')
+    expect(parsePresentation(next).slides).toHaveLength(4)
+    expect(slideSource(next, 1)).toBe('# New')
+    expect(slideSource(next, 2)).toBe('# Two')
+  })
+
+  it('adds a slide at the end after the last one', () => {
+    const next = insertSlide(source, 2, '# Four')
+    expect(next).toBe(source.replace('# Three\n', '# Three\n\n---\n\n# Four\n'))
+  })
+
+  it('removes a slide with its separator and keeps the rest', () => {
+    expect(removeSlide(source, 1)).toBe(source.replace('# Two\n\n---\n\n', ''))
+    expect(removeSlide(source, 0)).toBe(source.replace('# One\n\nWordy text.\n\n---\n\n', ''))
+    expect(removeSlide(source, 2)).toBe(source.replace('\n\n---\n\n```\n---\n```\n# Three', ''))
+  })
+
+  it('undoes an insert by removing the new slide', () => {
+    expect(removeSlide(insertSlide(source, 1, '# New'), 2)).toBe(source)
+  })
+
+  it('keeps the last slide', () => {
+    expect(() => removeSlide('# Only\n', 0)).toThrow('A presentation needs at least one slide.')
   })
 })

@@ -69,7 +69,12 @@ describe('opening a shared link', () => {
 function workspace() {
   return render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <KioskWorkspace example={example} prompt="" site="https://example.com" />
+      <KioskWorkspace
+        example={example}
+        prompt=""
+        slidePrompt="SLIDE GUIDE"
+        site="https://example.com"
+      />
     </NextIntlClientProvider>,
   )
 }

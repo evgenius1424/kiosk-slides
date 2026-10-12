@@ -119,7 +119,12 @@ describe('paste anywhere', () => {
 function renderWorkspace() {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <KioskWorkspace example={example} prompt="" site="https://example.com" />
+      <KioskWorkspace
+        example={example}
+        prompt=""
+        slidePrompt="SLIDE GUIDE"
+        site="https://example.com"
+      />
     </NextIntlClientProvider>,
   )
   fireEvent.click(screen.getByRole('button', { name: /Open this example/ }))

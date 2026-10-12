@@ -47,14 +47,45 @@ export function parsePresentation(source: string): Presentation {
 }
 
 export function slideLines(source: string) {
+  return slideRanges(source).map(r => r.start + 1)
+}
+
+export function slideSource(source: string, index: number) {
+  const range = slideRanges(source)[index]
+  if (!range) return ''
+  return source.replace(/\r/g, '').split('\n').slice(range.start, range.end).join('\n')
+}
+
+export function replaceSlide(source: string, index: number, replacement: string) {
+  const range = slideRanges(source)[index]
+  if (!range) throw new Error(`There is no slide ${index + 1}.`)
   const lines = source.replace(/\r/g, '').split('\n')
-  const end =
-    lines[0]?.trim() === '---' ? lines.findIndex((l, i) => i > 0 && l.trim() === '---') : -1
-  const start = lines[0]?.trim() === '---' ? (end < 0 ? lines.length : end + 1) : 0
-  return chunksOf(lines, start).chunks.flatMap(c => {
-    const offset = c.text.split('\n').findIndex(l => l.trim())
-    return offset < 0 ? [] : [c.line + offset]
-  })
+  const next = replacement.replace(/\r/g, '').trim().split('\n')
+  return [...lines.slice(0, range.start), ...next, ...lines.slice(range.end)].join('\n')
+}
+
+export function insertSlide(source: string, after: number, slide: string) {
+  const ranges = slideRanges(source)
+  const lines = source.replace(/\r/g, '').split('\n')
+  const next = slide.replace(/\r/g, '').trim().split('\n')
+  const range = ranges[Math.min(after, ranges.length - 1)]
+  if (!range) return `${source.trimEnd()}\n\n${next.join('\n')}\n`
+  return [...lines.slice(0, range.end), '', '---', '', ...next, ...lines.slice(range.end)].join(
+    '\n',
+  )
+}
+
+export function removeSlide(source: string, index: number) {
+  const ranges = slideRanges(source)
+  const range = ranges[index]
+  if (!range) throw new Error(`There is no slide ${index + 1}.`)
+  if (ranges.length === 1) throw new Error('A presentation needs at least one slide.')
+  const lines = source.replace(/\r/g, '').split('\n')
+  const [from, to] =
+    index < ranges.length - 1
+      ? [range.start, ranges[index + 1].start]
+      : [ranges[index - 1].end, range.end]
+  return [...lines.slice(0, from), ...lines.slice(to)].join('\n')
 }
 
 function parseFrontMatter(lines: string[]) {
@@ -129,6 +160,20 @@ function splitSlides(lines: string[], start: number): Chunk[] {
   const { chunks, fenceLine } = chunksOf(lines, start)
   if (fenceLine) failAt(fenceLine, 'Close the code block with ```')
   return chunks
+}
+
+function slideRanges(source: string) {
+  const lines = source.replace(/\r/g, '').split('\n')
+  const end =
+    lines[0]?.trim() === '---' ? lines.findIndex((l, i) => i > 0 && l.trim() === '---') : -1
+  const start = lines[0]?.trim() === '---' ? (end < 0 ? lines.length : end + 1) : 0
+  return chunksOf(lines, start).chunks.flatMap(c => {
+    const text = c.text.split('\n')
+    const first = text.findIndex(l => l.trim())
+    if (first < 0) return []
+    const last = text.findLastIndex(l => l.trim())
+    return [{ start: c.line - 1 + first, end: c.line + last }]
+  })
 }
 
 function chunksOf(lines: string[], start: number) {
