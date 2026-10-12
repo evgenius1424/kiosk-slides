@@ -385,6 +385,7 @@
     }
   },
   "Start": {
+    "tagline": "Slides made to be seen",
     "title": "What’s your talk about?",
     "body": "Say what you want to tell people. AI writes the slides, and you can change anything after.",
     "topic": "Your talk",
@@ -435,7 +436,6 @@
     "connecting": "Opening ChatGPT…",
     "copyPrompt": "Copy prompt",
     "copyHint": "Paste it into any AI chat",
-    "example": "See an example",
     "blank": "Start blank",
     "close": "Back to my presentation",
     "paste": {
@@ -445,6 +445,18 @@
       "steps": "When the AI answers, copy its reply and paste it anywhere on this page with Ctrl V or ⌘ V.",
       "again": "Copy again",
       "back": "Change the request"
+    },
+    "showcase": {
+      "label": "Example slides",
+      "previous": "Previous slide",
+      "next": "Next slide",
+      "count": "{number} / {count} · {title}",
+      "open": "Open this example",
+      "features": {
+        "room": "Readable from the back of the room",
+        "share": "Present, share a link, or download one file",
+        "saved": "Saved in your browser and works offline"
+      }
     }
   }
 }

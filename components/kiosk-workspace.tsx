@@ -1277,6 +1277,7 @@ export function KioskWorkspace({
       {start && (
         <StartScreen
           prompt={prompt}
+          example={example}
           onMake={makeSlides}
           onExample={openExample}
           onBlank={startBlank}

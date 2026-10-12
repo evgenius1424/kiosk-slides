@@ -40,7 +40,7 @@ describe('site preview and exported presentation', () => {
         <KioskWorkspace example={example} prompt="" site="https://example.com" />
       </NextIntlClientProvider>,
     )
-    fireEvent.click(screen.getByRole('button', { name: /See an example/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Open this example/ }))
     const exported = await exportedSlides()
     const preview = markup(container.querySelector('.canvas-slide article')!)
     const thumbnails = [...container.querySelectorAll('.thumbnail article')].map(a =>

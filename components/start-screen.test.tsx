@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { KioskWorkspace } from '@/components/kiosk-workspace'
@@ -61,6 +61,16 @@ describe('start screen', () => {
     expect(library().map(p => p.name)).toEqual(['Four days'])
   })
 
+  it('shows the example slides beside the question, moved with the arrows', () => {
+    workspace()
+    const showcase = screen.getByRole('region', { name: 'Example slides' })
+    expect(showcase.textContent).toContain('1 / 2')
+    fireEvent.click(within(showcase).getByRole('button', { name: 'Next slide' }))
+    expect(showcase.textContent).toContain('2 / 2')
+    fireEvent.keyDown(showcase, { key: 'ArrowRight' })
+    expect(showcase.textContent).toContain('1 / 2')
+  })
+
   it('fills the box from a starter and selects the first gap', async () => {
     workspace()
     fireEvent.click(screen.getByRole('button', { name: 'Pitch' }))
@@ -72,7 +82,7 @@ describe('start screen', () => {
 
   it('opens the example or a blank presentation, and New presentation comes back here', () => {
     workspace()
-    fireEvent.click(screen.getByRole('button', { name: /See an example/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Open this example/ }))
     expect(menuName()).toBe('The example')
     expect(library()).toHaveLength(1)
 
@@ -91,7 +101,7 @@ describe('start screen', () => {
 
   it('lands returning visitors on their last presentation', () => {
     workspace()
-    fireEvent.click(screen.getByRole('button', { name: /See an example/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Open this example/ }))
     cleanup()
     workspace()
     expect(screen.queryByRole('heading', { name: 'What’s your talk about?' })).toBeNull()
