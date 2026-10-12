@@ -1912,3 +1912,114 @@ html:has(.is-presenting .room-light) {
 .chat-local[open] summary {
   margin-bottom: 8px;
 }
+.chat-skill {
+  margin-left: 8px;
+}
+.skill-places {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 18px 0 20px;
+}
+.skill-places button {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-weight: 500;
+}
+.skill-places button.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+.skill-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.skill-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.55;
+  counter-increment: step;
+}
+.skill-steps li::before {
+  content: counter(step);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.skill-steps span {
+  flex: 1;
+}
+.skill-steps .btn {
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.workspace-dialog .skill-where {
+  margin: 0 0 10px;
+  color: var(--foreground);
+}
+.workspace-dialog .skill-note {
+  font-size: 14px;
+  margin: 10px 0 0;
+}
+.skill-commands {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.copy-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+}
+.copy-line > code,
+.copy-line > span {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+.copy-line .btn {
+  flex-shrink: 0;
+  padding: 7px 11px;
+}
+.skill-try {
+  margin-top: 24px;
+}
+.skill-try strong {
+  display: block;
+  margin-bottom: 8px;
+}
+@media (max-width: 650px) {
+  .skill-steps li {
+    flex-wrap: wrap;
+  }
+  .skill-steps span {
+    flex-basis: calc(100% - 40px);
+  }
+  .skill-steps .btn {
+    margin-left: 40px;
+  }
+  .chat-skill {
+    margin: 10px 0 0;
+  }
+}

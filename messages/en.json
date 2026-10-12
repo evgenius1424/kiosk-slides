@@ -133,6 +133,49 @@
     "tooBig": "This presentation is too big to share by link. Download it and send the file instead.",
     "download": "Download"
   },
+  "Skill": {
+    "title": "Add Kiosk Slides to your AI",
+    "close": "Close",
+    "intro": "Set it up once. Then ask your AI for a presentation and get a file back that opens and presents in any browser.",
+    "places": "Where you use AI",
+    "copy": "Copy",
+    "copied": "Copied",
+    "tryTitle": "Then ask for a presentation",
+    "tryAsk": "Make a 6-slide presentation about our quarterly results",
+    "claude": {
+      "name": "Claude",
+      "download": "Download the Kiosk Slides file. Keep it zipped.",
+      "downloadButton": "Download",
+      "settings": "Open Claude settings, go to Capabilities, and make sure code execution is on.",
+      "settingsButton": "Open Claude settings",
+      "upload": "Under Skills, choose Upload skill and pick the file you downloaded. It works on the website and in the Claude apps."
+    },
+    "claudeCode": {
+      "name": "Claude Code",
+      "where": "Paste each line into Claude Code and press Enter.",
+      "note": "It updates itself when a new version comes out."
+    },
+    "codex": {
+      "name": "Codex",
+      "where": "Paste each line into your terminal and press Enter.",
+      "note": "It updates itself when a new version comes out."
+    },
+    "copilot": {
+      "name": "Copilot",
+      "where": "Paste the first two lines into your terminal and press Enter after each. In VS Code, run Chat: Install Plugin From Source and paste the last line.",
+      "note": "It updates itself when a new version comes out."
+    },
+    "gemini": {
+      "name": "Gemini CLI",
+      "where": "Paste this into your terminal and press Enter.",
+      "note": "Run it again to get a new version."
+    },
+    "other": {
+      "name": "Other apps",
+      "where": "For Cursor, OpenCode, Windsurf, Amp and others. Paste this into a terminal in your project folder and press Enter.",
+      "note": "Run the same line with update instead of add to get a new version."
+    }
+  },
   "Settings": {
     "title": "Presentation settings",
     "appearance": "Appearance",
@@ -230,7 +273,10 @@
         "rule": "A list, table, picture, chart or number. One per slide. AI adds these for you."
       }
     },
-    "showPrompt": "Show the prompt"
+    "showPrompt": "Show the prompt",
+    "skillTitle": "Make slides right inside your AI",
+    "skillBody": "Add Kiosk Slides to Claude or another AI once. Then just ask it for a presentation.",
+    "addSkill": "Add to your AI"
   },
   "Shortcuts": {
     "title": "Make yourself at home.",
@@ -331,7 +377,8 @@
       "copyPrompt": "Copy prompt",
       "runHere": "Chat with your ChatGPT plan right here",
       "privacy": "Your sign-in stays on your computer and never reaches this website.",
-      "then": "Then open <strong>{url}</strong> and choose Ask AI."
+      "then": "Then open <strong>{url}</strong> and choose Ask AI.",
+      "addSkill": "Or add Kiosk Slides to your AI"
     },
     "offline": {
       "title": "Ask AI needs a connection",

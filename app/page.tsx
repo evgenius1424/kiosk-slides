@@ -7,6 +7,10 @@ import { fontFace, fontFiles, fonts } from '@/lib/presentation'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 import { slideStyles } from '@/lib/slide-styles'
 
+const SKILL_INSTALL = process.env.SKILL_INSTALL
+  ? process.env.SKILL_INSTALL === 'on'
+  : process.env.VERCEL_ENV !== 'production'
+
 const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
@@ -34,7 +38,13 @@ export default async function Page() {
           .map(f => fontFace(f, `/fonts/${f.file}`))
           .join('') + slideStyles}
       </style>
-      <KioskWorkspace example={example} prompt={prompt} slidePrompt={slidePrompt} site={SITE_URL} />
+      <KioskWorkspace
+        example={example}
+        prompt={prompt}
+        slidePrompt={slidePrompt}
+        site={SITE_URL}
+        skillInstall={SKILL_INSTALL}
+      />
     </>
   )
 }

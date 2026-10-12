@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   ArrowUp,
+  Blocks,
   Check,
   Copy,
   ExternalLink,
@@ -43,6 +44,7 @@ export function PresentationChat({
   onPresentation,
   onOpen,
   onCopyPrompt,
+  onAddSkill,
   request,
   onRequestTaken,
 }: {
@@ -50,6 +52,7 @@ export function PresentationChat({
   onPresentation: (source: string, fresh: boolean) => string
   onOpen: () => void
   onCopyPrompt: () => void
+  onAddSkill?: () => void
   request?: string
   onRequestTaken: () => void
 }) {
@@ -224,7 +227,7 @@ export function PresentationChat({
   if (!status.available)
     return (
       <div className="chat-panel">
-        <RunLocally reason={status.reason} onCopyPrompt={onCopyPrompt} />
+        <RunLocally reason={status.reason} onCopyPrompt={onCopyPrompt} onAddSkill={onAddSkill} />
       </div>
     )
   if (!status.connected || !status.planUsage)
@@ -406,7 +409,15 @@ export function PresentationChat({
   )
 }
 
-function RunLocally({ reason, onCopyPrompt }: { reason: string; onCopyPrompt: () => void }) {
+function RunLocally({
+  reason,
+  onCopyPrompt,
+  onAddSkill,
+}: {
+  reason: string
+  onCopyPrompt: () => void
+  onAddSkill?: () => void
+}) {
   const t = useTranslations('Chat.local')
   return (
     <div className="chat-messages">
@@ -418,6 +429,12 @@ function RunLocally({ reason, onCopyPrompt }: { reason: string; onCopyPrompt: ()
           <Copy size={14} />
           {t('copyPrompt')}
         </button>
+        {onAddSkill && (
+          <button className="btn chat-skill" onClick={onAddSkill}>
+            <Blocks size={14} />
+            {t('addSkill')}
+          </button>
+        )}
         <details className="chat-local">
           <summary>
             <MonitorDown size={14} />
