@@ -11,6 +11,8 @@ const SKILL_INSTALL = process.env.SKILL_INSTALL
   ? process.env.SKILL_INSTALL === 'on'
   : process.env.VERCEL_ENV !== 'production'
 
+const SLIDE_AI = process.env.SLIDE_AI === 'on'
+
 const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
@@ -44,6 +46,7 @@ export default async function Page() {
         slidePrompt={slidePrompt}
         site={SITE_URL}
         skillInstall={SKILL_INSTALL}
+        slideAi={SLIDE_AI}
       />
     </>
   )

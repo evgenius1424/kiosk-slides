@@ -130,6 +130,8 @@ Open http://127.0.0.1:3000. Running it on your own computer is what turns on Ask
 
 The **Add to your AI** panel, which walks people through installing the skill, shows locally and on preview deployments. Set `SKILL_INSTALL=on` to show it in production, or `off` to hide it everywhere.
 
+The AI buttons under each slide (Shorter, Make it visual and the rest) are hidden for now. Set `SLIDE_AI=on` to show them.
+
 The presentation format is described in [FORMAT.md](FORMAT.md), with a full example in [public/example.md](public/example.md).
 
 ## Made by
