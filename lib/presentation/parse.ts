@@ -7,7 +7,7 @@ import { widgetComponents, type Widget } from './components'
 import { headingLength, parseHeading } from './heading'
 import { defaultLook, fontId, fonts, isScale, scales } from './look'
 import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from '../player'
-import { DEFAULT_TONE, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
+import { defaultTone, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
 import type { Presentation, MessageWidget, Slide } from './types'
@@ -91,7 +91,7 @@ export function removeSlide(source: string, index: number) {
 function parseFrontMatter(lines: string[]) {
   let title = UNTITLED
   let theme: Theme = 'room-dark'
-  let tone: string = DEFAULT_TONE
+  let tone = ''
   let transition: Transition = DEFAULT_TRANSITION
   let shareSafe = false
   let credit = true
@@ -115,7 +115,7 @@ function parseFrontMatter(lines: string[]) {
     const toneField = field('tone')
     if (toneField.value)
       tone =
-        toneColor(toneField.value) ??
+        toneColor(toneField.value, theme) ??
         failAt(toneField.line, `Unknown tone “${toneField.value}”. ${toneHint}`)
     const transitionField = field('transition')
     if (transitionField.value && isTransition(transitionField.value.toLowerCase()))
@@ -152,6 +152,7 @@ function parseFrontMatter(lines: string[]) {
     loop = !/loop:\s*false/.test(front)
     start = end + 1
   }
+  if (!tone) tone = defaultTone(theme)
   return { title, theme, tone, transition, shareSafe, credit, duration, loop, start, look }
 }
 

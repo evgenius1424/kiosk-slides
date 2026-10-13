@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { KioskWorkspace } from '@/components/kiosk-workspace'
-import { parsePresentation, setFrontMatter, tones } from '@/lib/presentation'
+import { parsePresentation, setFrontMatter } from '@/lib/presentation'
 import { DEFAULT_TRANSITION } from '@/lib/player'
 import messages from '@/messages/en.json'
 import { presentationHtml } from './presentation-html'
@@ -12,7 +12,7 @@ import { presentationHtml } from './presentation-html'
 const example = Object.entries({
   theme: 'room-light',
   font: 'figtree',
-  scale: 'kiosk',
+  scale: 'hero',
   brand: 'Acme',
 }).reduce(
   (source, [key, value]) => setFrontMatter(source, key, value),
@@ -59,7 +59,7 @@ describe('site preview and exported presentation', () => {
 
 async function exportedSlides() {
   const html = await presentationHtml(presentation, {
-    tone: tones[0].color,
+    tone: presentation.tone,
     transition: DEFAULT_TRANSITION,
     embedImage: async src => src,
     embedFont: async file => file,

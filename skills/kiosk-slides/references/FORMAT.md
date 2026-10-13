@@ -23,14 +23,14 @@ autoplay:
 
 - **Front matter** (optional) goes between `---` lines at the very top of the file:
   - `title:` is the presentation title (default `Untitled presentation`).
-  - `theme:` is `room-dark` or `room-light`.
-  - `tone:` is the background tone: `graphite` (default), `plum`, `wine`, `teal`, `bronze`, or a `#hex` color.
+  - `theme:` is `room-dark` (default), `room-light`, or `studio`, a true-black stage lit from above.
+  - `tone:` is the color of the background glow and highlighted heading words: `mono` (default, black and white), `violet`, `coral`, `teal`, `amber`, or a `#hex` color. Each named tone has its own shade for each theme, so it always reads well against that background.
   - `transition:` is `gentle` (default), `fade`, `slide`, or `none`.
   - `share-safe: true` swaps every transition for a quick flat fade that stays sharp over screen sharing. It is off by default.
   - `duration: Ns` is the autoplay time per slide in seconds. The default is 12, and it is clamped to 2–120.
   - `loop: false` stops autoplay at the end. Looping is on by default.
   - `font:` is `classic` (default, Arial), `inter`, `figtree`, `bricolage-grotesque`, `space-grotesk`, `archivo-expanded`, or `golos-text`. The font's name works too, like `Space Grotesk`. Every font also covers Russian and other Cyrillic text.
-  - `scale:` is `normal` (default), `large`, or `kiosk`. `large` and `kiosk` size every heading to its length, so a one-word slide fills the screen and a long one still fits, and `kiosk` also enlarges the body for reading from across a room.
+  - `scale:` is `normal` (default), `large`, or `hero`. `large` and `hero` size every heading to its length, so a one-word slide fills the screen and a long one still fits, and `hero` also enlarges the body and makes every heading, widget slides included, as large as the frame allows.
   - `brand:` is the word in the corner of every slide, at most 24 characters. The default is `kiosk`; `none` hides it.
   - `credit: false` drops the “Made with Kiosk Slides” line from the end of a downloaded presentation and from shared links. It never appears on a slide. It is on by default.
 - **Slides** are separated by a line containing only `---`. A `---` line inside a ```` ``` ```` code fence does not split slides.
@@ -219,7 +219,7 @@ The first line is the bold value (`**…**` or `__…__`). The caption is on the
 
 The parser accepts a slide with no settings comment and no widget, but the result looks unfinished: every such slide shows the same placeholder title and label, no footer, and a wall of headings. Treat these rules as strictly as the grammar above.
 
-- **Front matter.** Always set `title:`. Set `brand:` to the organization, product or event in one or two words when you know it. Set `tone:` only when the talk suggests a mood (`teal` calm, `wine` warm, `plum` creative, `bronze` classic), and leave `transition:` and `share-safe:` to the person presenting.
+- **Front matter.** Always set `title:`. Set `brand:` to the organization, product or event in one or two words when you know it. Set `tone:` only when the talk suggests a mood (`teal` calm, `coral` warm, `violet` creative, `amber` classic), and leave `transition:` and `share-safe:` to the person presenting.
 - **Every slide starts with a settings comment holding `title`, `label` and `footer`.** No exceptions, the first and last slides included.
   - `title` names the part of the talk in one to three words (`Problem`, `Plan`, `Results`), shown top left.
   - `label` says what this slide shows in two to four words (`Three steps`, `Before / after`), shown top right.

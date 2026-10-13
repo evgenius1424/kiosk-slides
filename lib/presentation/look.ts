@@ -1,6 +1,6 @@
 import type { Presentation, Slide } from './types'
 
-export const scales = ['normal', 'large', 'kiosk'] as const
+export const scales = ['normal', 'large', 'hero'] as const
 export type Scale = (typeof scales)[number]
 
 export type FontFile = { family: string; file: string; weights: string; script: Script }
@@ -109,7 +109,7 @@ const LATIN_LETTERS = /[a-z]/gi
 
 const boxes = {
   large: { width: 86, height: 35, lineHeight: 1.05, message: 9, widget: 6, body: 2.4 },
-  kiosk: { width: 92, height: 39, lineHeight: 1, message: 16, widget: 7, body: 2.7 },
+  hero: { width: 92, height: 39, lineHeight: 1, message: 16, widget: 11, body: 2.7 },
 }
 
 function fit(
