@@ -5,7 +5,7 @@ import { parseAnnotation, type Annotation } from './annotation'
 import { defaultChrome, parseChrome } from './chrome'
 import { widgetComponents, type Widget } from './components'
 import { headingLength, parseHeading } from './heading'
-import { defaultLook, fontId, fonts, scaleId, scales } from './look'
+import { defaultLook, fontId, fonts, isScale, scales } from './look'
 import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from '../player'
 import { defaultTone, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
 import { messages } from './components/shared'
@@ -141,10 +141,9 @@ function parseFrontMatter(lines: string[]) {
         fontId(font.value) ??
         failAt(font.line, `Unknown font “${font.value}”. Use ${fonts.map(f => f.id).join(', ')}.`)
     const scale = field('scale')
-    if (scale.value)
-      look.scale =
-        scaleId(scale.value) ??
-        failAt(scale.line, `Unknown scale “${scale.value}”. Use ${scales.join(', ')}.`)
+    if (isScale(scale.value)) look.scale = scale.value
+    else if (scale.value)
+      failAt(scale.line, `Unknown scale “${scale.value}”. Use ${scales.join(', ')}.`)
     const brand = field('brand')
     if (brand.value && brand.value.length > 24)
       failAt(brand.line, 'Keep the brand to 24 characters.')

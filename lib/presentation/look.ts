@@ -57,11 +57,8 @@ export const presentationLook = ({ font, scale, brand }: Presentation): Presenta
   brand,
 })
 
-export const scaleId = (value: string) => {
-  const key = value.trim().toLowerCase()
-  const scale = key === 'kiosk' ? 'hero' : key
-  return scales.includes(scale as Scale) ? (scale as Scale) : undefined
-}
+export const isScale = (value: string | undefined): value is Scale =>
+  scales.includes(value as Scale)
 export const findFont = (id: string) => fonts.find(f => f.id === id) ?? fonts[0]
 export const fontId = (value: string) =>
   fonts.find(f => f.id === value.trim().toLowerCase().replace(/\s+/g, '-'))?.id

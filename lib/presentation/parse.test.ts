@@ -88,12 +88,6 @@ describe('parsePresentation: presentation and message slides', () => {
     expect(tone('tone: teal', 'theme: studio')).toBe('#5fe3d6')
   })
 
-  it('still reads the earlier tone and scale names', () => {
-    const presentation = parsePresentation(md('---', 'tone: wine', 'scale: kiosk', '---', '# Hi'))
-    expect([presentation.tone, presentation.scale]).toEqual(['#ff8577', 'hero'])
-    expect(parsePresentation(md('---', 'tone: graphite', '---', '# Hi')).tone).toBe('#ffffff')
-  })
-
   it('reads the credit flag', () => {
     expect(parsePresentation('# Hi').credit).toBe(true)
     expect(parsePresentation(md('---', 'credit: false', '---', '# Hi')).credit).toBe(false)

@@ -22,7 +22,7 @@ export {
   fontId,
   fonts,
   headingSize,
-  scaleId,
+  isScale,
   scales,
   type PresentationLook,
   type Scale,

@@ -21,9 +21,8 @@ export const toneName = (color: string, theme: Theme) =>
 
 export const toneColor = (value: string, theme: Theme) => {
   const key = value.trim().toLowerCase()
-  const name = FORMER_TONES[key] ?? key
   return (
-    tones.find(t => t.name.toLowerCase() === name)?.colors[theme] ??
+    tones.find(t => t.name.toLowerCase() === key)?.colors[theme] ??
     (/^#[0-9a-f]{3,8}$/.test(key) ? value.trim() : undefined)
   )
 }
@@ -32,13 +31,6 @@ export const toneHint = `Use ${tones.map(t => t.name.toLowerCase()).join(', ')} 
 
 export const setPresentationTheme = (source: string, theme: Theme) =>
   setFrontMatter(source, 'theme', theme)
-
-const FORMER_TONES: Record<string, string> = {
-  graphite: 'mono',
-  plum: 'violet',
-  wine: 'coral',
-  bronze: 'amber',
-}
 
 function tone<Name extends string>(name: Name, dark: string, light: string, studio: string) {
   return { name, colors: { 'room-dark': dark, 'room-light': light, studio } }

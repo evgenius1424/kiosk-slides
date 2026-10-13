@@ -5,10 +5,10 @@ import {
   fontId,
   fonts,
   formatPresentation,
+  isScale,
   isTheme,
   parsePresentation,
   reviewPresentation,
-  scaleId,
   scales,
   setPresentationTheme,
   themes,
@@ -91,8 +91,8 @@ function withLook(presentation: Presentation): Presentation {
   const font = values.font ? fontId(values.font) : presentation.font
   if (!font)
     throw new Error(`Unknown font “${values.font}”. Use ${fonts.map(f => f.id).join(', ')}.`)
-  const scale = values.scale === undefined ? presentation.scale : scaleId(values.scale)
-  if (!scale) throw new Error(`Unknown scale “${values.scale}”. Use ${scales.join(', ')}.`)
+  const scale = values.scale ?? presentation.scale
+  if (!isScale(scale)) throw new Error(`Unknown scale “${scale}”. Use ${scales.join(', ')}.`)
   const brand =
     values.brand === undefined ? presentation.brand : values.brand === 'none' ? '' : values.brand
   const credit = presentation.credit && !values['no-credit']
