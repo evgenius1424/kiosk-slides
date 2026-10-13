@@ -146,12 +146,14 @@ export function KioskWorkspace({
   slidePrompt,
   site,
   skillInstall = false,
+  slideAi = false,
 }: {
   example: string
   prompt: string
   slidePrompt: string
   site: string
   skillInstall?: boolean
+  slideAi?: boolean
 }) {
   const t = useTranslations('Workspace')
   const ts = useTranslations('Settings')
@@ -1068,7 +1070,7 @@ export function KioskWorkspace({
                     <Expand size={16} />
                   </button>
                 </div>
-                {!shared && slide && (
+                {slideAi && !shared && slide && (
                   <SlideActionBar
                     disabled={!!error}
                     working={!!slideActions.working}
@@ -1361,11 +1363,15 @@ export function KioskWorkspace({
         {slideMenu && (
           <SlideActionMenu
             at={slideMenu}
-            onAction={(action, i) => {
-              if (slideActions.working) return
-              setIndex(i)
-              slideActions.run(action, i)
-            }}
+            onAction={
+              slideAi
+                ? (action, i) => {
+                    if (slideActions.working) return
+                    setIndex(i)
+                    slideActions.run(action, i)
+                  }
+                : undefined
+            }
             onAdd={addSlide}
             onDelete={slides.length > 1 ? deleteSlide : undefined}
             onClose={closeSlideMenu}

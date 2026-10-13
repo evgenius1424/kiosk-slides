@@ -156,7 +156,7 @@ export function SlideActionMenu({
   onClose,
 }: {
   at: { x: number; y: number; index: number }
-  onAction: (action: SlideAction, index: number) => void
+  onAction?: (action: SlideAction, index: number) => void
   onAdd: (index: number) => void
   onDelete?: (index: number) => void
   onClose: () => void
@@ -194,24 +194,28 @@ export function SlideActionMenu({
       aria-label={t('menu', { number: at.index + 1 })}
       style={{ left: at.x, top: at.y }}
     >
-      {SLIDE_ACTIONS.map(action => {
-        const Icon = ICONS[action]
-        return (
-          <button
-            key={action}
-            role="menuitem"
-            title={t(`actions.${action}.hint`)}
-            onClick={() => {
-              onClose()
-              onAction(action, at.index)
-            }}
-          >
-            <Icon size={14} />
-            {t(`actions.${action}.name`)}
-          </button>
-        )
-      })}
-      <hr />
+      {onAction && (
+        <>
+          {SLIDE_ACTIONS.map(action => {
+            const Icon = ICONS[action]
+            return (
+              <button
+                key={action}
+                role="menuitem"
+                title={t(`actions.${action}.hint`)}
+                onClick={() => {
+                  onClose()
+                  onAction(action, at.index)
+                }}
+              >
+                <Icon size={14} />
+                {t(`actions.${action}.name`)}
+              </button>
+            )
+          })}
+          <hr />
+        </>
+      )}
       <button
         role="menuitem"
         onClick={() => {
