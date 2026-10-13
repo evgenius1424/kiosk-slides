@@ -47,7 +47,8 @@ layout: split-left
 duration: 20s
 -->
 
-# Make your point **impossible to miss**
+# Make your point
+**impossible to miss**
 
 Big type. One idea. No visual clutter.
 ````
@@ -59,8 +60,8 @@ In order, a slide has:
    - `layout` is `auto` (default), `stacked`, or `split-left`.
    - `duration` overrides the presentation's autoplay time for this slide, written like `20s`.
    - Any other key is an error.
-2. **Exactly one `#` heading** of at most 115 characters. Wrap the key phrase in `**bold**` to highlight it. Headings may also use `*italic*`, `` `code` `` and `[links](https://...)`; nothing else, and the 115 characters count the visible text, not the markup. Other heading levels (`##` and deeper) are not supported.
-3. **Body paragraphs** (optional): plain paragraphs, with inline Markdown kept as written. All the body text together must be at most 320 characters.
+2. **Exactly one `#` heading** of at most 115 characters. Wrap the key phrase in `**bold**` to highlight it. Headings may also use `*italic*`, `` `code` `` and `[links](https://...)`; nothing else, and the 115 characters count the visible text, not the markup. Other heading levels (`##` and deeper) are not supported. To break the heading onto a new line, write the next part on the line directly under it, with no blank line between: that line stays part of the heading and starts a new line on the slide. Leave a blank line after the heading before the body.
+3. **Body paragraphs** (optional): plain paragraphs, with inline Markdown kept as written. A line break inside a paragraph stays a line break on the slide. All the body text together must be at most 320 characters.
 4. **At most one supporting widget** (optional). It can go before, between, or after the body paragraphs. A slide with no widget is a *message* slide.
 
 > **`-->` can't appear inside any HTML comment**, slide settings included. It closes the comment early. Write `->` or "to" instead (for example, `footer: Draft -> Slides`).
@@ -240,8 +241,8 @@ The parser accepts a slide with no settings comment and no widget, but the resul
   | Where to go next                | buttons                                 |
 
 - **Few message slides.** At most a third of the slides (two in a short presentation) are message slides, usually the opening and the closing. Never put two message slides in a row. A presentation of six or more slides uses at least four different widgets.
-- **Headlines state the point**, not the topic ("Short presentations **hold attention**", not "Attention span"), with the key phrase in `**bold**`. Write for the last row of the room: plain words, one idea per slide, and no body text the heading or widget already says.
-- **Tidy Markdown.** A blank line between blocks (except under an annotation), `-` for bullets, and table columns padded so the pipes line up.
+- **Headlines state the point**, not the topic ("Short presentations **hold attention**", not "Attention span"), with the key phrase in `**bold**`. When a short, punchy heading reads better in two parts, break it where you would pause. Write for the last row of the room: plain words, one idea per slide, and no body text the heading or widget already says.
+- **Tidy Markdown.** A blank line between blocks (except under an annotation, or a heading that continues on the next line), `-` for bullets, and table columns padded so the pipes line up.
 
 ### Check before you hand it over
 

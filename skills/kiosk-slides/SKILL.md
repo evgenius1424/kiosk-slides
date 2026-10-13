@@ -74,6 +74,7 @@ When you hand over the HTML, say how to present it:
 ## Rules that are easy to miss
 
 - Exactly one `#` heading per slide, at most 115 visible characters. No `##`.
+- A line directly under the heading, with no blank line between, continues the heading on a new line. Leave a blank line before the body.
 - Body text totals at most 320 characters per slide.
 - One widget per slide at most.
 - `-->` ends any HTML comment early. Write `->` or "to" inside comments.

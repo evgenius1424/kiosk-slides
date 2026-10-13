@@ -10,6 +10,7 @@ describe('formatPresentation', () => {
   it('aligns tables and keeps annotations directly above them', () => {
     const source = md(
       '# Results',
+      '',
       'Recall drops fast.',
       '<!-- chart: type=bar x=Slides y=Recall -->',
       '|Slides|Recall|',
@@ -75,6 +76,11 @@ describe('formatPresentation', () => {
         '',
       ),
     )
+  })
+
+  it('keeps a heading line break and the body lines as written', () => {
+    const source = md('# Ship it', '**today**', '', 'First line', 'second line', '')
+    expect(formatPresentation(source)).toBe(source)
   })
 
   it('leaves code untouched', () => {

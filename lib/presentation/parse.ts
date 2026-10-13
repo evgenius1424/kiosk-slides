@@ -1,4 +1,4 @@
-import type { Heading, Html, Node, RootContent } from 'mdast'
+import type { Heading, Html, Node, Paragraph, RootContent } from 'mdast'
 import { remark } from 'remark'
 import remarkGfm from 'remark-gfm'
 import { parseAnnotation, type Annotation } from './annotation'
@@ -223,7 +223,14 @@ function parseSlide(chunk: Chunk): Slide {
     )
   const headingNode = headings[0]
   const headingLine = lineOf(headingNode.position)
-  const heading = parseHeading(headingNode, message => fail(message, headingLine))
+  const next = nodes[nodes.indexOf(headingNode) + 1]
+  const continued =
+    next?.type === 'paragraph' &&
+    next.position?.start.line === (headingNode.position?.end.line ?? 0) + 1 &&
+    !next.children.some(c => c.type === 'image')
+      ? (next as Paragraph)
+      : undefined
+  const heading = parseHeading([headingNode, continued], message => fail(message, headingLine))
   if (headingLength(heading) > 115)
     fail('Shorten the headline to 115 characters or split the slide.', headingLine)
 
@@ -236,7 +243,9 @@ function parseSlide(chunk: Chunk): Slide {
 
   const body: string[] = []
   let widget: Widget | MessageWidget = { kind: 'message' }
-  const rest = nodes.filter(node => node !== headingNode && !(hasChrome && node === first))
+  const rest = nodes.filter(
+    node => node !== headingNode && node !== continued && !(hasChrome && node === first),
+  )
   for (let i = 0; i < rest.length; i++) {
     let node = rest[i]
     let line = lineOf(node.position)

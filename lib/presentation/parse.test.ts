@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   defaultTone,
+  headingText,
   parsePresentation,
   setPresentationTheme,
   setFrontMatter,
@@ -327,6 +328,26 @@ describe('parsePresentation: errors', () => {
 
   it('treats == as plain text', () => {
     expect(heading('# Make it ==count==')).toEqual([{ text: 'Make it ==count==' }])
+  })
+
+  it('keeps lines written directly under the heading as heading line breaks', () => {
+    const slide = parsePresentation(
+      md('# Ship', '**fast,**', 'ship often', '', 'Body one', 'body two'),
+    ).slides[0]
+    expect(slide.heading).toEqual([
+      { text: 'Ship' },
+      { text: '\n' },
+      { text: 'fast,', highlight: true },
+      { text: '\nship often' },
+    ])
+    expect(slide.body).toBe('Body one\nbody two')
+    expect(headingText(slide.heading)).toBe('Ship fast, ship often')
+  })
+
+  it('keeps an image directly under the heading as the image widget', () => {
+    const slide = parsePresentation(md('# Look', '![Chart](https://example.com/c.png)')).slides[0]
+    expect(slide.heading).toEqual([{ text: 'Look' }])
+    expect(slide.kind).toBe('image')
   })
 
   it('requires https heading links', () => {

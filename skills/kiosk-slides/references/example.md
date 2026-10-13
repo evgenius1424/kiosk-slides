@@ -13,7 +13,8 @@ footer: One point per slide, visible from the back of the room.
 layout: auto
 -->
 
-# Make your point **impossible to miss**
+# Make your point
+**impossible to miss**
 
 Big type. One idea. No visual clutter.
 
