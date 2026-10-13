@@ -28,14 +28,14 @@ Slides today are mostly seen through a video call or on a TV across a table. Kio
 
 - **Screen-share safe mode** turns every transition into a quick, flat fade that stays crisp when the picture is compressed. Press `S` while presenting.
 - **Calm transitions**: Gentle, Crossfade, Slide, or none at all.
-- **Big text sizes**, up to an extra large setting meant for reading from across the room.
+- **Big text sizes**, up to a hero setting where every heading fills the screen.
 - **Autoplay and looping**, so a presentation can run on its own on an unattended screen.
 
 ## What you get
 
 - **Ask AI.** Chat with ChatGPT using your own ChatGPT plan, and watch the slides appear. Sign-in runs on your own computer, so your account never touches a server.
 - **Use any AI.** Copy the ready-made prompt into Gemini, ChatGPT, Claude or anything else, then paste the slides it writes.
-- **Dark and light themes** with five quiet background tones: Graphite, Plum, Wine, Teal and Bronze.
+- **Dark, light and studio themes** in black and white, or with a Violet, Coral, Teal or Amber tone tuned to each theme.
 - **Fonts** including Inter, Figtree, Bricolage Grotesque, Space Grotesk, Archivo Expanded and Golos Text, each with Cyrillic letters.
 - **Your brand** in the corner of every slide, or nothing at all.
 - **Present anywhere**, including from a phone held sideways, with swipe and tap.

@@ -563,7 +563,10 @@ kbd {
   height: 30px;
   border: 1px solid #0003;
   border-radius: 50%;
-  color: #27272a;
+  color: #fff;
+}
+.color-choice svg {
+  mix-blend-mode: difference;
 }
 .color-choice.chosen {
   outline: 2px solid var(--foreground);
@@ -1146,6 +1149,9 @@ html:has(.is-presenting) {
 }
 html:has(.is-presenting .room-light) {
   background: #fafafa;
+}
+html:has(.is-presenting .studio) {
+  background: #000000;
 }
 @media (min-aspect-ratio: 16/9) {
   .is-presenting .canvas-slide {

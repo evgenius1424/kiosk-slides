@@ -5,11 +5,12 @@ import {
   fontId,
   fonts,
   formatPresentation,
-  isScale,
   isTheme,
   parsePresentation,
   reviewPresentation,
+  scaleId,
   scales,
+  setPresentationTheme,
   themes,
   toneColor,
   toneHint,
@@ -21,7 +22,7 @@ import { shareLink } from '@/lib/share'
 import { SITE_URL } from '@/lib/site'
 
 const usage =
-  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light] [--tone graphite|plum|wine|teal|bronze|#hex] [--font name] [--scale normal|large|kiosk] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--no-credit] [--no-link] [--check] [--format]'
+  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light|studio] [--tone mono|violet|coral|teal|amber|#hex] [--font name] [--scale normal|large|hero] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--no-credit] [--no-link] [--check] [--format]'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -52,16 +53,19 @@ async function main() {
   const input = positionals[0]
   if (!input) throw new Error(usage)
   const source = await readFile(input, 'utf8')
-  const presentation = withLook(parsePresentation(source))
+  if (values.theme !== undefined && !isTheme(values.theme))
+    throw new Error(`Unknown theme “${values.theme}”. Use ${themes.join(' or ')}.`)
+  const presentation = withLook(
+    parsePresentation(values.theme ? setPresentationTheme(source, values.theme) : source),
+  )
   if (values.format) await writeFile(input, formatPresentation(source))
   if (values.check) {
     console.log(summary(presentation))
     reviewPresentation(presentation).forEach(problem => console.log(`Warning: ${problem}`))
     return
   }
-  const theme = values.theme ?? presentation.theme
-  if (!isTheme(theme)) throw new Error(`Unknown theme “${theme}”. Use ${themes.join(' or ')}.`)
-  const tone = values.tone === undefined ? presentation.tone : toneColor(values.tone)
+  const theme = presentation.theme
+  const tone = values.tone === undefined ? presentation.tone : toneColor(values.tone, theme)
   if (!tone) throw new Error(`Unknown tone “${values.tone}”. ${toneHint}`)
   const transition = values['no-motion'] ? 'none' : (values.transition ?? presentation.transition)
   if (!isTransition(transition))
@@ -87,8 +91,8 @@ function withLook(presentation: Presentation): Presentation {
   const font = values.font ? fontId(values.font) : presentation.font
   if (!font)
     throw new Error(`Unknown font “${values.font}”. Use ${fonts.map(f => f.id).join(', ')}.`)
-  const scale = values.scale ?? presentation.scale
-  if (!isScale(scale)) throw new Error(`Unknown scale “${scale}”. Use ${scales.join(', ')}.`)
+  const scale = values.scale === undefined ? presentation.scale : scaleId(values.scale)
+  if (!scale) throw new Error(`Unknown scale “${values.scale}”. Use ${scales.join(', ')}.`)
   const brand =
     values.brand === undefined ? presentation.brand : values.brand === 'none' ? '' : values.brand
   const credit = presentation.credit && !values['no-credit']

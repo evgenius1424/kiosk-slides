@@ -1,6 +1,6 @@
 import type { Presentation, Slide } from './types'
 
-export const scales = ['normal', 'large', 'kiosk'] as const
+export const scales = ['normal', 'large', 'hero'] as const
 export type Scale = (typeof scales)[number]
 
 export type FontFile = { family: string; file: string; weights: string; script: Script }
@@ -57,8 +57,11 @@ export const presentationLook = ({ font, scale, brand }: Presentation): Presenta
   brand,
 })
 
-export const isScale = (value: string | undefined): value is Scale =>
-  scales.includes(value as Scale)
+export const scaleId = (value: string) => {
+  const key = value.trim().toLowerCase()
+  const scale = key === 'kiosk' ? 'hero' : key
+  return scales.includes(scale as Scale) ? (scale as Scale) : undefined
+}
 export const findFont = (id: string) => fonts.find(f => f.id === id) ?? fonts[0]
 export const fontId = (value: string) =>
   fonts.find(f => f.id === value.trim().toLowerCase().replace(/\s+/g, '-'))?.id
@@ -109,7 +112,7 @@ const LATIN_LETTERS = /[a-z]/gi
 
 const boxes = {
   large: { width: 86, height: 35, lineHeight: 1.05, message: 9, widget: 6, body: 2.4 },
-  kiosk: { width: 92, height: 39, lineHeight: 1, message: 16, widget: 7, body: 2.7 },
+  hero: { width: 92, height: 39, lineHeight: 1, message: 16, widget: 11, body: 2.7 },
 }
 
 function fit(

@@ -29,7 +29,7 @@ import {
 } from 'lucide-react'
 import {
   DEFAULT_BRAND,
-  DEFAULT_TONE,
+  defaultTone,
   presentationLook,
   fonts,
   formatPresentation,
@@ -40,6 +40,7 @@ import {
   slideLines,
   themes,
   tones,
+  toneName,
   type Scale,
   type Slide,
   type Theme,
@@ -111,7 +112,7 @@ const SHORTCUTS = [
   'tidy',
   'undo',
 ] as const
-const SCALES: Scale[] = ['normal', 'large', 'kiosk']
+const SCALES: Scale[] = ['normal', 'large', 'hero']
 const TOAST_MS = 2600
 const UNDO_MS = 8000
 
@@ -220,7 +221,7 @@ export function KioskWorkspace({
   const setTone = (color: string) =>
     setFront(
       'tone',
-      color === DEFAULT_TONE ? undefined : tones.find(t => t.color === color)?.name.toLowerCase(),
+      color === defaultTone(presentation.theme) ? undefined : toneName(color, presentation.theme),
     )
   const setTransition = (next: Transition) =>
     setFront('transition', next === DEFAULT_TRANSITION ? undefined : next)
@@ -1154,19 +1155,22 @@ export function KioskWorkspace({
             </div>
             <div className="setting-label">{ts('tone')}</div>
             <div className="color-options">
-              {tones.map(({ name, color }) => (
-                <button
-                  key={color}
-                  className={`color-choice ${accent === color ? 'chosen' : ''}`}
-                  style={{ background: color }}
-                  title={ts(`tones.${name}`)}
-                  aria-label={ts('toneOption', { name: ts(`tones.${name}`) })}
-                  aria-pressed={accent === color}
-                  onClick={() => setTone(color)}
-                >
-                  {accent === color && <Check size={14} />}
-                </button>
-              ))}
+              {tones.map(({ name, colors }) => {
+                const color = colors[presentation.theme]
+                return (
+                  <button
+                    key={name}
+                    className={`color-choice ${accent === color ? 'chosen' : ''}`}
+                    style={{ background: color }}
+                    title={ts(`tones.${name}`)}
+                    aria-label={ts('toneOption', { name: ts(`tones.${name}`) })}
+                    aria-pressed={accent === color}
+                    onClick={() => setTone(color)}
+                  >
+                    {accent === color && <Check size={14} />}
+                  </button>
+                )
+              })}
             </div>
             <p className="setting-help">{ts('toneHelp')}</p>
             <label className="field-label" htmlFor="font">

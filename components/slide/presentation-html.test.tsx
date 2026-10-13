@@ -37,10 +37,10 @@ describe('presentationHtml', () => {
 
   it('takes the tone, transition and screen-share safe flag from the front matter', async () => {
     const html = await presentationHtml(
-      parsePresentation('---\ntone: wine\ntransition: fade\nshare-safe: true\n---\n# Hi'),
+      parsePresentation('---\ntone: coral\ntransition: fade\nshare-safe: true\n---\n# Hi'),
       { embedImage: async src => src, embedFont: async file => file },
     )
-    expect(html).toContain('--slide-tone:#a16b7b')
+    expect(html).toContain('--slide-tone:#ff8577')
     expect(html).toContain('"transition":"fade","shareSafe":true')
   })
 

@@ -15,7 +15,7 @@ const SITE = 'https://kiosk-slides.vercel.app'
 const example = readFileSync(path.join(process.cwd(), 'public/example.md'), 'utf8')
 const cyrillic = `---
 theme: room-light
-tone: plum
+tone: violet
 transition: slide
 ---
 

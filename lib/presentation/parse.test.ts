@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  defaultTone,
   parsePresentation,
   setPresentationTheme,
   setFrontMatter,
@@ -32,7 +33,7 @@ describe('parsePresentation: presentation and message slides', () => {
     expect(presentation).toEqual({
       title: 'Demo presentation',
       theme: 'room-light',
-      tone: '#74747e',
+      tone: defaultTone('room-light'),
       transition: 'gentle',
       shareSafe: false,
       credit: true,
@@ -57,11 +58,11 @@ describe('parsePresentation: presentation and message slides', () => {
 
   it('reads the font, scale and brand', () => {
     const presentation = parsePresentation(
-      md('---', 'font: Archivo Expanded', 'scale: kiosk', 'brand: ZEOS', '---', '# Hi'),
+      md('---', 'font: Archivo Expanded', 'scale: hero', 'brand: ZEOS', '---', '# Hi'),
     )
     expect([presentation.font, presentation.scale, presentation.brand]).toEqual([
       'archivo-expanded',
-      'kiosk',
+      'hero',
       'ZEOS',
     ])
     expect(parsePresentation(md('---', 'brand: none', '---', '# Hi')).brand).toBe('')
@@ -69,14 +70,28 @@ describe('parsePresentation: presentation and message slides', () => {
 
   it('reads the tone, transition and screen-share safe flag', () => {
     const presentation = parsePresentation(
-      md('---', 'tone: Wine', 'transition: Slide', 'share-safe: true', '---', '# Hi'),
+      md('---', 'tone: Coral', 'transition: Slide', 'share-safe: true', '---', '# Hi'),
     )
     expect([presentation.tone, presentation.transition, presentation.shareSafe]).toEqual([
-      '#a16b7b',
+      '#ff8577',
       'slide',
       true,
     ])
     expect(parsePresentation(md('---', 'tone: #123abc', '---', '# Hi')).tone).toBe('#123abc')
+  })
+
+  it('pairs each tone and the black and white default with the theme', () => {
+    const tone = (...lines: string[]) => parsePresentation(md('---', ...lines, '---', '# Hi')).tone
+    expect(tone('theme: room-light')).toBe('#000000')
+    expect(tone('theme: studio')).toBe('#ffffff')
+    expect(tone('theme: room-light', 'tone: teal')).toBe('#0f7f76')
+    expect(tone('tone: teal', 'theme: studio')).toBe('#5fe3d6')
+  })
+
+  it('still reads the earlier tone and scale names', () => {
+    const presentation = parsePresentation(md('---', 'tone: wine', 'scale: kiosk', '---', '# Hi'))
+    expect([presentation.tone, presentation.scale]).toEqual(['#ff8577', 'hero'])
+    expect(parsePresentation(md('---', 'tone: graphite', '---', '# Hi')).tone).toBe('#ffffff')
   })
 
   it('reads the credit flag', () => {
@@ -450,7 +465,7 @@ describe('parsePresentation: errors', () => {
       /^Line 3: Unknown font “comic”\. Use classic, inter/,
     )
     expect(error(md('---', 'scale: huge', '---', '# Hi'))).toBe(
-      'Line 2: Unknown scale “huge”. Use normal, large, kiosk.',
+      'Line 2: Unknown scale “huge”. Use normal, large, hero.',
     )
     expect(error(md('---', `brand: ${'x'.repeat(25)}`, '---', '# Hi'))).toBe(
       'Line 2: Keep the brand to 24 characters.',
@@ -459,7 +474,7 @@ describe('parsePresentation: errors', () => {
 
   it('rejects an unknown tone, transition or share-safe value on its front-matter line', () => {
     expect(error(md('---', 'title: T', 'tone: neon', '---', '# Hi'))).toBe(
-      'Line 3: Unknown tone “neon”. Use graphite, plum, wine, teal, bronze or a #hex color.',
+      'Line 3: Unknown tone “neon”. Use mono, violet, coral, teal, amber or a #hex color.',
     )
     expect(error(md('---', 'transition: spin', '---', '# Hi'))).toBe(
       'Line 2: Unknown transition “spin”. Use gentle, fade, slide, none.',
@@ -471,7 +486,7 @@ describe('parsePresentation: errors', () => {
 
   it('rejects an unknown theme on its front-matter line', () => {
     expect(error(md('---', 'title: T', 'theme: neon', '---', '# Hi'))).toBe(
-      'Line 3: Unknown theme “neon”. Use room-dark or room-light.',
+      'Line 3: Unknown theme “neon”. Use room-dark or room-light or studio.',
     )
   })
 })
@@ -923,7 +938,7 @@ describe('setPresentationTheme', () => {
 
 describe('setFrontMatter', () => {
   it('removes a key when the value is undefined', () => {
-    expect(setFrontMatter(md('---', 'title: T', 'scale: kiosk', '---', '# Hi'), 'scale')).toBe(
+    expect(setFrontMatter(md('---', 'title: T', 'scale: hero', '---', '# Hi'), 'scale')).toBe(
       md('---', 'title: T', '---', '# Hi'),
     )
     expect(setFrontMatter(md('# Hi'), 'scale')).toBe('# Hi')
@@ -951,8 +966,10 @@ describe('setFrontMatter', () => {
 
   it('keeps settings apart between presentations', () => {
     const teal = setFrontMatter(md('---', 'title: A', '---', '# Hi'), 'tone', 'teal')
-    expect(parsePresentation(teal).tone).toBe('#669a98')
-    expect(parsePresentation(md('---', 'title: B', '---', '# Hi')).tone).toBe('#74747e')
+    expect(parsePresentation(teal).tone).toBe('#4fd1c5')
+    expect(parsePresentation(md('---', 'title: B', '---', '# Hi')).tone).toBe(
+      defaultTone('room-dark'),
+    )
   })
 })
 

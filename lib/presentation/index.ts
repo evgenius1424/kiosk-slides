@@ -22,18 +22,19 @@ export {
   fontId,
   fonts,
   headingSize,
-  isScale,
+  scaleId,
   scales,
   type PresentationLook,
   type Scale,
 } from './look'
 export {
-  DEFAULT_TONE,
+  defaultTone,
   isTheme,
   setPresentationTheme,
   themes,
   toneColor,
   toneHint,
+  toneName,
   tones,
   type Theme,
 } from './theme'
