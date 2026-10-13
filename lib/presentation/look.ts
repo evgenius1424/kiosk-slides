@@ -92,7 +92,8 @@ export function headingSize(
     )
   }
   const width = slide.kind === 'code' ? box.width * 0.48 : box.width
-  return fit(text, charWidth, width, box.widget, 5, lines => lines <= 2)
+  const most = Math.max(2, text.split('\n').length)
+  return fit(text, charWidth, width, box.widget, 5, lines => lines <= most)
 }
 
 type Script = 'latin' | 'cyrillic'

@@ -1,3 +1,4 @@
+import { headingText } from './presentation/heading'
 import type { Slide } from './presentation/types'
 
 export const transitions = ['gentle', 'fade', 'slide', 'none'] as const
@@ -73,7 +74,7 @@ export function slideHash(index: number) {
 }
 
 export function slideTitle(slide: Slide) {
-  return slide.title || slide.heading.map(part => part.text).join('')
+  return slide.title || headingText(slide.heading)
 }
 
 export function slideLabel(slide: Slide, index: number, count: number) {

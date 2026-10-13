@@ -5,6 +5,7 @@ import {
   fontId,
   fonts,
   formatPresentation,
+  headingText,
   isScale,
   isTheme,
   parsePresentation,
@@ -109,8 +110,7 @@ function summary(presentation: Presentation) {
   return [
     head,
     ...presentation.slides.map(
-      (s, i) =>
-        `${String(i + 1).padStart(2, '0')} ${s.kind.padEnd(12)} ${s.heading.map(p => p.text).join('')}`,
+      (s, i) => `${String(i + 1).padStart(2, '0')} ${s.kind.padEnd(12)} ${headingText(s.heading)}`,
     ),
   ].join('\n')
 }

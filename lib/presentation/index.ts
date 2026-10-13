@@ -10,7 +10,7 @@ export {
 export { formatPresentation } from './format'
 export { reviewPresentation } from './review'
 export { setFrontMatter } from './front-matter'
-export type { HeadingPart } from './heading'
+export { headingText, type HeadingPart } from './heading'
 export {
   DEFAULT_BRAND,
   presentationLook,

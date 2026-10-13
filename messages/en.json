@@ -258,7 +258,7 @@
       },
       "heading": {
         "term": "# Heading",
-        "rule": "The big line on each slide. One per slide, kept short."
+        "rule": "The big line on each slide. One per slide, kept short. Press Enter to carry it onto a second line."
       },
       "highlight": {
         "term": "**words**",
@@ -266,7 +266,7 @@
       },
       "text": {
         "term": "Text",
-        "rule": "A sentence or two under the heading."
+        "rule": "A sentence or two under the heading, after an empty line."
       },
       "extras": {
         "term": "Extras",

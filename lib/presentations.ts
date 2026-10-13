@@ -1,4 +1,4 @@
-import { formatPresentation, parsePresentation, UNTITLED } from './presentation'
+import { formatPresentation, headingText, parsePresentation, UNTITLED } from './presentation'
 
 export type SavedPresentation = {
   id: string
@@ -63,10 +63,7 @@ export function presentationName(source: string) {
   try {
     const presentation = parsePresentation(source)
     if (presentation.title !== UNTITLED) return presentation.title.trim()
-    return presentation.slides[0].heading
-      .map(part => part.text)
-      .join('')
-      .trim()
+    return headingText(presentation.slides[0].heading).trim()
   } catch {
     return ''
   }

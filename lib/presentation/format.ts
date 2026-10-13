@@ -19,6 +19,7 @@ export function formatPresentation(source: string) {
 const fenceStart = /^\s{0,3}(```|~~~)/
 const delimiterRow = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/
 const thematicBreak = /^\s*([*_-])(\s*\1){2,}\s*$/
+const startsBlock = /^\s*(<!--|```|~~~|\||#|[-*+]\s|\d+[.)]\s|!\[)/
 
 function format(source: string) {
   const lines = source.split('\n').map(l => l.replace(/\s+$/, ''))
@@ -71,7 +72,7 @@ function formatSlide(lines: string[]) {
     else if (/^\s{0,3}#{1,6}(\s|$)/.test(line)) {
       if (out.length && !out[out.length - 1].includes('-->')) blank()
       out.push(line.trim())
-      if (lines[i + 1]?.trim()) out.push('')
+      if (startsBlock.test(lines[i + 1] ?? '')) out.push('')
     } else if (line.includes('|') && delimiterRow.test(lines[i + 1] ?? '')) {
       let end = i + 2
       while (end < lines.length && lines[end].includes('|')) end++
