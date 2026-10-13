@@ -316,6 +316,10 @@
       "undo": {
         "name": "Undo the last AI change or paste",
         "keys": "Ctrl / ⌘ Z"
+      },
+      "deleteSlide": {
+        "name": "Delete the selected slide in the slide list",
+        "keys": "Delete / ⌫"
       }
     },
     "note": "Scroll over the canvas to move one slide at a time. Click the presentation or navigate to pause autoplay. Presentations are saved in this browser; switch or create them from the menu at the top.",

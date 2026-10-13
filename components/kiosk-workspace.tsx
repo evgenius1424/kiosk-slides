@@ -110,6 +110,7 @@ const SHORTCUTS = [
   'ends',
   'tidy',
   'undo',
+  'deleteSlide',
 ] as const
 const SCALES: Scale[] = ['normal', 'large', 'kiosk']
 const TOAST_MS = 2600
@@ -292,8 +293,13 @@ export function KioskWorkspace({
     remember(current.id, source)
     live.replace(removeSlide(source, i))
     setPlaying(false)
-    setIndex(Math.min(i, slides.length - 2))
+    const next = Math.min(i, slides.length - 2)
+    setIndex(next)
     notice(t('toast.slideDeleted', { number: i + 1 }), undoAction)
+    if (document.activeElement?.closest('.slide-list'))
+      requestAnimationFrame(() =>
+        document.querySelectorAll<HTMLElement>('.slide-nav')[next]?.focus({ preventScroll: true }),
+      )
   }
   const slideActions = useSlideActions({
     prompt: slidePrompt,
@@ -316,7 +322,8 @@ export function KioskWorkspace({
   const select = (i: number) => {
     setPlaying(false)
     setIndex(i)
-    if (tab === 'markdown' && textareaRef.current) selectSlide(textareaRef.current, source, i)
+    if (tab === 'markdown' && textareaRef.current)
+      selectSlide(textareaRef.current, source, i, false)
   }
   const focusSlide = (text: string, i: number) =>
     requestAnimationFrame(() => {
@@ -899,7 +906,10 @@ export function KioskWorkspace({
               <button
                 key={i}
                 className={`slide-nav ${index === i ? 'selected' : ''} ${slideActions.working?.index === i ? 'is-changing' : ''}`}
-                onClick={() => select(i)}
+                onClick={e => {
+                  e.currentTarget.focus({ preventScroll: true })
+                  select(i)
+                }}
                 onKeyDown={e => {
                   if (shared || error || (e.key !== 'Delete' && e.key !== 'Backspace')) return
                   e.preventDefault()
