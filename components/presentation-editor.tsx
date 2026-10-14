@@ -34,10 +34,15 @@ export function useLiveSource(initial: string) {
   return { ...parsed, source, type: setSource, replace, load }
 }
 
-export function selectSlide(textarea: HTMLTextAreaElement, source: string, index: number) {
+export function selectSlide(
+  textarea: HTMLTextAreaElement,
+  source: string,
+  index: number,
+  focus = true,
+) {
   const line = slideLines(source)[index]
   if (!line) return
-  selectLine(textarea, source, line, false)
+  selectLine(textarea, source, line, false, focus)
   const lines = source.split('\n')
   const separator = lines.slice(0, line - 1).findLastIndex(l => l.trim() === '---') + 1
   textarea.scrollTop = index && separator ? lineTop(textarea, lines, separator) : 0
@@ -140,11 +145,17 @@ function errorLine(error: string) {
   return Number(error.match(/^Line (\d+):/)?.[1] ?? 0)
 }
 
-function selectLine(textarea: HTMLTextAreaElement, source: string, line: number, whole = true) {
+function selectLine(
+  textarea: HTMLTextAreaElement,
+  source: string,
+  line: number,
+  whole = true,
+  focus = true,
+) {
   const lines = source.split('\n')
   const start = lines.slice(0, line - 1).reduce((sum, l) => sum + l.length + 1, 0)
   const end = whole ? start + (lines[line - 1]?.length ?? 0) : start
-  textarea.focus()
+  if (focus) textarea.focus()
   textarea.setSelectionRange(start, end)
   const height = parseFloat(getComputedStyle(textarea).lineHeight) || 20
   textarea.scrollTop = Math.max(0, (line - 1) * height - textarea.clientHeight / 3)
