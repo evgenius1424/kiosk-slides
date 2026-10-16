@@ -6,8 +6,13 @@ describe('imagePdf', () => {
     const jpeg = new Uint8Array([0xff, 0xd8, 1, 2, 3, 0xff, 0xd9])
     const blob = imagePdf(
       [
-        { jpeg, width: 3840, height: 2160 },
-        { jpeg, width: 3840, height: 2160 },
+        { jpeg, width: 3840, height: 2160, links: [] },
+        {
+          jpeg,
+          width: 3840,
+          height: 2160,
+          links: [{ url: 'https://example.com/a(b)', x: 0.1, y: 0.2, width: 0.3, height: 0.1 }],
+        },
       ],
       [960, 540],
       'Слайды',
@@ -18,6 +23,10 @@ describe('imagePdf', () => {
     expect(text).toContain('/Count 2')
     expect(text.match(/\/MediaBox \[0 0 960 540\]/g)).toHaveLength(2)
     expect(text).toContain('/Title <FEFF0421043B043004390434044B>')
+    expect(text.match(/\/Annots \[/g)).toHaveLength(1)
+    expect(text).toContain(
+      '/Subtype /Link /Rect [96 378 384 432] /Border [0 0 0] /H /N /A << /S /URI /URI (https://example.com/a\\(b\\)) >>',
+    )
     const xref = Number(/startxref\n(\d+)/.exec(text)![1])
     expect(text.slice(xref, xref + 4)).toBe('xref')
     const offsets = [...text.slice(xref).matchAll(/(\d{10}) 00000 n/g)].map(m => Number(m[1]))
