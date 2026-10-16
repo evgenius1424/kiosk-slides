@@ -14,8 +14,10 @@ const chrome: SlideChrome = {
   heading: [{ text: 'Make it ' }, { text: 'count', highlight: true }],
   body: 'Body text.',
 }
-const view = (slide: Slide) =>
-  render(<SlideView slide={slide} />).container.querySelector('article')!
+const view = (slide: Slide, accent?: string, theme?: string) =>
+  render(<SlideView slide={slide} accent={accent} theme={theme} />).container.querySelector(
+    'article',
+  )!
 
 describe('SlideView', () => {
   it('renders the chrome, highlighted heading, and body of a message slide', () => {
@@ -25,6 +27,17 @@ describe('SlideView', () => {
     expect(article.querySelector('.slide-body')?.textContent).toBe('Body text.')
     expect(article.querySelector('.slide-meta')?.textContent).toContain('Title')
     expect(article.querySelector('.slide-footer')?.textContent).toContain('Footer')
+  })
+
+  it.each([
+    ['room-dark', '#ffffff', true],
+    ['room-light', '#000000', true],
+    ['studio', '#ffffff', true],
+    ['room-dark', '#a594ff', false],
+    ['room-light', '#ffffff', false],
+  ])('marks %s slides with the %s tone as Mono: %s', (theme, accent, mono) => {
+    const article = view({ ...chrome, kind: 'message' }, accent, theme)
+    expect(article.classList.contains('tone-mono')).toBe(mono)
   })
 
   it('renders italic, code and links in the heading', () => {

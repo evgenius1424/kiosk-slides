@@ -3,6 +3,7 @@ import { slideStyles } from '@/lib/slide-styles'
 import { themes, tones, type Theme } from './theme'
 
 const LARGE_TEXT = 3
+const STRONG = 7
 
 describe('tones', () => {
   it.each(themes)('stand out at 3:1 as heading highlight and accent on the %s theme', theme => {
@@ -18,6 +19,20 @@ describe('tones', () => {
     })
     expect(ratios.filter(r => r.ratio < LARGE_TEXT)).toEqual([])
   })
+
+  it.each(themes)('reverse the Mono heading highlight onto a solid band on the %s theme', theme => {
+    const { value, surfaces } = themeColors(theme)
+    const rule = /\.slide\.tone-mono h2 strong\{([^}]*)\}/.exec(slideStyles)![1]
+    const resolve = (property: string) =>
+      rgb(value(new RegExp(`(?:^|;)${property}:var\\(--slide-([\\w-]+)\\)`).exec(rule)![1]))
+    const [ink, field, heading] = [resolve('color'), resolve('background'), rgb(value('text'))]
+    expect(contrast(ink, field)).toBeGreaterThanOrEqual(STRONG)
+    expect(contrast(field, surfaces[0])).toBeGreaterThanOrEqual(STRONG)
+    expect(contrast(heading, surfaces[0])).toBeGreaterThanOrEqual(STRONG)
+    expect(Math.sign(luminance(ink) - luminance(field))).toBe(
+      Math.sign(luminance(surfaces[0]) - luminance(heading)),
+    )
+  })
 })
 
 type Rgb = [number, number, number]
@@ -32,6 +47,7 @@ function themeColors(theme: Theme) {
   return {
     mix: { with: rgb(other), amount: Number(amount) / 100 },
     surfaces: [rgb(value('bg')), rgb(value('surface'))],
+    value,
   }
 }
 

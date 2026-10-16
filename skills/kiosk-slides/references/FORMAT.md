@@ -24,7 +24,7 @@ autoplay:
 - **Front matter** (optional) goes between `---` lines at the very top of the file:
   - `title:` is the presentation title (default `Untitled presentation`).
   - `theme:` is `room-dark` (default), `room-light`, or `studio`, a true-black stage lit from above.
-  - `tone:` is the color of the background glow and highlighted heading words: `mono` (default, black and white), `violet`, `coral`, `teal`, `amber`, or a `#hex` color. Each named tone has its own shade for each theme, so it always reads well against that background.
+  - `tone:` is the color of the background glow and highlighted heading words: `mono` (default, black and white, with highlighted words reversed on a solid band), `violet`, `coral`, `teal`, `amber`, or a `#hex` color. Each named tone has its own shade for each theme, so it always reads well against that background.
   - `transition:` is `gentle` (default), `fade`, `slide`, or `none`.
   - `share-safe: true` swaps every transition for a quick flat fade that stays sharp over screen sharing. It is off by default.
   - `duration: Ns` is the autoplay time per slide in seconds. The default is 12, and it is clamped to 2–120.

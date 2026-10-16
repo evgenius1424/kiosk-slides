@@ -7,6 +7,8 @@ import {
   type PresentationLook,
   type HeadingPart,
   type Slide,
+  type Theme,
+  toneName,
 } from '@/lib/presentation'
 import { widgets } from './widgets'
 
@@ -52,7 +54,7 @@ export function SlideView({
   } as React.CSSProperties
   return (
     <article
-      className={`slide ${theme} kind-${slide.kind} scale-${look.scale} ${miniature ? 'miniature' : ''}`}
+      className={`slide ${theme} ${toneName(accent, theme as Theme) === 'mono' ? 'tone-mono ' : ''}kind-${slide.kind} scale-${look.scale} ${miniature ? 'miniature' : ''}`}
       style={style}
     >
       <header className="slide-meta">

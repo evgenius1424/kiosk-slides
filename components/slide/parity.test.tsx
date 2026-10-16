@@ -54,6 +54,9 @@ describe('site preview and exported presentation', () => {
     expect(exported).toHaveLength(presentation.slides.length)
     expect(preview).toBe(exported[0])
     expect(thumbnails).toEqual(exported)
+    expect(exported.filter(slide => /tone-mono[^]*<h2>[^]*<strong>/.test(slide))).not.toHaveLength(
+      0,
+    )
   })
 })
 
