@@ -1,4 +1,6 @@
-export type PdfPage = { jpeg: Uint8Array; width: number; height: number }
+export type PdfLink = { url: string; x: number; y: number; width: number; height: number }
+
+export type PdfPage = { jpeg: Uint8Array; width: number; height: number; links: PdfLink[] }
 
 export function imagePdf(pages: PdfPage[], size: [number, number], title: string): Blob {
   const parts: Uint8Array[] = []
@@ -20,7 +22,12 @@ export function imagePdf(pages: PdfPage[], size: [number, number], title: string
     write('endobj\n')
   }
   const [width, height] = size
-  const pageIds = pages.map((_, i) => 4 + i * 3)
+  let nextId = 4
+  const pageIds = pages.map(page => {
+    const id = nextId
+    nextId += 3 + page.links.length
+    return id
+  })
   write(HEADER)
   object(1, '<< /Type /Catalog /Pages 2 0 R >>')
   object(
@@ -31,9 +38,13 @@ export function imagePdf(pages: PdfPage[], size: [number, number], title: string
   pages.forEach((page, i) => {
     const id = pageIds[i]
     const content = encoder.encode(`q ${width} 0 0 ${height} 0 0 cm /Slide Do Q`)
+    const linkIds = page.links.map((_, j) => id + 3 + j)
+    const annots = linkIds.length
+      ? ` /Annots [${linkIds.map(linkId => `${linkId} 0 R`).join(' ')}]`
+      : ''
     object(
       id,
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /XObject << /Slide ${id + 2} 0 R >> >> /Contents ${id + 1} 0 R >>`,
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /XObject << /Slide ${id + 2} 0 R >> >> /Contents ${id + 1} 0 R${annots} >>`,
     )
     object(id + 1, `<< /Length ${content.length} >>`, content)
     object(
@@ -41,6 +52,7 @@ export function imagePdf(pages: PdfPage[], size: [number, number], title: string
       `<< /Type /XObject /Subtype /Image /Width ${page.width} /Height ${page.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${page.jpeg.length} >>`,
       page.jpeg,
     )
+    page.links.forEach((link, j) => object(linkIds[j], linkAnnotation(link, width, height)))
   })
   const xref = length
   const count = offsets.length
@@ -61,4 +73,17 @@ function utf16Hex(text: string) {
   let hex = 'FEFF'
   for (let i = 0; i < text.length; i++) hex += text.charCodeAt(i).toString(16).padStart(4, '0')
   return hex.toUpperCase()
+}
+
+function linkAnnotation(link: PdfLink, width: number, height: number) {
+  const rect = [
+    link.x * width,
+    (1 - link.y - link.height) * height,
+    (link.x + link.width) * width,
+    (1 - link.y) * height,
+  ]
+    .map(n => Number(n.toFixed(2)))
+    .join(' ')
+  const uri = link.url.replace(/[\\()]/g, '\\$&')
+  return `<< /Type /Annot /Subtype /Link /Rect [${rect}] /Border [0 0 0] /H /N /A << /S /URI /URI (${uri}) >> >>`
 }
