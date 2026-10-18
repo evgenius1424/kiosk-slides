@@ -1,6 +1,6 @@
 # Issue tracker: Local Markdown
 
-Issues and specs for this repo live as markdown files in `.scratch/`.
+Issues and specs for this repo live as markdown files in `.scratch/`. They are working notes, not documentation, and may be stale once the work ships; don't maintain them.
 
 ## Conventions
 
