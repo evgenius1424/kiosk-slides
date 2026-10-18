@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   ArrowUp,
@@ -84,12 +84,13 @@ export function PresentationChat({
       else setStatus({ available: false, reason: errorText(err, t) })
     }
   }, [t])
+  const openFromSignIn = useEffectEvent(onOpen)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('chatgpt_error')) setNotice(params.get('chatgpt_error')!)
     if (params.get('chatgpt') === 'connected' && !storage(WELCOME_KEY)) setWelcome(true)
     if (params.has('chatgpt') || params.has('chatgpt_error')) {
-      onOpen()
+      openFromSignIn()
       params.delete('chatgpt')
       params.delete('chatgpt_error')
       window.history.replaceState(

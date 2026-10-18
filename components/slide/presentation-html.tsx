@@ -6,6 +6,7 @@ import {
   hasCyrillic,
   type Presentation,
   type Theme,
+  type Transition,
 } from '@/lib/presentation'
 import { slideStyles } from '@/lib/slide-styles'
 import {
@@ -18,7 +19,6 @@ import {
   WHEEL,
   slideLabel,
   slideSeconds,
-  type Transition,
 } from '@/lib/player'
 import { SlideView } from '.'
 
