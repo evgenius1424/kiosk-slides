@@ -10,7 +10,6 @@ const chrome: SlideChrome = {
   title: 'Title',
   label: 'Label',
   footer: 'Footer',
-  layout: 'auto',
   heading: [{ text: 'Make it ' }, { text: 'count', highlight: true }],
   body: 'Body text.',
 }
