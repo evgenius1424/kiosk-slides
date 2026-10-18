@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# 5,000 tokens × 4 bytes/token
+MAX_BYTES=$((5000 * 4))
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+[[ -z "$STAGED" ]] && exit 0
+
+OVERSIZED=()
+
+while IFS= read -r file; do
+  # Skip lockfiles and generated files (not authored by agents)
+  case "$file" in
+    pnpm-lock.yaml | package-lock.json | yarn.lock | *.lock) continue ;;
+    next-env.d.ts | *.tsbuildinfo)                           continue ;;
+    skills/kiosk-slides/scripts/* \
+    | skills/kiosk-slides/references/* \
+    | skills/kiosk-slides/assets/*)                          continue ;;
+    public/fonts/*)                                          continue ;;
+  esac
+
+  # Skip binary files (git numstat prints - for binary line counts)
+  if git diff --cached --numstat -- "$file" | grep -q $'^-\t-\t'; then
+    continue
+  fi
+
+  SIZE=$(git cat-file -s ":$file" 2>/dev/null || echo 0)
+
+  if (( SIZE > MAX_BYTES )); then
+    TOKENS=$(( SIZE / 4 ))
+    OVERSIZED+=("  $file  ($TOKENS tokens, limit 5,000)")
+  fi
+
+done <<< "$STAGED"
+
+[[ ${#OVERSIZED[@]} -eq 0 ]] && exit 0
+
+echo ""
+echo "Pre-commit: the following staged files exceed 5,000 tokens (tokens ≈ bytes ÷ 4):"
+echo ""
+for entry in "${OVERSIZED[@]}"; do
+  echo "$entry"
+done
+echo ""
+echo "How to split a large file:"
+echo "  1. Find a logical boundary: public API vs. helpers, one feature per file,"
+echo "     types separated from implementation, or a large constant table on its own."
+echo "  2. Move each section to a new file with a focused name"
+echo "     (e.g. foo-utils.ts, foo-types.ts, foo-constants.ts)."
+echo "  3. Update imports in the original file and anywhere else that referenced"
+echo "     the moved symbols."
+echo "  4. Stage the new files alongside the updated original, then commit."
+echo ""
+echo "Target: one clear responsibility per file, under ~20 KB (~5,000 tokens)."
+echo ""
+exit 1
