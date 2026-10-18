@@ -1,9 +1,8 @@
 ---
 title: Kiosk Slides — example presentation
 theme: room-dark
-autoplay:
-  duration: 12s
-  loop: true
+duration: 12s
+loop: true
 ---
 
 <!--

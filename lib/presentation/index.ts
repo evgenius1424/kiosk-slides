@@ -11,6 +11,7 @@ export { formatPresentation } from './format'
 export { reviewPresentation } from './review'
 export { setFrontMatter } from './front-matter'
 export { headingText, type HeadingPart } from './heading'
+export { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'
 export {
   DEFAULT_BRAND,
   presentationLook,
