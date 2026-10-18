@@ -15,5 +15,3 @@ next-env.d.ts
 # Editor settings
 .idea/
 
-# Local issue tracker (specs and tickets)
-.scratch/

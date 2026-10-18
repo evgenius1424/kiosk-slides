@@ -43,7 +43,7 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `messages/en.json`      | Every UI string, read through next-intl                                                |
 | `skills/`               | The agent skill; its `scripts/`, `references/` and `assets/` are generated             |
 | `.claude-plugin/`       | Plugin and marketplace manifests that publish the skill                                |
-| `.scratch/`             | Local, gitignored specs and issues as Markdown (see Agent skills below)                |
+| `.scratch/`             | Working specs and issues as Markdown, may be stale (see Agent skills below)            |
 
 ## Rendering architecture
 
@@ -88,7 +88,7 @@ Everything else is a thin adapter: `app/` and `components/workspace/` for the si
 
 ### Issue tracker
 
-Local markdown: issues and specs live as files under `.scratch/<feature>/`, which is gitignored, so they stay on your machine. See `docs/agents/issue-tracker.md`.
+Local markdown: issues and specs live as files under `.scratch/<feature>/` in this repo. See `docs/agents/issue-tracker.md`. They are working notes from when each feature was planned and are not kept up to date: don't treat them as documentation or update them after the work ships. The code, README.md and FORMAT.md are the source of truth.
 
 ### Triage labels
 
