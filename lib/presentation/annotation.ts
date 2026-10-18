@@ -1,7 +1,7 @@
 /** A block annotation: `<!-- type -->` or `<!-- type: key=value key=value -->`, on the line directly above a block. */
 export type Annotation = { type: string; args: Record<string, string> }
 
-const settingKeys = ['title', 'label', 'footer', 'layout', 'duration']
+const settingKeys = ['title', 'label', 'footer', 'duration']
 
 /**
  * Parse one annotation comment. When `known` is given, an unknown type is rejected

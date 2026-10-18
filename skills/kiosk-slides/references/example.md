@@ -9,7 +9,6 @@ loop: true
 title: Opening
 label: Core concept
 footer: One point per slide, visible from the back of the room.
-layout: auto
 -->
 
 # Make your point
@@ -37,7 +36,6 @@ footer: Describe your talk. Review the slides. Present anywhere.
 title: Code
 label: When you need it
 footer: Code keeps its spacing, ready to read on screen.
-layout: split-left
 -->
 
 # Keep the source **simple**
