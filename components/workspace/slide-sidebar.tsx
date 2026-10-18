@@ -49,7 +49,10 @@ export function SlideSidebar({
           <button
             key={i}
             className={`slide-nav ${index === i ? 'selected' : ''} ${changing === i ? 'is-changing' : ''}`}
-            onClick={() => onSelect(i)}
+            onClick={e => {
+              e.currentTarget.focus({ preventScroll: true })
+              onSelect(i)
+            }}
             onKeyDown={e => {
               if (!editable || (e.key !== 'Delete' && e.key !== 'Backspace')) return
               e.preventDefault()

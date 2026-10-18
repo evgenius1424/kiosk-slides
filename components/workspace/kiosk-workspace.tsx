@@ -139,12 +139,18 @@ export function KioskWorkspace({
     if (slides.length < 2) return notice(t('toast.lastSlide'))
     versions.remember(current.id, source)
     live.replace(removeSlide(source, i))
-    go(Math.min(i, slides.length - 2))
+    const next = Math.min(i, slides.length - 2)
+    go(next)
     notice(t('toast.slideDeleted', { number: i + 1 }), undoAction)
+    if (document.activeElement?.closest('.slide-list'))
+      requestAnimationFrame(() =>
+        document.querySelectorAll<HTMLElement>('.slide-nav')[next]?.focus({ preventScroll: true }),
+      )
   }
   const select = (i: number) => {
     go(i)
-    if (tab === 'markdown' && textareaRef.current) selectSlide(textareaRef.current, source, i)
+    if (tab === 'markdown' && textareaRef.current)
+      selectSlide(textareaRef.current, source, i, false)
   }
   const focusSlide = (text: string, i: number) =>
     requestAnimationFrame(() => {

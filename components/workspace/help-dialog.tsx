@@ -18,6 +18,7 @@ const SHORTCUTS = [
   'ends',
   'tidy',
   'undo',
+  'deleteSlide',
 ] as const
 
 export function HelpDialog({
