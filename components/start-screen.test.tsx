@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { KioskWorkspace } from '@/components/kiosk-workspace'
+import { KioskWorkspace } from '@/components/workspace/kiosk-workspace'
 import messages from '@/messages/en.json'
 
 const example = '---\ntitle: The example\n---\n\n# One\n\n---\n\n# Two\n'

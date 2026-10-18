@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { KioskWorkspace } from '@/components/kiosk-workspace'
+import { KioskWorkspace } from '@/components/workspace/kiosk-workspace'
 import { encodeShare } from '@/lib/share'
 import messages from '@/messages/en.json'
 
