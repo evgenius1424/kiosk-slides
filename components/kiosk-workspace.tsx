@@ -43,10 +43,12 @@ import {
   toneName,
   type Scale,
   type Slide,
+  transitions,
+  DEFAULT_TRANSITION,
   type Theme,
+  type Transition,
 } from '@/lib/presentation'
 import {
-  DEFAULT_TRANSITION,
   IDLE_MS,
   SWIPE,
   TRANSITION_MS,
@@ -58,9 +60,7 @@ import {
   slideSeconds,
   slideTitle,
   swipeDelta,
-  transitions,
   type ActiveTransition,
-  type Transition,
 } from '@/lib/player'
 import {
   blankPresentation,

@@ -8,6 +8,7 @@ import {
   headingText,
   isScale,
   isTheme,
+  isTransition,
   parsePresentation,
   reviewPresentation,
   scales,
@@ -15,10 +16,10 @@ import {
   themes,
   toneColor,
   toneHint,
+  transitions,
   type Presentation,
 } from '@/lib/presentation'
 import { presentationHtml, fetchAsDataUrl } from '@/components/slide/presentation-html'
-import { isTransition, transitions } from '@/lib/player'
 import { shareLink } from '@/lib/share'
 import { SITE_URL } from '@/lib/site'
 

@@ -6,7 +6,7 @@ import { defaultChrome, parseChrome } from './chrome'
 import { widgetComponents, type Widget } from './components'
 import { headingLength, parseHeading } from './heading'
 import { defaultLook, fontId, fonts, isScale, scales } from './look'
-import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from '../player'
+import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'
 import { defaultTone, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
@@ -102,12 +102,11 @@ function parseFrontMatter(lines: string[]) {
   if (lines[0]?.trim() === '---') {
     const end = lines.findIndex((l, i) => i > 0 && l.trim() === '---')
     if (end < 0) failAt(1, 'close the front matter with ---')
-    const front = lines.slice(1, end).join('\n')
     const field = (key: string) => {
       const index = lines.findIndex((l, i) => i > 0 && i < end && l.startsWith(`${key}:`))
       return { value: lines[index]?.slice(key.length + 1).trim() || undefined, line: index + 1 }
     }
-    title = front.match(/^title:\s*(.+)$/m)?.[1] || title
+    title = field('title').value || title
     const themeField = field('theme')
     if (isTheme(themeField.value)) theme = themeField.value
     else if (themeField.value)
@@ -148,8 +147,15 @@ function parseFrontMatter(lines: string[]) {
     if (brand.value && brand.value.length > 24)
       failAt(brand.line, 'Keep the brand to 24 characters.')
     if (brand.value) look.brand = brand.value === 'none' ? '' : brand.value
-    duration = Number(front.match(/duration:\s*(\d+)s/)?.[1] || 12)
-    loop = !/loop:\s*false/.test(front)
+    const durationField = field('duration')
+    if (durationField.value && /^\d+s$/.test(durationField.value))
+      duration = Number(durationField.value.slice(0, -1))
+    else if (durationField.value)
+      failAt(durationField.line, `Use a duration such as 12s, not “${durationField.value}”.`)
+    const loopField = field('loop')
+    if (loopField.value === 'true' || loopField.value === 'false') loop = loopField.value === 'true'
+    else if (loopField.value)
+      failAt(loopField.line, `Set loop to true or false, not “${loopField.value}”.`)
     start = end + 1
   }
   if (!tone) tone = defaultTone(theme)

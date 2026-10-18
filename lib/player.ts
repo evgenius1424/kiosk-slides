@@ -1,14 +1,10 @@
 import { headingText } from './presentation/heading'
+import type { Transition } from './presentation/transition'
 import type { Slide } from './presentation/types'
 
-export const transitions = ['gentle', 'fade', 'slide', 'none'] as const
-
-export type Transition = (typeof transitions)[number]
 export type ActiveTransition = Transition | 'share'
 export type PlayerAction =
   'next' | 'previous' | 'first' | 'last' | 'autoplay' | 'fullscreen' | 'shareSafe'
-
-export const DEFAULT_TRANSITION: Transition = 'gentle'
 
 export const TRANSITION_MS: Record<ActiveTransition, number> = {
   gentle: 880,
@@ -44,10 +40,6 @@ export const PLAYER_WORDS = {
   end: 'End of presentation',
   credit: 'Made with Kiosk Slides',
   slide: 'Slide {number} of {count}: {title}',
-}
-
-export function isTransition(value: string): value is Transition {
-  return transitions.includes(value as Transition)
 }
 
 export function activeTransition(transition: Transition, shareSafe: boolean): ActiveTransition {
