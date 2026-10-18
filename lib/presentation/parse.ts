@@ -1,4 +1,4 @@
-import type { Heading, Html, Node, RootContent } from 'mdast'
+import type { Heading, Html, Node, Paragraph, RootContent } from 'mdast'
 import { remark } from 'remark'
 import remarkGfm from 'remark-gfm'
 import { parseAnnotation, type Annotation } from './annotation'
@@ -6,8 +6,8 @@ import { defaultChrome, parseChrome } from './chrome'
 import { widgetComponents, type Widget } from './components'
 import { headingLength, parseHeading } from './heading'
 import { defaultLook, fontId, fonts, isScale, scales } from './look'
-import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from '../player'
-import { DEFAULT_TONE, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
+import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'
+import { defaultTone, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
 import type { Presentation, MessageWidget, Slide } from './types'
@@ -91,7 +91,7 @@ export function removeSlide(source: string, index: number) {
 function parseFrontMatter(lines: string[]) {
   let title = UNTITLED
   let theme: Theme = 'room-dark'
-  let tone: string = DEFAULT_TONE
+  let tone = ''
   let transition: Transition = DEFAULT_TRANSITION
   let shareSafe = false
   let credit = true
@@ -102,12 +102,11 @@ function parseFrontMatter(lines: string[]) {
   if (lines[0]?.trim() === '---') {
     const end = lines.findIndex((l, i) => i > 0 && l.trim() === '---')
     if (end < 0) failAt(1, 'close the front matter with ---')
-    const front = lines.slice(1, end).join('\n')
     const field = (key: string) => {
       const index = lines.findIndex((l, i) => i > 0 && i < end && l.startsWith(`${key}:`))
       return { value: lines[index]?.slice(key.length + 1).trim() || undefined, line: index + 1 }
     }
-    title = front.match(/^title:\s*(.+)$/m)?.[1] || title
+    title = field('title').value || title
     const themeField = field('theme')
     if (isTheme(themeField.value)) theme = themeField.value
     else if (themeField.value)
@@ -115,7 +114,7 @@ function parseFrontMatter(lines: string[]) {
     const toneField = field('tone')
     if (toneField.value)
       tone =
-        toneColor(toneField.value) ??
+        toneColor(toneField.value, theme) ??
         failAt(toneField.line, `Unknown tone “${toneField.value}”. ${toneHint}`)
     const transitionField = field('transition')
     if (transitionField.value && isTransition(transitionField.value.toLowerCase()))
@@ -148,10 +147,18 @@ function parseFrontMatter(lines: string[]) {
     if (brand.value && brand.value.length > 24)
       failAt(brand.line, 'Keep the brand to 24 characters.')
     if (brand.value) look.brand = brand.value === 'none' ? '' : brand.value
-    duration = Number(front.match(/duration:\s*(\d+)s/)?.[1] || 12)
-    loop = !/loop:\s*false/.test(front)
+    const durationField = field('duration')
+    if (durationField.value && /^\d+s$/.test(durationField.value))
+      duration = Number(durationField.value.slice(0, -1))
+    else if (durationField.value)
+      failAt(durationField.line, `Use a duration such as 12s, not “${durationField.value}”.`)
+    const loopField = field('loop')
+    if (loopField.value === 'true' || loopField.value === 'false') loop = loopField.value === 'true'
+    else if (loopField.value)
+      failAt(loopField.line, `Set loop to true or false, not “${loopField.value}”.`)
     start = end + 1
   }
+  if (!tone) tone = defaultTone(theme)
   return { title, theme, tone, transition, shareSafe, credit, duration, loop, start, look }
 }
 
@@ -222,7 +229,14 @@ function parseSlide(chunk: Chunk): Slide {
     )
   const headingNode = headings[0]
   const headingLine = lineOf(headingNode.position)
-  const heading = parseHeading(headingNode, message => fail(message, headingLine))
+  const next = nodes[nodes.indexOf(headingNode) + 1]
+  const continued =
+    next?.type === 'paragraph' &&
+    next.position?.start.line === (headingNode.position?.end.line ?? 0) + 1 &&
+    !next.children.some(c => c.type === 'image')
+      ? (next as Paragraph)
+      : undefined
+  const heading = parseHeading([headingNode, continued], message => fail(message, headingLine))
   if (headingLength(heading) > 115)
     fail('Shorten the headline to 115 characters or split the slide.', headingLine)
 
@@ -235,7 +249,9 @@ function parseSlide(chunk: Chunk): Slide {
 
   const body: string[] = []
   let widget: Widget | MessageWidget = { kind: 'message' }
-  const rest = nodes.filter(node => node !== headingNode && !(hasChrome && node === first))
+  const rest = nodes.filter(
+    node => node !== headingNode && node !== continued && !(hasChrome && node === first),
+  )
   for (let i = 0; i < rest.length; i++) {
     let node = rest[i]
     let line = lineOf(node.position)

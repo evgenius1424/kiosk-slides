@@ -1,7 +1,7 @@
 import type { Widget } from './components'
 import type { HeadingPart } from './heading'
 import type { PresentationLook } from './look'
-import type { Transition } from '../player'
+import type { Transition } from './transition'
 import type { Theme } from './theme'
 
 export type Layout = 'auto' | 'stacked' | 'split-left'

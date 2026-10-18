@@ -6,6 +6,7 @@ import {
   hasCyrillic,
   type Presentation,
   type Theme,
+  type Transition,
 } from '@/lib/presentation'
 import { slideStyles } from '@/lib/slide-styles'
 import {
@@ -18,7 +19,6 @@ import {
   WHEEL,
   slideLabel,
   slideSeconds,
-  type Transition,
 } from '@/lib/player'
 import { SlideView } from '.'
 
@@ -85,10 +85,16 @@ export async function fetchAsDataUrl(src: string): Promise<string> {
 const SAFE_AREA =
   'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'
 
-const pageStyles = (theme: Theme) =>
-  `html,body{margin:0;background:${theme === 'room-light' ? '#fafafa' : '#121214'};width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active,.portable-slide.kt-leave{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#notice a{color:inherit}#spoken{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
+const PAGE_BACKGROUNDS: Record<Theme, string> = {
+  'room-dark': '#121214',
+  'room-light': '#fafafa',
+  studio: '#000000',
+}
 
-const printStyles = `@page{size:16in 9in;margin:0}@media print{html,body{width:auto;height:auto;overflow:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}.portable-slide,.portable-slide.active,.portable-slide.kt-leave{display:block;position:relative;inset:auto;width:16in;height:9in;padding:0;overflow:hidden;background:color-mix(in srgb,var(--slide-bg) 95%,var(--slide-tone));break-inside:avoid}.portable-slide+.portable-slide{break-before:page}.slide-frame{width:100%;height:100%;aspect-ratio:auto}.portable-slide *{animation:none!important;transition:none!important}#full,#notice,#spoken{display:none!important}}`
+const pageStyles = (theme: Theme) =>
+  `html,body{margin:0;background:${PAGE_BACKGROUNDS[theme]};width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active,.portable-slide.kt-leave{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#notice a{color:inherit}#spoken{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
+
+const printStyles = `@page{size:16in 9in;margin:0}@media print{html,body{width:auto;height:auto;overflow:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}.portable-slide,.portable-slide.active,.portable-slide.kt-leave{display:block;position:relative;inset:auto;width:16in;height:9in;padding:0;overflow:hidden;background:var(--slide-wash);break-inside:avoid}.portable-slide+.portable-slide{break-before:page}.slide-frame{width:100%;height:100%;aspect-ratio:auto}.portable-slide *{animation:none!important;transition:none!important}#full,#notice,#spoken{display:none!important}}`
 
 const icon = (path: string, className: string) =>
   `<svg class="${className}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`

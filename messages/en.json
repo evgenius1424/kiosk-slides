@@ -87,7 +87,8 @@
     },
     "themes": {
       "room-dark": "Dark",
-      "room-light": "Light"
+      "room-light": "Light",
+      "studio": "Studio"
     },
     "toast": {
       "swipe": "Swipe to change slides",
@@ -179,22 +180,22 @@
     "title": "Presentation settings",
     "appearance": "Appearance",
     "theme": "Theme",
-    "tone": "Background tone",
-    "toneOption": "{name} background",
-    "toneHelp": "Quiet color in the background, and on highlighted heading words.",
+    "tone": "Color",
+    "toneOption": "{name} color",
+    "toneHelp": "Lights the background and highlighted heading words, in a shade made for this theme.",
     "tones": {
-      "Graphite": "Graphite",
-      "Plum": "Plum",
-      "Wine": "Wine",
+      "Mono": "Black and white",
+      "Violet": "Violet",
+      "Coral": "Coral",
       "Teal": "Teal",
-      "Bronze": "Bronze"
+      "Amber": "Amber"
     },
     "font": "Font",
     "textSize": "Text size",
     "sizes": {
       "normal": "Normal",
       "large": "Large",
-      "kiosk": "Extra large · read from across the room"
+      "hero": "Hero · headings fill the screen"
     },
     "brand": "Brand",
     "showBrand": "Show brand",
@@ -257,7 +258,7 @@
       },
       "heading": {
         "term": "# Heading",
-        "rule": "The big line on each slide. One per slide, kept short."
+        "rule": "The big line on each slide. One per slide, kept short. Press Enter to carry it onto a second line."
       },
       "highlight": {
         "term": "**words**",
@@ -265,7 +266,7 @@
       },
       "text": {
         "term": "Text",
-        "rule": "A sentence or two under the heading."
+        "rule": "A sentence or two under the heading, after an empty line."
       },
       "extras": {
         "term": "Extras",

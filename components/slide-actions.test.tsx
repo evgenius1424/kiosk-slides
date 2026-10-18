@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { KioskWorkspace } from '@/components/kiosk-workspace'
+import { KioskWorkspace } from '@/components/workspace/kiosk-workspace'
 import { slideSource } from '@/lib/presentation'
 import messages from '@/messages/en.json'
 
@@ -116,6 +116,16 @@ describe('AI actions on a slide', () => {
     expect(slideCount()).toBe(3)
   })
 
+  it('hides the actions unless the flag is on', () => {
+    signedIn('<slides>\n# One\n</slides>')
+    workspace(false)
+    expect(screen.queryByRole('toolbar', { name: 'Change this slide with AI' })).toBeNull()
+    fireEvent.contextMenu(slideButton(3))
+    const menu = screen.getByRole('menu', { name: 'Slide 3 actions' })
+    expect(within(menu).queryByRole('menuitem', { name: 'Stronger headline' })).toBeNull()
+    expect(within(menu).getByRole('menuitem', { name: 'Add a slide after' })).toBeTruthy()
+  })
+
   it('says so when there is nothing to undo', () => {
     hosted()
     workspace()
@@ -147,7 +157,7 @@ function hosted() {
   )
 }
 
-function workspace() {
+function workspace(slideAi = true) {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
       <KioskWorkspace
@@ -155,6 +165,7 @@ function workspace() {
         prompt="GUIDE"
         slidePrompt="SLIDE GUIDE"
         site="https://example.com"
+        slideAi={slideAi}
       />
     </NextIntlClientProvider>,
   )

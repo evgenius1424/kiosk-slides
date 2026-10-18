@@ -1,34 +1,33 @@
 import { describe, expect, it } from 'vitest'
 import { slideStyles } from '@/lib/slide-styles'
-import { tones } from './theme'
+import { themes, tones, type Theme } from './theme'
 
 const LARGE_TEXT = 3
 
 describe('tones', () => {
-  it.each(['dark', 'light'] as const)(
-    'stand out at 3:1 as heading highlight and accent on the %s theme',
-    theme => {
-      const { mix, surfaces } = themeColors(theme)
-      const ratios = tones.flatMap(({ name, color }) => {
-        const tone = rgb(color)
-        const highlight = mixOklab(tone, mix.with, mix.amount)
-        return surfaces.flatMap(surface => {
-          const flat = mixSrgb(surface, tone, 0.95)
-          const corner = mixSrgb(tone, flat, 0.12)
-          return [flat, corner].map(back => ({ name, ratio: contrast(highlight, back) }))
-        })
+  it.each(themes)('stand out at 3:1 as heading highlight and accent on the %s theme', theme => {
+    const { mix, surfaces } = themeColors(theme)
+    const ratios = tones.flatMap(({ name, colors }) => {
+      const tone = rgb(colors[theme])
+      const highlight = mixOklab(tone, mix.with, mix.amount)
+      return surfaces.flatMap(surface => {
+        const flat = mixSrgb(surface, tone, 0.95)
+        const corner = mixSrgb(tone, flat, 0.16)
+        return [flat, corner].map(back => ({ name, ratio: contrast(highlight, back) }))
       })
-      expect(ratios.filter(r => r.ratio < LARGE_TEXT)).toEqual([])
-    },
-  )
+    })
+    expect(ratios.filter(r => r.ratio < LARGE_TEXT)).toEqual([])
+  })
 })
 
 type Rgb = [number, number, number]
 
-function themeColors(theme: 'dark' | 'light') {
-  const rule = theme === 'dark' ? /\.slide\{([^}]*)\}/ : /\.slide\.room-light\{([^}]*)\}/
-  const vars = rule.exec(slideStyles)![1]
-  const value = (name: string) => new RegExp(`--slide-${name}:([^;]+)`).exec(vars)![1]
+function themeColors(theme: Theme) {
+  const base = /\.slide\{([^}]*)\}/.exec(slideStyles)![1]
+  const own = new RegExp(`\\.slide\\.${theme}\\{([^}]*)\\}`).exec(slideStyles)?.[1] ?? ''
+  const value = (name: string) =>
+    new RegExp(`--slide-${name}:([^;]+)`).exec(own)?.[1] ??
+    new RegExp(`--slide-${name}:([^;]+)`).exec(base)![1]
   const [, amount, other] = /var\(--slide-tone\) (\d+)%,(#\w+)/.exec(value('highlight'))!
   return {
     mix: { with: rgb(other), amount: Number(amount) / 100 },

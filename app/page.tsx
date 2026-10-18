@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { getTranslations } from 'next-intl/server'
-import { KioskWorkspace } from '@/components/kiosk-workspace'
+import { KioskWorkspace } from '@/components/workspace/kiosk-workspace'
 import { copyPrompt, slideCopyPrompt } from '@/lib/chat-prompt'
 import { fontFace, fontFiles, fonts } from '@/lib/presentation'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
@@ -10,6 +10,8 @@ import { slideStyles } from '@/lib/slide-styles'
 const SKILL_INSTALL = process.env.SKILL_INSTALL
   ? process.env.SKILL_INSTALL === 'on'
   : process.env.VERCEL_ENV !== 'production'
+
+const SLIDE_AI = process.env.SLIDE_AI === 'on'
 
 const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
@@ -44,6 +46,7 @@ export default async function Page() {
         slidePrompt={slidePrompt}
         site={SITE_URL}
         skillInstall={SKILL_INSTALL}
+        slideAi={SLIDE_AI}
       />
     </>
   )

@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { parsePresentation } from '@/lib/presentation'
+import { parsePresentation, type Transition } from '@/lib/presentation'
 import { slideStyles } from '@/lib/slide-styles'
-import type { Transition } from '@/lib/player'
 import { presentationHtml } from './presentation-html'
 
 const presentation = parsePresentation(readFileSync('public/example.md', 'utf8'))
@@ -37,10 +36,10 @@ describe('presentationHtml', () => {
 
   it('takes the tone, transition and screen-share safe flag from the front matter', async () => {
     const html = await presentationHtml(
-      parsePresentation('---\ntone: wine\ntransition: fade\nshare-safe: true\n---\n# Hi'),
+      parsePresentation('---\ntone: coral\ntransition: fade\nshare-safe: true\n---\n# Hi'),
       { embedImage: async src => src, embedFont: async file => file },
     )
-    expect(html).toContain('--slide-tone:#a16b7b')
+    expect(html).toContain('--slide-tone:#ff8577')
     expect(html).toContain('"transition":"fade","shareSafe":true')
   })
 

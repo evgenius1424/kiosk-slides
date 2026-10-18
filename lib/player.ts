@@ -1,13 +1,10 @@
+import { headingText } from './presentation/heading'
+import type { Transition } from './presentation/transition'
 import type { Slide } from './presentation/types'
 
-export const transitions = ['gentle', 'fade', 'slide', 'none'] as const
-
-export type Transition = (typeof transitions)[number]
 export type ActiveTransition = Transition | 'share'
 export type PlayerAction =
   'next' | 'previous' | 'first' | 'last' | 'autoplay' | 'fullscreen' | 'shareSafe'
-
-export const DEFAULT_TRANSITION: Transition = 'gentle'
 
 export const TRANSITION_MS: Record<ActiveTransition, number> = {
   gentle: 880,
@@ -45,10 +42,6 @@ export const PLAYER_WORDS = {
   slide: 'Slide {number} of {count}: {title}',
 }
 
-export function isTransition(value: string): value is Transition {
-  return transitions.includes(value as Transition)
-}
-
 export function activeTransition(transition: Transition, shareSafe: boolean): ActiveTransition {
   return shareSafe && transition !== 'none' ? 'share' : transition
 }
@@ -73,7 +66,7 @@ export function slideHash(index: number) {
 }
 
 export function slideTitle(slide: Slide) {
-  return slide.title || slide.heading.map(part => part.text).join('')
+  return slide.title || headingText(slide.heading)
 }
 
 export function slideLabel(slide: Slide, index: number, count: number) {

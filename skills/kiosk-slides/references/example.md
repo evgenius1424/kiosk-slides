@@ -1,9 +1,8 @@
 ---
 title: Kiosk Slides — example presentation
 theme: room-dark
-autoplay:
-  duration: 12s
-  loop: true
+duration: 12s
+loop: true
 ---
 
 <!--
@@ -13,7 +12,8 @@ footer: One point per slide, visible from the back of the room.
 layout: auto
 -->
 
-# Make your point **impossible to miss**
+# Make your point
+**impossible to miss**
 
 Big type. One idea. No visual clutter.
 

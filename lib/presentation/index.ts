@@ -10,7 +10,8 @@ export {
 export { formatPresentation } from './format'
 export { reviewPresentation } from './review'
 export { setFrontMatter } from './front-matter'
-export type { HeadingPart } from './heading'
+export { headingText, type HeadingPart } from './heading'
+export { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'
 export {
   DEFAULT_BRAND,
   presentationLook,
@@ -28,12 +29,13 @@ export {
   type Scale,
 } from './look'
 export {
-  DEFAULT_TONE,
+  defaultTone,
   isTheme,
   setPresentationTheme,
   themes,
   toneColor,
   toneHint,
+  toneName,
   tones,
   type Theme,
 } from './theme'

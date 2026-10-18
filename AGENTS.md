@@ -30,19 +30,20 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 
 ## Layout
 
-| Path                  | What lives there                                                                       |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| `app/`                | Next.js routes: the page, metadata, ChatGPT sign-in and chat API routes                |
-| `components/`         | Workspace UI (`kiosk-workspace.tsx`, `presentation-chat.tsx`, `presentation-menu.tsx`) |
-| `components/slide/`   | Shared slide renderer and the exported single-file HTML (`presentation-html.tsx`)      |
-| `lib/presentation/`   | Markdown presentation parser, widgets, themes, fonts and front matter                  |
-| `lib/slide-styles.ts` | Slide CSS shared by the site, the export and the skills                                |
-| `lib/player.ts`       | Transitions, keys, swipe and wheel rules shared by every player                        |
-| `lib/chat*.ts`        | AI prompt and the local ChatGPT plan-usage client                                      |
-| `messages/en.json`    | Every UI string, read through next-intl                                                |
-| `skills/`             | The agent skill; its `scripts/`, `references/` and `assets/` are generated             |
-| `.claude-plugin/`     | Plugin and marketplace manifests that publish the skill                                |
-| `.scratch/`           | Specs and issues as Markdown (see Agent skills below)                                  |
+| Path                    | What lives there                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `app/`                  | Next.js routes: the page, metadata, ChatGPT sign-in and chat API routes                |
+| `components/`           | Workspace panels and dialogs (`presentation-chat.tsx`, `presentation-editor.tsx`, ...) |
+| `components/workspace/` | The workspace: `kiosk-workspace.tsx` wires one hook or panel per job (see below)       |
+| `components/slide/`     | Shared slide renderer and the exported single-file HTML (`presentation-html.tsx`)      |
+| `lib/presentation/`     | Markdown presentation parser, widgets, themes, fonts and front matter                  |
+| `lib/slide-styles.ts`   | Slide CSS shared by the site, the export and the skills                                |
+| `lib/player.ts`         | Transitions, keys, swipe and wheel rules shared by every player                        |
+| `lib/chat*.ts`          | AI prompt and the local ChatGPT plan-usage client                                      |
+| `messages/en.json`      | Every UI string, read through next-intl                                                |
+| `skills/`               | The agent skill; its `scripts/`, `references/` and `assets/` are generated             |
+| `.claude-plugin/`       | Plugin and marketplace manifests that publish the skill                                |
+| `.scratch/`             | Specs and issues as Markdown (see Agent skills below)                                  |
 
 ## Rendering architecture
 
@@ -52,7 +53,25 @@ One core turns Markdown into slides for the site preview, presenting mode, thumb
 2. **Render**: `components/slide` turns each slide into markup with `SlideView`, styled by `lib/slide-styles.ts`. `presentation-html.tsx` wraps those slides into the single-file presentation.
 3. **Play**: `lib/player.ts` holds the transitions and navigation rules. The site's React player and the export's inline script both read them.
 
-Everything else is a thin adapter: `app/` and `components/kiosk-workspace.tsx` for the site, `skills/render.ts` for the command line, and `scripts/bundle-renderer.mjs` for the skills' esbuild bundle. The core imports only itself, React and remark, with no Next.js, Node or browser-only code, so changing the site's compiler or bundler never touches it. Tests hold this in place: `lib/core.test.ts` checks the core's imports, `components/slide/parity.test.tsx` checks the preview and thumbnails match the export, `components/slide/player.test.ts` checks the export player follows the shared rules, and `skills/render.test.ts` checks the esbuild-built skill writes the same file as the site.
+Everything else is a thin adapter: `app/` and `components/workspace/` for the site, `skills/render.ts` for the command line, and `scripts/bundle-renderer.mjs` for the skills' esbuild bundle. The core imports only itself, React and remark, with no Next.js, Node or browser-only code, so changing the site's compiler or bundler never touches it. Tests hold this in place: `lib/core.test.ts` checks the core's imports, `components/slide/parity.test.tsx` checks the preview and thumbnails match the export, `components/slide/player.test.ts` checks the export player follows the shared rules, and `skills/render.test.ts` checks the esbuild-built skill writes the same file as the site.
+
+## Workspace
+
+`components/workspace/kiosk-workspace.tsx` only holds the view tab, open panels and the actions that cross jobs (add, delete or change a slide, undo, paste, AI replies). Each job lives in its own file:
+
+| File                   | Job                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| `use-player.ts`        | Current slide, autoplay, presenting, fullscreen, idle, share-safe, `#N` address |
+| `use-library.ts`       | Saved presentations, shared links, paste anywhere                               |
+| `use-versions.ts`      | Undo history                                                                    |
+| `use-shortcuts.ts`     | Keyboard shortcuts                                                              |
+| `use-download.ts`      | Web page and PDF downloads                                                      |
+| `settings-panel.tsx`   | Settings panel, writes each setting to the front matter                         |
+| `slide-canvas.tsx`     | Preview canvas, wheel and swipe, fit check                                      |
+| `slide-sidebar.tsx`    | Slide list                                                                      |
+| `workspace-header.tsx` | Header and the Preview / Edit / Ask AI tabs                                     |
+| `help-dialog.tsx`      | Shortcuts and format help                                                       |
+| `toast.tsx`            | Toast messages with an optional Undo                                            |
 
 ## Conventions
 

@@ -32,7 +32,7 @@ export function HeadingText({ parts }: { parts: HeadingPart[] }) {
 export function SlideView({
   slide,
   theme = 'room-dark',
-  accent = '#74747e',
+  accent = '#ffffff',
   look = defaultLook(),
   miniature = false,
 }: {
