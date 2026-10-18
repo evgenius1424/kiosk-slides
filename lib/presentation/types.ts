@@ -4,8 +4,6 @@ import type { PresentationLook } from './look'
 import type { Transition } from '../player'
 import type { Theme } from './theme'
 
-export type Layout = 'auto' | 'stacked' | 'split-left'
-
 /** Fields every slide has, whatever its widget. */
 export type SlideChrome = {
   title: string
@@ -13,7 +11,6 @@ export type SlideChrome = {
   footer: string
   heading: HeadingPart[]
   body: string
-  layout: Layout
   duration?: number
 }
 

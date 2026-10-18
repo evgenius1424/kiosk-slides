@@ -43,7 +43,6 @@ autoplay:
 title: Opening
 label: Core concept
 footer: One point per slide, visible from the back of the room.
-layout: split-left
 duration: 20s
 -->
 
@@ -57,7 +56,6 @@ In order, a slide has:
 
 1. **Slide settings** (optional): one HTML comment that is the slide's first block, directly followed by the `#` heading. It has one `key: value` per line, and every key is optional:
    - `title`, `label`, `footer` are free text shown around the slide.
-   - `layout` is `auto` (default), `stacked`, or `split-left`.
    - `duration` overrides the presentation's autoplay time for this slide, written like `20s`.
    - Any other key is an error.
 2. **Exactly one `#` heading** of at most 115 characters. Wrap the key phrase in `**bold**` to highlight it. Headings may also use `*italic*`, `` `code` `` and `[links](https://...)`; nothing else, and the 115 characters count the visible text, not the markup. Other heading levels (`##` and deeper) are not supported. To break the heading onto a new line, write the next part on the line directly under it, with no blank line between: that line stays part of the heading and starts a new line on the slide. Leave a blank line after the heading before the body.

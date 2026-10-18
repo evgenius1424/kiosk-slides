@@ -49,7 +49,6 @@ describe('parsePresentation: presentation and message slides', () => {
           title: '',
           label: '',
           footer: '',
-          layout: 'auto',
           heading: [{ text: 'Make your point ' }, { text: 'impossible to miss', highlight: true }],
           body: 'Big type. One idea.',
         },
@@ -111,7 +110,6 @@ describe('parsePresentation: presentation and message slides', () => {
         'title: Opening',
         'label: Core concept',
         'footer: One point per slide.',
-        'layout: split-left',
         'duration: 8s',
         '-->',
         '# Second',
@@ -122,7 +120,6 @@ describe('parsePresentation: presentation and message slides', () => {
       title: 'Opening',
       label: 'Core concept',
       footer: 'One point per slide.',
-      layout: 'split-left',
       duration: 8,
       heading: [{ text: 'Second' }],
       body: '',
@@ -153,7 +150,6 @@ describe('parsePresentation: widgets', () => {
       title: '',
       label: '',
       footer: '',
-      layout: 'auto',
       heading: [{ text: 'Three ' }, { text: 'steps', highlight: true }],
       body: 'Intro.',
       steps: ['Gather the **material**.', 'Generate a presentation.', 'Present.'],
@@ -177,7 +173,6 @@ describe('parsePresentation: widgets', () => {
       title: '',
       label: '',
       footer: '',
-      layout: 'auto',
       heading: [{ text: 'Keep it ' }, { text: 'simple', highlight: true }],
       body: '',
       language: 'html',
@@ -198,7 +193,6 @@ describe('parsePresentation: widgets', () => {
       title: '',
       label: '',
       footer: '',
-      layout: 'auto',
       heading: [{ text: 'Look at ' }, { text: 'this', highlight: true }],
       body: '',
       src: 'https://example.com/kiosk.png',
@@ -247,7 +241,6 @@ describe('parsePresentation: metric', () => {
       title: '',
       label: '',
       footer: '',
-      layout: 'auto',
       heading: [{ text: 'Short talks ' }, { text: 'land', highlight: true }],
       body: '',
       value: '3x',
@@ -287,9 +280,9 @@ describe('parsePresentation: errors', () => {
     )
   })
 
-  it('rejects a bad layout and a bad duration', () => {
-    expect(error(md('# One', '---', '<!-- layout: wide -->', '# Hi'))).toBe(
-      'Line 3: Layout must be auto, stacked, or split-left.',
+  it('rejects a layout setting and a bad duration', () => {
+    expect(error(md('# One', '---', '<!-- layout: split-left -->', '# Hi'))).toBe(
+      'Line 3: Unsupported slide setting: layout: split-left',
     )
     expect(error(md('<!-- duration: 8 -->', '# Hi'))).toBe('Line 1: Use a duration such as 12s.')
   })
@@ -532,7 +525,6 @@ describe('parsePresentation: table and before/after', () => {
       title: '',
       label: '',
       footer: '',
-      layout: 'auto',
       heading: [{ text: 'Where the ' }, { text: 'time', highlight: true }, { text: ' goes' }],
       body: '',
       header: ['Task', 'Hours'],
@@ -576,7 +568,6 @@ describe('parsePresentation: table and before/after', () => {
       title: '',
       label: '',
       footer: '',
-      layout: 'auto',
       heading: [{ text: 'One ' }, { text: 'idea', highlight: true }, { text: ' per slide' }],
       body: '',
       before: 'Dense slides nobody reads',
@@ -621,7 +612,6 @@ describe('parsePresentation: chart', () => {
       title: '',
       label: '',
       footer: '',
-      layout: 'auto',
       heading: [{ text: 'Visits ' }, { text: 'doubled', highlight: true }],
       body: '',
       type: 'bar',
@@ -812,7 +802,6 @@ describe('parsePresentation: buttons', () => {
       title: '',
       label: '',
       footer: '',
-      layout: 'auto',
       heading: [{ text: 'Try it ' }, { text: 'yourself', highlight: true }],
       body: '',
       buttons: [

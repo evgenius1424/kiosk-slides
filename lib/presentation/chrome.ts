@@ -1,10 +1,8 @@
-import type { Layout, SlideChrome } from './types'
+import type { SlideChrome } from './types'
 
-type Chrome = Pick<SlideChrome, 'title' | 'label' | 'footer' | 'layout' | 'duration'>
+type Chrome = Pick<SlideChrome, 'title' | 'label' | 'footer' | 'duration'>
 
-const layouts: Layout[] = ['auto', 'stacked', 'split-left']
-
-export const defaultChrome = (): Chrome => ({ title: '', label: '', footer: '', layout: 'auto' })
+export const defaultChrome = (): Chrome => ({ title: '', label: '', footer: '' })
 
 /** Parse the per-slide settings comment: `<!--` then `key: value` lines then `-->`. */
 export function parseChrome(comment: string, fail: (message: string) => never): Chrome {
@@ -18,10 +16,7 @@ export function parseChrome(comment: string, fail: (message: string) => never): 
   for (const line of lines) {
     const [, key, value = ''] = line.match(/^([\w-]+):\s*(.*)$/) ?? []
     if (key === 'title' || key === 'label' || key === 'footer') chrome[key] = value
-    else if (key === 'layout') {
-      if (!layouts.includes(value as Layout)) fail('Layout must be auto, stacked, or split-left.')
-      chrome.layout = value as Layout
-    } else if (key === 'duration') {
+    else if (key === 'duration') {
       if (!/^\d+s$/.test(value)) fail('Use a duration such as 12s.')
       chrome.duration = Number(value.slice(0, -1))
     } else fail(`Unsupported slide setting: ${line}`)
