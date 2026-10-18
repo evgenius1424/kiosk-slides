@@ -9,9 +9,8 @@ A presentation is one Markdown file. Plain Markdown carries the meaning, and a s
 title: Quarterly review
 theme: room-dark
 tone: teal
-autoplay:
-  duration: 12s
-  loop: true
+duration: 12s
+loop: true
 ---
 
 # First slide's **big idea**

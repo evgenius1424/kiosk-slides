@@ -21,9 +21,8 @@ describe('parsePresentation: presentation and message slides', () => {
         '---',
         'title: Demo presentation',
         'theme: room-light',
-        'autoplay:',
-        '  duration: 20s',
-        '  loop: false',
+        'duration: 20s',
+        'loop: false',
         '---',
         '',
         '# Make your point **impossible to miss**',
@@ -499,6 +498,15 @@ describe('parsePresentation: errors', () => {
     )
   })
 
+  it('rejects a bad duration or loop on its front-matter line', () => {
+    expect(error(md('---', 'duration: 12', '---', '# Hi'))).toBe(
+      'Line 2: Use a duration such as 12s, not “12”.',
+    )
+    expect(error(md('---', 'title: T', 'loop: no', '---', '# Hi'))).toBe(
+      'Line 3: Set loop to true or false, not “no”.',
+    )
+  })
+
   it('rejects an unknown theme on its front-matter line', () => {
     expect(error(md('---', 'title: T', 'theme: neon', '---', '# Hi'))).toBe(
       'Line 3: Unknown theme “neon”. Use room-dark or room-light or studio.',
@@ -959,20 +967,10 @@ describe('setFrontMatter', () => {
     expect(setFrontMatter(md('# Hi'), 'scale')).toBe('# Hi')
   })
 
-  it('edits autoplay settings inside the autoplay block', () => {
-    const source = md(
-      '---',
-      'title: T',
-      'autoplay:',
-      '  duration: 12s',
-      '  loop: true',
-      '---',
-      '# Hi',
-    )
+  it('edits and removes autoplay settings', () => {
+    const source = md('---', 'title: T', 'duration: 12s', 'loop: true', '---', '# Hi')
     const longer = setFrontMatter(source, 'duration', '20s')
-    expect(longer).toBe(
-      md('---', 'title: T', 'autoplay:', '  duration: 20s', '  loop: true', '---', '# Hi'),
-    )
+    expect(longer).toBe(md('---', 'title: T', 'duration: 20s', 'loop: true', '---', '# Hi'))
     expect(parsePresentation(longer).duration).toBe(20)
     expect(setFrontMatter(setFrontMatter(source, 'loop'), 'duration')).toBe(
       md('---', 'title: T', '---', '# Hi'),

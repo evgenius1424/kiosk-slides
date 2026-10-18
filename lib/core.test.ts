@@ -33,6 +33,17 @@ describe('rendering core', () => {
     expect(outside).toEqual([])
   })
 
+  it('keeps the parser free of the player and the renderer', () => {
+    const upward = walk('lib/presentation')
+      .filter(file => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file))
+      .flatMap(file =>
+        imports(file)
+          .filter(spec => /(^|\/)(player|slide-styles|components\/slide)(\/|$)/.test(spec))
+          .map(spec => `${file}: ${spec}`),
+      )
+    expect(upward).toEqual([])
+  })
+
   it('stays free of framework directives', () => {
     const marked = coreFiles().filter(file => /^\s*['"]use (client|server)['"]/m.test(read(file)))
     expect(marked).toEqual([])

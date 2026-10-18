@@ -13,6 +13,9 @@ import {
 } from 'lucide-react'
 import {
   DEFAULT_BRAND,
+  DEFAULT_TRANSITION,
+  transitions,
+  type Transition,
   defaultTone,
   fonts,
   scales,
@@ -25,7 +28,6 @@ import {
   type Scale,
   type Theme,
 } from '@/lib/presentation'
-import { DEFAULT_TRANSITION, transitions, type Transition } from '@/lib/player'
 import type { Player } from './use-player'
 
 export function useSettingsPanel() {

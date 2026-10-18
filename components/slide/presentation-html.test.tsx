@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { parsePresentation } from '@/lib/presentation'
+import { parsePresentation, type Transition } from '@/lib/presentation'
 import { slideStyles } from '@/lib/slide-styles'
-import type { Transition } from '@/lib/player'
 import { presentationHtml } from './presentation-html'
 
 const presentation = parsePresentation(readFileSync('public/example.md', 'utf8'))
