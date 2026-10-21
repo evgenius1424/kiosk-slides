@@ -907,7 +907,7 @@ kbd {
 }
 .start-topic {
   width: 100%;
-  resize: vertical;
+  resize: none;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px 16px;
