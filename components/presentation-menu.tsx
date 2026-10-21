@@ -20,13 +20,15 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
   const [editing, setEditing] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const openedByKeyboard = useRef(false)
   const sorted = [...items].sort((a, b) => b.updatedAt - a.updatedAt)
   const close = () => {
     setOpen(false)
     setEditing(null)
   }
   useEffect(() => {
-    if (open) rootRef.current?.querySelector<HTMLElement>('.presentation-item')?.focus()
+    if (open && openedByKeyboard.current)
+      rootRef.current?.querySelector<HTMLElement>('.presentation-item')?.focus()
   }, [open])
   useEffect(() => {
     if (!open) return
@@ -53,7 +55,11 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
         className="presentation-selector"
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => (open ? close() : setOpen(true))}
+        onClick={event => {
+          openedByKeyboard.current = event.detail === 0
+          if (open) close()
+          else setOpen(true)
+        }}
       >
         <span>{current.name}</span>
         <ChevronDown size={14} />
