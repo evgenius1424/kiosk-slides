@@ -1482,6 +1482,9 @@ html:has(.is-presenting .studio) {
 .presentation-popover li.selected {
   background: var(--muted);
 }
+.presentation-popover li button:focus-visible {
+  outline-offset: -2px;
+}
 .presentation-popover li .icon-btn {
   width: 30px;
   height: 30px;
