@@ -1,63 +1,33 @@
-import { generateText } from 'ai'
-import { createAnthropic } from '@ai-sdk/anthropic'
-import { getAnthropicApiKey, MAX_SLIDES, MODEL_ID } from './config'
+import Anthropic from '@anthropic-ai/sdk'
 
-export type ProviderResult =
-  | { kind: 'ok'; text: string; inputTokens: number; outputTokens: number }
-  | { kind: 'refused' }
-  | { kind: 'error'; message: string }
+export const MODEL_ID = 'claude-haiku-5-5'
+export const RESERVE_CENTS_PER_DRAFT = 1
 
-const SYSTEM_PROMPT = `You create presentations for Kiosk Slides. Reply with ONLY the presentation Markdown inside <presentation></presentation> tags. No other text outside the tags.
+const MAX_OUTPUT_TOKENS = 3000
+const TIMEOUT_MS = 45_000
 
-Rules:
-- At most ${MAX_SLIDES} slides (separated by ---)
-- Every slide needs a settings comment: <!-- title: ... | label: ... | footer: ... -->
-- Follow the Kiosk Slides Markdown format exactly
-- Do NOT include any http:// or https:// URLs, external image links, or HTML tags
-- Each slide starts with a # heading`
+export type Turn = { role: 'user' | 'assistant'; content: string }
+export type Reply = { text: string | null; inputTokens: number; outputTokens: number }
 
-export async function generateDraft(brief: string, signal: AbortSignal): Promise<ProviderResult> {
-  return callApi(`Create a presentation about: ${brief}`, signal)
-}
-
-export async function repairDraft(
-  originalText: string,
-  signal: AbortSignal,
-): Promise<ProviderResult> {
-  return callApi(
-    `The presentation was invalid. Reply with ONLY the complete corrected presentation Markdown inside <presentation></presentation> tags. Previous attempt:\n${originalText}`,
-    signal,
-  )
-}
-
-async function callApi(userMessage: string, signal: AbortSignal): Promise<ProviderResult> {
-  const anthropic = createAnthropic({ apiKey: getAnthropicApiKey() })
+export async function complete(system: string, turns: Turn[], signal: AbortSignal): Promise<Reply> {
   try {
-    const result = await generateText({
-      model: anthropic(MODEL_ID),
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userMessage }],
-      maxOutputTokens: 4096,
-      abortSignal: signal,
-    })
-
-    if (result.finishReason === 'length') {
-      return { kind: 'error', message: 'output truncated' }
-    }
-    if (result.finishReason === 'content-filter') {
-      return { kind: 'refused' }
-    }
-
+    const response = await new Anthropic({ maxRetries: 0, timeout: TIMEOUT_MS }).messages.create(
+      {
+        model: MODEL_ID,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        thinking: { type: 'disabled' },
+        system,
+        messages: turns,
+      },
+      { signal },
+    )
+    const text = response.content.map(block => (block.type === 'text' ? block.text : '')).join('')
     return {
-      kind: 'ok',
-      text: result.text,
-      inputTokens: result.usage.inputTokens ?? 0,
-      outputTokens: result.usage.outputTokens ?? 0,
+      text: response.stop_reason === 'end_turn' ? text : null,
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
     }
-  } catch (err) {
-    if (signal.aborted) {
-      return { kind: 'error', message: 'cancelled' }
-    }
-    return { kind: 'error', message: (err as Error).message }
+  } catch {
+    return { text: null, inputTokens: 0, outputTokens: 0 }
   }
 }

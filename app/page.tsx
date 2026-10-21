@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { getTranslations } from 'next-intl/server'
 import { KioskWorkspace } from '@/components/workspace/kiosk-workspace'
+import { AI_DRAFT_ENABLED } from '@/lib/ai-draft/server'
 import { copyPrompt, slideCopyPrompt } from '@/lib/chat-prompt'
 import { fontFace, fontFiles, fonts } from '@/lib/presentation'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
@@ -47,6 +48,7 @@ export default async function Page() {
         site={SITE_URL}
         skillInstall={SKILL_INSTALL}
         slideAi={SLIDE_AI}
+        freeDraft={AI_DRAFT_ENABLED}
       />
     </>
   )

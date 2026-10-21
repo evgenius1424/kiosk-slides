@@ -66,13 +66,14 @@ Slides today are mostly seen through a video call or on a TV across a table. Kio
 ## What you get
 
 - **Ask AI.** Chat with ChatGPT using your own ChatGPT plan, and watch the slides appear. Sign-in runs on your own computer, so your account never touches a server.
+- **Free AI draft.** On the hosted site, describe your talk and get one AI-written draft a day, while a small shared monthly allowance lasts. Your request is sent to Anthropic to write it, and the site keeps no copy. When the allowance runs out, copy the prompt into any AI instead.
 - **Use any AI.** Copy the ready-made prompt into Gemini, ChatGPT, Claude or anything else, then paste the slides it writes.
 - **Dark, light and studio themes** in black and white, or with a Violet, Coral, Teal or Amber tone tuned to each theme.
 - **Fonts** including Inter, Figtree, Bricolage Grotesque, Space Grotesk, Archivo Expanded and Golos Text, each with Cyrillic letters.
 - **Your brand** in the corner of every slide, or nothing at all.
 - **Present anywhere**, including from a phone held sideways, with swipe and tap.
 - **Many presentations**, saved in your browser and one click apart.
-- **Works offline and installs as an app.** After one visit the site opens, edits, presents and downloads with no connection. Only Ask AI needs the internet.
+- **Works offline and installs as an app.** After one visit the site opens, edits, presents and downloads with no connection. Only the AI features need the internet.
 - **One-file download.** Every presentation downloads as a single HTML file with its images and fonts inside. It opens in any browser, works offline, and needs nothing installed. Pick PDF instead for email and chat: one page per slide, with the same look.
 - **Share by link.** The link carries the whole presentation. Nothing is uploaded: the slides live in the link itself.
 
@@ -143,6 +144,8 @@ Open http://127.0.0.1:3000. Running it on your own computer is what turns on Ask
 The **Add to your AI** panel, which walks people through installing the skill, shows locally and on preview deployments. Set `SKILL_INSTALL=on` to show it in production, or `off` to hide it everywhere.
 
 The AI buttons under each slide (Shorter, Make it visual and the rest) are hidden for now. Set `SLIDE_AI=on` to show them.
+
+The free AI draft is off unless `AI_DRAFT_ENABLED=true`. It also needs `ANTHROPIC_API_KEY`, an Upstash Redis database (`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`, or the `KV_REST_API_*` pair Vercel adds), and a random `IP_HASH_SALT`. Redis holds only hashed visitor keys and counters: one draft per visitor a day, 20 a day in all, and a monthly budget, with `SET ai-draft:enabled 1` as the switch that turns drafts on and `DEL ai-draft:enabled` as the one that stops them.
 
 The presentation format is described in [FORMAT.md](FORMAT.md), with a full example in [public/example.md](public/example.md).
 

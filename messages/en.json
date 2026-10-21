@@ -510,6 +510,13 @@
     "connecting": "Opening ChatGPT…",
     "copyPrompt": "Copy prompt",
     "copyHint": "Paste it into any AI chat",
+    "draft": {
+      "make": "Make a free AI draft",
+      "working": "Writing your slides…",
+      "privacy": "One free AI draft a day. Your request goes to Anthropic to write the slides, and this site doesn’t keep it.",
+      "used": "You’ve used today’s free AI draft. Keep editing here, or copy the prompt to use your preferred AI.",
+      "paused": "Free AI drafts are paused for now. Keep editing here, or copy the prompt to use your preferred AI."
+    },
     "blank": "Start blank",
     "close": "Back to my presentation",
     "paste": {
