@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Blocked by: 02, 03
 
 # T04 – Free-draft generation boundary
@@ -47,3 +47,15 @@ Anonymous aggregate counters (record only counts, no content):
 
 ## Spec reference
 `.scratch/public-ai-draft/spec.md` — Implementation Decisions on boundary, repair, sanitisation, and counters.
+
+## Answer
+
+Implemented in commit b4c8600 on branch `worktree-agent-a9633b90ff1065663`.
+
+Files created:
+- `lib/ai-draft/generate.ts` — `generateFreeDraft` orchestrator with `sanitiseOutput` helper and `extractSource` helper
+- `lib/ai-draft/generate.test.ts` — 16 tests covering gate rejection, provider failure, valid first attempt, sanitisation rejection (no repair), slide-count exceeded (no repair), parse failure triggers repair, repair failure, and at-most-two-provider-calls invariant
+
+Files modified:
+- `lib/ai-draft/index.ts` — added `generateFreeDraft` re-export
+- `knip.json` — removed `lib/ai-draft/**` from ignore (module now consumed by T05)
