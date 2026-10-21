@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Blocked by: 01
 
 # T02 – Upstash Redis gate
@@ -43,3 +43,12 @@ Export `setRemoteEnabled(enabled: boolean)` for smoke-test/admin use only – se
 
 ## Spec reference
 `.scratch/public-ai-draft/spec.md` — Implementation Decisions on the gate, counters, fail-closed behaviour.
+
+## Answer
+
+Created `lib/ai-draft/gate.ts` with:
+- `admitRequest(clientIp: string | null): Promise<DraftOutcome | null>` — atomic Lua script via `redis.eval()` checking all four controls (kill switch, per-hash limit, daily cap, monthly budget); returns `null` on admission or a `DraftOutcome` on rejection; fails closed on any Redis error.
+- `releaseReservation(): void` — no-op per spec.
+- `setRemoteEnabled(enabled: boolean): Promise<void>` — admin helper to set `ai-draft:enabled`.
+
+Installed `@upstash/redis@^1.39.0`. Merged integration branch tip (which included T03's `@anthropic-ai/sdk`), resolving the package.json conflict by keeping both dependencies.
