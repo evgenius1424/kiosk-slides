@@ -3,5 +3,5 @@
   "entry": ["skills/render.ts", "scripts/*.mjs"],
   "ignoreExportsUsedInFile": true,
   "ignoreDependencies": ["postcss-load-config"],
-  "ignore": ["skills/*/scripts/**", "lib/ai-draft/**"]
+  "ignore": ["skills/*/scripts/**"]
 }

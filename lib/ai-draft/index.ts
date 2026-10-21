@@ -12,3 +12,4 @@ export {
   getUpstashToken,
   getIpHashSalt,
 } from "./config";
+export { generateFreeDraft } from "./generate";
