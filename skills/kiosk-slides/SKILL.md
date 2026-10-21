@@ -1,6 +1,8 @@
 ---
 name: kiosk-slides
-description: Write a Kiosk Slides presentation in Markdown from a conversation, notes, or a document, and render it to one self-contained HTML file that presents anywhere, offline. Use when the user wants a presentation, slides, a deck, or a kiosk loop made, revised, checked, re-themed, exported, or turned into HTML.
+description: Create, revise, check, re-theme, or render a Kiosk Slides presentation as Markdown and one self-contained HTML file.
+disable-model-invocation: true
+argument-hint: <presentation request>
 ---
 
 # Kiosk Slides

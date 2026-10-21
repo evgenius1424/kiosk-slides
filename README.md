@@ -15,6 +15,12 @@ At the Claude Code prompt, run these commands one at a time:
 /plugin install kiosk-slides@kiosk-slides
 ```
 
+Create or change a presentation with the command:
+
+```text
+/kiosk-slides Make a 6-slide presentation about our Q3 results.
+```
+
 ### Codex
 
 In your terminal, run:
@@ -24,7 +30,7 @@ codex plugin marketplace add evgenius1424/kiosk-slides
 codex plugin add kiosk-slides@kiosk-slides
 ```
 
-Start a new chat after installing, then ask for a presentation. For example: "Make a 6-slide presentation about our Q3 results."
+In Codex, name the skill in your request: "Use kiosk-slides to make a 6-slide presentation about our Q3 results."
 
 Need another agent? See [more installation options](#more-installation-options).
 
@@ -121,7 +127,7 @@ Update with `npx skills@latest update`.
 
 </details>
 
-Then ask your agent for a presentation, for example "make a 6-slide presentation about our Q3 results".
+In Claude Code, use `/kiosk-slides` to start the presentation workflow. In other agents, name `kiosk-slides` in your request.
 
 ## Run it yourself
 
