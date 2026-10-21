@@ -40,7 +40,7 @@ describe('opening a shared link', () => {
     fireEvent.click(screen.getByText('Keep a copy'))
     await screen.findByText('Edit')
     expect(library().filter(p => p.source === shared)).toHaveLength(1)
-    expect(location.hash).toBe('#2')
+    expect(location.hash).toBe('#slide-2')
 
     cleanup()
     history.replaceState(null, '', `/#s=${await encodeShare(shared)}`)

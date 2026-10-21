@@ -32,7 +32,7 @@ export const PLAYER_KEYS: Record<string, PlayerAction> = {
 export const SWIPE = { distance: 45, ratio: 1.2 }
 export const WHEEL = { distance: 65, settleMs: 240, lineHeight: 16 }
 export const IDLE_MS = 2600
-export const SLIDE_HASH = /^#(\d+)$/
+export const SLIDE_HASH = /^#(?:slide-)?(\d+)$/
 
 export const PLAYER_WORDS = {
   autoplay: { on: 'Autoplay on', off: 'Autoplay off' },
@@ -62,7 +62,7 @@ export function slideFromHash(hash: string, count: number) {
 }
 
 export function slideHash(index: number) {
-  return `#${index + 1}`
+  return `#slide-${index + 1}`
 }
 
 export function slideTitle(slide: Slide) {

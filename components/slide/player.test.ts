@@ -8,6 +8,7 @@ import {
   PLAYER_WORDS,
   SWIPE,
   slideFromHash,
+  slideHash,
   slideLabel,
   swipeDelta,
   type PlayerAction,
@@ -82,7 +83,7 @@ describe('exported presentation player', () => {
     expect((await open('#s=abc')).active()).toBe(0)
     const page = await open('#2')
     page.press({ key: 'ArrowRight' })
-    expect(page.hash()).toBe('#3')
+    expect(page.hash()).toBe('#slide-3')
     expect(page.history()).toBe(1)
   })
 
@@ -164,6 +165,17 @@ describe('reduced motion', () => {
 })
 
 describe('slide in the address', () => {
+  it('writes selector-safe addresses and reads them in both players', async () => {
+    const hash = slideHash(2)
+    expect(hash).toBe('#slide-3')
+    expect(slideFromHash(hash, 10)).toBe(2)
+    expect(slideFromHash('#slide-0', 10)).toBe(0)
+    expect(slideFromHash('#slide-40', 10)).toBe(9)
+    const { document } = new JSDOM('').window
+    expect(() => document.querySelector(hash)).not.toThrow()
+    expect((await open(hash)).active()).toBe(2)
+  })
+
   it('reads bare numbers and clamps them', () => {
     expect(slideFromHash('#4', 10)).toBe(3)
     expect(slideFromHash('#0', 10)).toBe(0)
