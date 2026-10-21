@@ -36,6 +36,7 @@ export function useSettingsPanel() {
   const buttonRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     if (!open) return
+    void loadFonts()
     panelRef.current?.querySelector<HTMLElement>('select,input,button')?.focus()
     const outside = (event: PointerEvent) => {
       const target = event.target as Element
@@ -85,6 +86,10 @@ export function SettingsPanel({
   const set = (key: string, value?: string) => onChange(setFrontMatter(source, key, value))
   const setTone = (color: string) =>
     set('tone', color === defaultTone(theme) ? undefined : toneName(color, theme))
+  const setFont = async (id: string) => {
+    await loadFonts()
+    set('font', id === fonts[0].id ? undefined : id)
+  }
   const setShareSafe = (next: boolean) => {
     player.resetSafe()
     set('share-safe', next ? 'true' : undefined)
@@ -141,11 +146,7 @@ export function SettingsPanel({
           {ts('font')}
         </label>
         <div className="select-wrap">
-          <select
-            id="font"
-            value={look.font}
-            onChange={e => set('font', e.target.value === fonts[0].id ? undefined : e.target.value)}
-          >
+          <select id="font" value={look.font} onChange={e => void setFont(e.target.value)}>
             {fonts.map(f => (
               <option key={f.id} value={f.id}>
                 {f.name}
@@ -328,4 +329,11 @@ function Toggle({
       <span />
     </button>
   )
+}
+
+let fontsLoaded: Promise<unknown> | undefined
+
+function loadFonts() {
+  fontsLoaded ??= Promise.all([...document.fonts].map(face => face.load().catch(() => {})))
+  return fontsLoaded
 }
