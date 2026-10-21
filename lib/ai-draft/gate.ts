@@ -77,12 +77,3 @@ export async function admitRequest(clientIp: string | null): Promise<DraftOutcom
     return { kind: 'provider-failure' }
   }
 }
-
-export function releaseReservation(): void {
-  // no-op: reservations are retained even if the provider call fails
-}
-
-export async function setRemoteEnabled(enabled: boolean): Promise<void> {
-  const redis = new Redis({ url: getUpstashUrl(), token: getUpstashToken() })
-  await redis.set('ai-draft:enabled', enabled ? '1' : '0')
-}

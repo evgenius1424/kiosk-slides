@@ -12,14 +12,16 @@ Create `lib/ai-draft/provider.ts`:
 Install `@anthropic-ai/sdk` via pnpm before implementing.
 
 Export `generateDraft(brief: string, signal: AbortSignal): Promise<ProviderResult>` where:
+
 ```ts
 type ProviderResult =
-  | { kind: "ok"; text: string; inputTokens: number; outputTokens: number }
-  | { kind: "refused" }
-  | { kind: "error"; message: string }
+  | { kind: 'ok'; text: string; inputTokens: number; outputTokens: number }
+  | { kind: 'refused' }
+  | { kind: 'error'; message: string }
 ```
 
 Implementation:
+
 - Use `MODEL_ID` from config (pinned `"claude-haiku-4-5"`)
 - Set `max_tokens: 4096`
 - Send a single user message with the compact prompt below
@@ -29,6 +31,7 @@ Implementation:
 - Return actual `input_usage.input_tokens` and `usage.output_tokens` for aggregate tracking
 
 Compact prompt template (system):
+
 ```
 You create presentations for Kiosk Slides. Reply with ONLY the presentation Markdown inside <presentation></presentation> tags. No other text.
 
@@ -43,17 +46,20 @@ Rules:
 User message: `Create a presentation about: {brief}`
 
 ## Notes
+
 - Do NOT reuse `streamResponse` from chatgpt.ts – this is a completely separate provider.
 - Use the Anthropic SDK `messages.create` (non-streaming) for simplicity.
 - Pass `signal` as `AbortSignal` to the SDK fetch options.
 - Keep MAX_SLIDES and the format rules aligned with config constants.
 
 ## Spec reference
+
 `.scratch/public-ai-draft/spec.md` — Implementation Decisions on provider, model, token limits, prompt.
 
 ## Answer
 
 Implemented `lib/ai-draft/provider.ts` with:
+
 - `ProviderResult` type (ok / refused / error variants)
 - `generateDraft(brief, signal)` — calls Anthropic `messages.create` with `MODEL_ID`, `max_tokens: 4096`, `SYSTEM_PROMPT`, and the brief as the user message
 - `repairDraft(originalText, signal)` — same flow but with a repair user message

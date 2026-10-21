@@ -7,6 +7,7 @@ Define the typed configuration accessors and domain types for the free-draft fea
 ## Scope
 
 Create `lib/ai-draft/config.ts`:
+
 - Export `AI_DRAFT_ENABLED` (reads `process.env.AI_DRAFT_ENABLED`; defaults to `false`; string `"true"` enables)
 - Export `ANTHROPIC_API_KEY` accessor (reads `process.env.ANTHROPIC_API_KEY`; throws if accessed when missing)
 - Export `UPSTASH_URL` accessor (reads `process.env.UPSTASH_REDIS_REST_URL`)
@@ -16,23 +17,26 @@ Create `lib/ai-draft/config.ts`:
 - Export the `DraftOutcome` discriminated union type:
   ```ts
   type DraftOutcome =
-    | { kind: "presentation"; source: string }
-    | { kind: "limit"; reason: "disabled" | "already-used" | "capacity" | "budget" }
-    | { kind: "invalid-output" }
-    | { kind: "provider-failure" }
+    | { kind: 'presentation'; source: string }
+    | { kind: 'limit'; reason: 'disabled' | 'already-used' | 'capacity' | 'budget' }
+    | { kind: 'invalid-output' }
+    | { kind: 'provider-failure' }
   ```
 
 ## Notes
+
 - All accessors must be server-side only (never imported by client code).
 - Keep accessors as functions, not module-level reads, so tests can set env vars before import.
 - No test file needed for this ticket (config is tested through higher-level tests).
 
 ## Spec reference
+
 `.scratch/public-ai-draft/spec.md` — Implementation Decisions bullets on credentials, model version, and configuration.
 
 ## Answer
 
 Created `lib/ai-draft/config.ts` with:
+
 - `AI_DRAFT_ENABLED` boolean constant
 - `getAnthropicApiKey()`, `getUpstashUrl()`, `getUpstashToken()`, `getIpHashSalt()` accessor functions
 - Constants: `MAX_BRIEF_LENGTH`, `MAX_SLIDES`, `DAILY_PER_HASH_LIMIT`, `DAILY_GLOBAL_LIMIT`, `MONTHLY_BUDGET_CENTS` (800), `MODEL_ID`

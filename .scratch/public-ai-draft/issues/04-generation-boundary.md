@@ -12,6 +12,7 @@ Create `lib/ai-draft/generate.ts`:
 Export `generateFreeDraft(brief: string, clientIp: string | null, signal: AbortSignal): Promise<DraftOutcome>`.
 
 Algorithm:
+
 1. Call `admitRequest(clientIp)`. If it returns a non-null outcome, return that outcome immediately (no provider call).
 2. Call `generateDraft(brief, signal)`.
    - If `{ kind: "refused" }` or `{ kind: "error" }`, record aggregate counter and return `{ kind: "provider-failure" }`.
@@ -32,12 +33,14 @@ Algorithm:
    - **No second repair**: the route never attempts more than 2 provider calls total.
 
 Sanitisation (`sanitiseOutput(source: string): string | null`):
+
 - Scan for `http://` or `https://` patterns anywhere in the text.
 - Scan for `![` (image widget syntax).
 - If either is present, return `null` (rejected).
 - Otherwise return the source unchanged.
 
 Anonymous aggregate counters (record only counts, no content):
+
 - `admitted` – gate returned null
 - `blocked` – gate returned a limit outcome
 - `provider-failed` – provider returned error or refused
@@ -46,6 +49,7 @@ Anonymous aggregate counters (record only counts, no content):
 - Log these to `console.log` as a JSON object `{ event: "ai-draft", outcome: "..." }` for now (no Redis counter yet – deferred to later, counters in Redis are in T02 scope for admission only)
 
 ## Spec reference
+
 `.scratch/public-ai-draft/spec.md` — Implementation Decisions on boundary, repair, sanitisation, and counters.
 
 ## Answer
@@ -53,9 +57,11 @@ Anonymous aggregate counters (record only counts, no content):
 Implemented in commit b4c8600 on branch `worktree-agent-a9633b90ff1065663`.
 
 Files created:
+
 - `lib/ai-draft/generate.ts` — `generateFreeDraft` orchestrator with `sanitiseOutput` helper and `extractSource` helper
 - `lib/ai-draft/generate.test.ts` — 16 tests covering gate rejection, provider failure, valid first attempt, sanitisation rejection (no repair), slide-count exceeded (no repair), parse failure triggers repair, repair failure, and at-most-two-provider-calls invariant
 
 Files modified:
+
 - `lib/ai-draft/index.ts` — added `generateFreeDraft` re-export
 - `knip.json` — removed `lib/ai-draft/**` from ignore (module now consumed by T05)
