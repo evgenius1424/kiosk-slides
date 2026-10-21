@@ -1,5 +1,5 @@
 export const SITE_NAME = 'Kiosk Slides'
-const PUBLIC_SITE_URL = 'https://kiosk-slides.vercel.app'
+const PUBLIC_SITE_URL = 'https://kiosk-slides.com'
 export const SITE_URL = siteUrl()
 
 function siteUrl() {

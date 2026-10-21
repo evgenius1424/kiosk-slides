@@ -11,7 +11,7 @@ import {
   shareSlideHash,
 } from './share'
 
-const SITE = 'https://kiosk-slides.vercel.app'
+const SITE = 'https://kiosk-slides.com'
 const example = readFileSync(path.join(process.cwd(), 'public/example.md'), 'utf8')
 const cyrillic = `---
 theme: room-light
