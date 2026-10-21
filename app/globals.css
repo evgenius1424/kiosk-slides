@@ -947,6 +947,9 @@ kbd {
   align-items: center;
   gap: 10px;
 }
+.start-note {
+  font-size: 13px;
+}
 .start-steps {
   color: var(--foreground);
 }

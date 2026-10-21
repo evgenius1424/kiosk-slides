@@ -46,6 +46,7 @@ export function KioskWorkspace({
   site,
   skillInstall = false,
   slideAi = false,
+  freeDraft = false,
 }: {
   example: string
   prompt: string
@@ -53,6 +54,7 @@ export function KioskWorkspace({
   site: string
   skillInstall?: boolean
   slideAi?: boolean
+  freeDraft?: boolean
 }) {
   const t = useTranslations('Workspace')
   const ta = useTranslations('SlideActions')
@@ -186,6 +188,11 @@ export function KioskWorkspace({
     setStart(null)
     setTab('preview')
     library.openExample()
+  }
+  const openDraft = (value: string) => {
+    setStart(null)
+    setTab('preview')
+    loadGenerated(value, true)
   }
   const pastePresentation = (value: string) => {
     setStart(null)
@@ -447,7 +454,9 @@ export function KioskWorkspace({
         <StartScreen
           prompt={prompt}
           example={example}
+          freeDraft={freeDraft}
           onMake={makeSlides}
+          onDraft={openDraft}
           onExample={openExample}
           onBlank={startBlank}
           onClose={start === 'new' ? () => setStart(null) : undefined}

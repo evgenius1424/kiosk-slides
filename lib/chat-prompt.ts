@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
+import { MAX_SLIDES } from './ai-draft'
 import { SLIDES_CLOSE, SLIDES_OPEN } from './slide-actions'
 
 const QUALITY = `Follow "Writing a good presentation" just as strictly. Every slide needs its settings comment with a title, label and footer, and most slides need a widget such as steps, before/after, a metric, a chart, a table or a flow. A presentation that is only one heading per slide, or that skips the settings comments, is wrong even when it parses. Run the checklist at the end of the format before you reply.`
@@ -17,6 +18,12 @@ const COPY_GUIDE = `You write presentations for Kiosk Slides, a tool for present
 I'll tell you what the presentation is about and who it is for. Then reply with the complete presentation source in a single \`\`\`markdown code block so I can paste it into the Kiosk Slides editor. Give the presentation a short \`title:\` in its front matter. When I ask for changes, return the whole presentation again, never a partial edit.
 
 The presentation format is specified below. A parser enforces every grammar rule and rejects the presentation otherwise, so follow it exactly. ${QUALITY}`
+
+const DRAFT_GUIDE = `You write presentations for Kiosk Slides, a tool for presenting one clear idea per slide on a TV, in a room, or on a call.
+
+The user describes their talk. Reply with only the complete presentation source inside <presentation></presentation> tags, with nothing before or after. Give it a short \`title:\` in its front matter. Write at most ${MAX_SLIDES} slides, even when asked for more. Use no links, images or buttons anywhere. Where a detail is missing, make a sensible choice instead of asking.
+
+The presentation format is specified below. A parser enforces every grammar rule and rejects the presentation otherwise. ${QUALITY}`
 
 const SLIDE_GUIDE = `You change one slide of a Kiosk Slides presentation. You get the whole presentation for context, the slide to change, and what to do with it.
 
@@ -40,6 +47,10 @@ export function systemPrompt(): Promise<string> {
       throw err
     })
   return cached
+}
+
+export async function draftSystemPrompt() {
+  return `${DRAFT_GUIDE}\n\n${await reference()}`
 }
 
 export async function slideSystemPrompt() {

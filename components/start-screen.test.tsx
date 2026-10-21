@@ -10,6 +10,7 @@ const SIGNED_IN = { available: true, connected: true, email: 'a@b.c', planUsage:
 
 let clipboard = ''
 let chats: { messages: { content: string }[] }[] = []
+let briefs: string[] = []
 
 beforeAll(() => {
   vi.stubGlobal(
@@ -32,6 +33,7 @@ beforeEach(() => {
   history.replaceState(null, '', '/')
   clipboard = ''
   chats = []
+  briefs = []
   hosted()
 })
 afterEach(cleanup)
@@ -107,6 +109,55 @@ describe('start screen', () => {
     expect(screen.queryByRole('heading', { name: 'What’s your talk about?' })).toBeNull()
   })
 
+  it('offers no free AI draft unless the site turns it on', async () => {
+    workspace()
+    await act(() => Promise.resolve())
+    expect(screen.queryByRole('button', { name: 'Make a free AI draft' })).toBeNull()
+  })
+
+  it('opens the free AI draft as a new presentation on the hosted site', async () => {
+    hostedDraft({
+      kind: 'presentation',
+      source: '---\ntitle: Four days\n---\n\n# Less is **more**\n',
+    })
+    workspace({ freeDraft: true })
+    fireEvent.change(topic(), { target: { value: 'Moving to a four-day week' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Short (5)' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
+    expect(screen.getByText(/Your request goes to Anthropic/)).toBeTruthy()
+    await vi.waitFor(() => expect(menuName()).toBe('Four days'))
+    expect(briefs[0]).toMatch(/^My talk: Moving to a four-day week\nLength: about 5 slides\./)
+    expect(screen.queryByRole('heading', { name: 'What’s your talk about?' })).toBeNull()
+    expect(library().map(p => p.name)).toEqual(['Four days'])
+  })
+
+  it.each([
+    [{ kind: 'limit', reason: 'already-used' }, 'You’ve used today’s free AI draft'],
+    [{ kind: 'invalid-output' }, 'You’ve used today’s free AI draft'],
+    [{ kind: 'provider-failure' }, 'You’ve used today’s free AI draft'],
+    [{ kind: 'limit', reason: 'disabled' }, 'Free AI drafts are paused'],
+    [{ kind: 'limit', reason: 'capacity' }, 'Free AI drafts are paused'],
+    [{ kind: 'limit', reason: 'budget' }, 'Free AI drafts are paused'],
+  ])('keeps the topic and falls back to the prompt on %o', async (outcome, note) => {
+    hostedDraft(outcome)
+    workspace({ freeDraft: true })
+    fireEvent.change(topic(), { target: { value: 'Our onboarding' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
+    expect((await screen.findByRole('status')).textContent).toContain(note)
+    expect(screen.queryByRole('button', { name: 'Make a free AI draft' })).toBeNull()
+    expect(topic().value).toBe('Our onboarding')
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy prompt' })))
+    expect(clipboard).toMatch(/My talk: Our onboarding/)
+    expect(screen.getByRole('heading', { name: 'Now paste the answer here' })).toBeTruthy()
+  })
+
+  it('prefers the local ChatGPT plan over the free AI draft', async () => {
+    signedIn()
+    workspace({ freeDraft: true })
+    expect(await screen.findByRole('button', { name: 'Make slides' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Make a free AI draft' })).toBeNull()
+  })
+
   it('sends the request to Ask AI when signed in locally', async () => {
     signedIn()
     workspace()
@@ -127,6 +178,17 @@ function hosted() {
   )
 }
 
+function hostedDraft(outcome: object) {
+  vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
+    if (url.includes('status')) return Response.json({ available: false, reason: 'Hosted.' })
+    if (url.includes('ai-draft')) {
+      briefs.push(JSON.parse(String(init?.body)).brief)
+      return Response.json(outcome)
+    }
+    return new Response(null, { status: 404 })
+  })
+}
+
 function signedIn() {
   vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
     if (url.includes('status')) return Response.json(SIGNED_IN)
@@ -136,7 +198,7 @@ function signedIn() {
   })
 }
 
-function workspace() {
+function workspace({ freeDraft = false } = {}) {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
       <KioskWorkspace
@@ -144,6 +206,7 @@ function workspace() {
         prompt="GUIDE"
         slidePrompt="SLIDE GUIDE"
         site="https://example.com"
+        freeDraft={freeDraft}
       />
     </NextIntlClientProvider>,
   )

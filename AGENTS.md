@@ -40,6 +40,7 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `lib/slide-styles.ts`   | Slide CSS shared by the site, the export and the skills                                |
 | `lib/player.ts`         | Transitions, keys, swipe and wheel rules shared by every player                        |
 | `lib/chat*.ts`          | AI prompt and the local ChatGPT plan-usage client                                      |
+| `lib/ai-draft/`         | Free AI draft: browser contract in `index.ts`, server flow, Redis gate, Anthropic call |
 | `messages/en.json`      | Every UI string, read through next-intl                                                |
 | `skills/`               | The agent skill; its `scripts/`, `references/` and `assets/` are generated             |
 | `.claude-plugin/`       | Plugin and marketplace manifests that publish the skill                                |

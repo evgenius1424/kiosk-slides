@@ -13,6 +13,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
+import { MAX_BRIEF_LENGTH, requestDraft } from '@/lib/ai-draft'
 import { type ChatGPTStatus, connectChatGPT, fetchStatus } from '@/lib/chat'
 import { parsePresentation, presentationLook } from '@/lib/presentation'
 import { slideTitle } from '@/lib/player'
@@ -33,6 +34,8 @@ const DRAFT_KEY = 'kiosk-talk'
 const RESUME_KEY = 'kiosk-talk-resume'
 const SHOWCASE_MS = 5000
 const FEATURES = ['room', 'share', 'saved'] as const
+const MAX_TOPIC_LENGTH =
+  MAX_BRIEF_LENGTH - talkRequest({ topic: '', audience: 'screen', length: 'long' }).length
 
 export function resumingStart() {
   const resume = session(RESUME_KEY)
@@ -43,14 +46,18 @@ export function resumingStart() {
 export function StartScreen({
   prompt,
   example,
+  freeDraft = false,
   onMake,
+  onDraft,
   onExample,
   onBlank,
   onClose,
 }: {
   prompt: string
   example: string
+  freeDraft?: boolean
   onMake: (request: string) => void
+  onDraft: (source: string) => void
   onExample: () => void
   onBlank: () => void
   onClose?: () => void
@@ -61,17 +68,22 @@ export function StartScreen({
   const [copied, setCopied] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
   const [connecting, setConnecting] = useState(false)
+  const [drafting, setDrafting] = useState(false)
+  const [draftNote, setDraftNote] = useState<'used' | 'paused' | null>(null)
+  const draftRef = useRef<AbortController | null>(null)
   const online = useOnline()
   const topicRef = useRef<HTMLTextAreaElement>(null)
   const ready = status?.available && status.connected && status.planUsage
   const local = online && status?.available
   const hasTopic = !!talk.topic.trim()
+  const offerDraft = freeDraft && online && status?.available === false && !draftNote
 
   useEffect(() => {
     const saved = draft()
     if (saved) setTalk(saved)
     topicRef.current?.focus()
   }, [])
+  useEffect(() => () => draftRef.current?.abort(), [])
   useEffect(() => {
     if (online) fetchStatus().then(setStatus, () => setStatus(null))
   }, [online])
@@ -96,6 +108,19 @@ export function StartScreen({
     if (!hasTopic) return topicRef.current?.focus()
     session(DRAFT_KEY, null)
     onMake(talkRequest(talk))
+  }
+  const makeDraft = async () => {
+    if (!hasTopic) return topicRef.current?.focus()
+    setDrafting(true)
+    draftRef.current = new AbortController()
+    const outcome = await requestDraft(talkRequest(talk), draftRef.current.signal).catch(() => null)
+    if (!outcome) return
+    setDrafting(false)
+    if (outcome.kind === 'presentation') {
+      session(DRAFT_KEY, null)
+      onDraft(outcome.source)
+    } else if (outcome.kind === 'limit' && outcome.reason !== 'already-used') setDraftNote('paused')
+    else setDraftNote('used')
   }
   const connect = async () => {
     setConnecting(true)
@@ -160,6 +185,7 @@ export function StartScreen({
               e.preventDefault()
               if (ready) make()
               else if (local) connect()
+              else if (offerDraft) makeDraft()
               else copy()
             }}
           >
@@ -180,6 +206,7 @@ export function StartScreen({
               placeholder={t('placeholder')}
               value={talk.topic}
               rows={4}
+              maxLength={offerDraft ? MAX_TOPIC_LENGTH : undefined}
               onChange={e => update({ ...talk, topic: e.target.value })}
               onKeyDown={e => {
                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey))
@@ -216,6 +243,17 @@ export function StartScreen({
                     {t('copyPrompt')}
                   </button>
                 </>
+              ) : offerDraft ? (
+                <>
+                  <button className="btn primary" type="submit" disabled={drafting}>
+                    <Sparkles size={14} />
+                    {drafting ? t('draft.working') : t('draft.make')}
+                  </button>
+                  <button className="btn" type="button" onClick={copy} disabled={drafting}>
+                    <Copy size={14} />
+                    {t('copyPrompt')}
+                  </button>
+                </>
               ) : (
                 <button className="btn primary" type="submit" title={t('copyHint')}>
                   <Copy size={14} />
@@ -223,6 +261,12 @@ export function StartScreen({
                 </button>
               )}
             </div>
+            {offerDraft && <p className="start-note">{t('draft.privacy')}</p>}
+            {draftNote && (
+              <p className="start-note" role="status">
+                {t(`draft.${draftNote}`)}
+              </p>
+            )}
           </form>
         )}
         <Showcase example={example} onOpen={onExample} />
