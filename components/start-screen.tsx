@@ -76,7 +76,7 @@ export function StartScreen({
   const ready = status?.available && status.connected && status.planUsage
   const local = online && status?.available
   const hasTopic = !!talk.topic.trim()
-  const offerDraft = freeDraft && online && status?.available === false && !draftNote
+  const offerDraft = freeDraft && online && !status?.available && !draftNote
 
   useEffect(() => {
     const saved = draft()

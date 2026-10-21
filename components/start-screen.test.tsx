@@ -131,6 +131,13 @@ describe('start screen', () => {
     expect(library().map(p => p.name)).toEqual(['Four days'])
   })
 
+  it('shows the free AI draft before the status check answers', () => {
+    vi.stubGlobal('fetch', () => new Promise(() => {}))
+    workspace({ freeDraft: true })
+    expect(screen.getByRole('button', { name: 'Make a free AI draft' })).toBeTruthy()
+    expect(screen.getByText(/Your request goes to Anthropic/)).toBeTruthy()
+  })
+
   it.each([
     [{ kind: 'limit', reason: 'already-used' }, 'You’ve used today’s free AI draft'],
     [{ kind: 'invalid-output' }, 'You’ve used today’s free AI draft'],
