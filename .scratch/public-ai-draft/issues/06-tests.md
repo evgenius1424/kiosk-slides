@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Blocked by: 05
 
 # T06 – Backend tests
@@ -63,3 +63,12 @@ Per spec Testing Decisions:
 ## Spec reference
 
 `.scratch/public-ai-draft/spec.md` — Testing Decisions section in full.
+
+## Answer
+
+Created `app/api/ai-draft/route.test.ts` with 19 tests across 6 groups:
+input validation, feature disabled, gate outcomes, generation outcomes, Cache-Control header, and credential leak check.
+
+Mocked `@/lib/ai-draft` with a getter for `AI_DRAFT_ENABLED` (re-reads `process.env.AI_DRAFT_ENABLED` at call time) to work around the module-level constant. This avoids `vi.resetModules()` complexity.
+
+Commit: f9c9b4e — all 276 tests pass, `pnpm check` clean.
