@@ -22,6 +22,7 @@
     "build:skills": "node scripts/build-skills.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "@upstash/redis": "^1.39.0",
     "@vercel/analytics": "1.6.1",
     "lucide-react": "^1.16.0",
