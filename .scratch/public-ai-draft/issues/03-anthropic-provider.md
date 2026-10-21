@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Blocked by: 01
 
 # T03 – Anthropic free-draft provider
@@ -50,3 +50,15 @@ User message: `Create a presentation about: {brief}`
 
 ## Spec reference
 `.scratch/public-ai-draft/spec.md` — Implementation Decisions on provider, model, token limits, prompt.
+
+## Answer
+
+Implemented `lib/ai-draft/provider.ts` with:
+- `ProviderResult` type (ok / refused / error variants)
+- `generateDraft(brief, signal)` — calls Anthropic `messages.create` with `MODEL_ID`, `max_tokens: 4096`, `SYSTEM_PROMPT`, and the brief as the user message
+- `repairDraft(originalText, signal)` — same flow but with a repair user message
+- Internal `callApi` helper shared by both functions
+- Handles: `stop_reason: "max_tokens"` → error, AbortError → cancelled, 4xx API error → refused, others → error with message
+- `@anthropic-ai/sdk 0.135.0` added to dependencies
+
+Commit: 3f1283e on branch `feat/public-ai-draft-phase1`
