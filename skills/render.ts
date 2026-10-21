@@ -86,7 +86,7 @@ async function main() {
   await writeFile(out, html)
   console.log(`${summary(presentation)}\nWrote ${out}`)
   const link = values['no-link'] ? undefined : await openLink(source)
-  if (link) console.log(`Open in your browser: ${link}`)
+  if (link) console.log(`Open in your browser: \x1b]8;;${link}\x1b\\${link}\x1b]8;;\x1b\\`)
 }
 
 function withLook(presentation: Presentation): Presentation {

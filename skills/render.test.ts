@@ -40,9 +40,7 @@ describe('skill renderer', () => {
   it('prints the same share link as the site', async () => {
     const link = await shareLink(await readFile('public/example.md', 'utf8'), SITE_URL)
     expect(link).toHaveProperty('url')
-    expect(render('linked.html').split('\n')).toContain(
-      `Open in your browser: ${(link as { url: string }).url}`,
-    )
+    expect(render('linked.html').split('\n')).toContain(terminalLink((link as { url: string }).url))
     expect(render('quiet.html', '--no-link')).not.toContain('Open in your browser')
   })
 
@@ -60,6 +58,10 @@ function render(out: string, ...options: string[]) {
   const script = path.join(dir, 'scripts/render.mjs')
   const args = [script, path.join(dir, 'example.md'), '-o', path.join(dir, out), ...options]
   return execFileSync('node', args, { encoding: 'utf8' })
+}
+
+function terminalLink(url: string) {
+  return `Open in your browser: \x1b]8;;${url}\x1b\\${url}\x1b]8;;\x1b\\`
 }
 
 async function dataUrl(file: string, type: string) {

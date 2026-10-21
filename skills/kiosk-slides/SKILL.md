@@ -21,7 +21,7 @@ The full grammar is in `references/FORMAT.md` and a presentation that uses every
 1. Find out what the presentation is for: the audience, the one thing they should remember, and where it plays (a room, a call, an unattended screen). If the user already said, don't ask again. If a detail is missing and a sensible default exists, use the default and say which.
 2. Outline before writing: one idea per slide, 5–12 slides, a closing slide that restates the message.
 3. Pick a widget for each slide from what its content is, using the table in "Writing a good presentation" in FORMAT.md. Keep message slides to a third at most and never two in a row.
-4. Write the presentation to a `.md` file. Put the key phrase of every heading in `**bold**`. Every slide gets a settings comment with a `title`, a `label`, and a `footer` that adds one useful line. Set `title:` in the front matter, and `brand:` when you know the organization or product.
+4. Write the presentation to a `.md` file. Put the key phrase of every heading in `**bold**`. Every slide gets a settings comment with a `title`, a `label`, and a `footer` that adds one useful line. Set `title:` in the front matter, and `brand:` when you know the organization or product. Leave `font:` unset (it defaults to `classic`) unless the user asks for a different one.
 5. Validate:
 
    ```bash
@@ -57,7 +57,7 @@ Options:
 - `--check` only validates and prints the slide list and any warnings, without writing HTML.
 - `--format` tidies the Markdown file in place without changing what it shows.
 
-After writing the HTML, the renderer prints `Open in your browser: https://…` when the presentation is small enough to share by link. The whole presentation lives in that link, so it opens the same slides on a phone, a TV or another computer with nothing uploaded. Give the person that link next to the files in one sentence, exactly as printed; never shorten it with a link service. When no link is printed, the HTML file is the way to share it.
+After writing the HTML, the renderer prints `Open in your browser: https://…` when the presentation is small enough to share by link. The whole presentation lives in that link, so it opens the same slides on a phone, a TV or another computer with nothing uploaded. Give the person that link next to the files in one sentence as a Markdown link `[Open in your browser](url)`; never shorten it with a link service. When no link is printed, the HTML file is the way to share it.
 
 For a PDF, open the HTML in a desktop browser and print it with Save as PDF: every slide prints on its own 16:9 page, in the same theme, tone and font, with selectable text. No other tool is needed.
 

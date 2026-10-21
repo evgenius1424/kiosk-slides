@@ -2,6 +2,32 @@
 
 **Slides made to be seen. Ready in seconds.**
 
+## Install the skill
+
+Install it once for each agent you use. It is then available in new projects on your computer. Claude Code and Codex keep separate plugin installs, so run both sets of commands if you use both.
+
+### Claude Code
+
+At the Claude Code prompt, run these commands one at a time:
+
+```text
+/plugin marketplace add evgenius1424/kiosk-slides
+/plugin install kiosk-slides@kiosk-slides
+```
+
+### Codex
+
+In your terminal, run:
+
+```bash
+codex plugin marketplace add evgenius1424/kiosk-slides
+codex plugin add kiosk-slides@kiosk-slides
+```
+
+Start a new chat after installing, then ask for a presentation. For example: "Make a 6-slide presentation about our Q3 results."
+
+Need another agent? See [more installation options](#more-installation-options).
+
 Tell an AI what you want to say. Get a clean, finished presentation back, and put it on the screen. No dragging boxes, no picking layouts, no nudging text. Just your point, big and clear.
 
 ## Why "Kiosk"
@@ -50,34 +76,14 @@ The same thing, without the website. The **kiosk-slides** skill in [`skills/`](s
 
 It shares the site's own renderer, so a presentation looks exactly the same wherever it was made. It needs Node 18 or later.
 
-### Install
+### More installation options
 
-Plugins update themselves. The `npx skills` route copies the files into your project, and you update them by hand. Pick one per agent, or you get the skill twice.
-
-<details>
-<summary><strong>Claude Code</strong></summary>
-
-```bash
-/plugin marketplace add evgenius1424/kiosk-slides
-/plugin install kiosk-slides@kiosk-slides
-```
-
-</details>
+The `npx skills` route copies the skill into your current project. Use one installation route per agent.
 
 <details>
 <summary><strong>Claude app</strong> (claude.ai and desktop)</summary>
 
 Download `kiosk-slides.zip` from the [latest release](https://github.com/evgenius1424/kiosk-slides/releases/latest), then add it under **Settings → Capabilities → Skills**.
-
-</details>
-
-<details>
-<summary><strong>Codex</strong></summary>
-
-```bash
-codex plugin marketplace add evgenius1424/kiosk-slides
-codex plugin add kiosk-slides@kiosk-slides
-```
 
 </details>
 
