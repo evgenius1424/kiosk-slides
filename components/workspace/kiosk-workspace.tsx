@@ -257,7 +257,7 @@ export function KioskWorkspace({
   function show(value: string, hash = '') {
     const next = live.load(value)
     if (next.error) setTab('markdown')
-    go(next.error ? 0 : (slideFromHash(hash, next.presentation!.slides.length) ?? 0))
+    player.jump(next.error ? 0 : (slideFromHash(hash, next.presentation!.slides.length) ?? 0))
     player.resetSafe()
   }
   if (library.broken)
@@ -273,7 +273,7 @@ export function KioskWorkspace({
     <>
       <main
         inert={!!start}
-        className={`workspace ${player.presenting ? 'is-presenting' : ''} ${player.presenting && player.idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}
+        className={`workspace ${library.loaded ? '' : 'is-loading'} ${player.presenting ? 'is-presenting' : ''} ${player.presenting && player.idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}
       >
         <WorkspaceHeader
           library={library}
