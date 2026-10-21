@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 
 # T01 – Config and domain types
 
@@ -29,3 +29,17 @@ Create `lib/ai-draft/config.ts`:
 
 ## Spec reference
 `.scratch/public-ai-draft/spec.md` — Implementation Decisions bullets on credentials, model version, and configuration.
+
+## Answer
+
+Created `lib/ai-draft/config.ts` with:
+- `AI_DRAFT_ENABLED` boolean constant
+- `getAnthropicApiKey()`, `getUpstashUrl()`, `getUpstashToken()`, `getIpHashSalt()` accessor functions
+- Constants: `MAX_BRIEF_LENGTH`, `MAX_SLIDES`, `DAILY_PER_HASH_LIMIT`, `DAILY_GLOBAL_LIMIT`, `MONTHLY_BUDGET_CENTS` (800), `MODEL_ID`
+- `DraftOutcome` discriminated union type
+
+Created `lib/ai-draft/index.ts` re-exporting all public surface.
+
+Added `lib/ai-draft/**` to knip ignore list (T02–T06 will import these, at which point the ignore entry can be removed).
+
+Commit: 8b25c16
