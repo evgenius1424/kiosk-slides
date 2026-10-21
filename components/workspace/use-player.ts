@@ -24,11 +24,13 @@ export function usePlayer(presentation: Presentation, notice: (message: string) 
   const [presenting, setPresenting] = useState(false)
   const [idle, setIdle] = useState(false)
   const [safeKey, setSafeKey] = useState<boolean | null>(null)
+  const [jumped, setJumped] = useState<number | null>(null)
+  if (jumped !== null && jumped !== index) setJumped(null)
   const safe = safeKey ?? presentation.shareSafe
   const at = Math.max(0, Math.min(index, slides.length - 1))
   const slide = slides[at] as Slide | undefined
   const motion = activeTransition(transition, safe)
-  const change = useSlideChange(index, slide, motion)
+  const change = useSlideChange(index, slide, jumped === index ? 'none' : motion)
   const slideName =
     slide && t('canvas.slide', { number: at + 1, count: slides.length, title: slideTitle(slide) })
   useWakeLock(presenting || playing)
@@ -36,6 +38,11 @@ export function usePlayer(presentation: Presentation, notice: (message: string) 
   const go = useCallback((i: number) => {
     setPlaying(false)
     setIndex(i)
+  }, [])
+  const jump = useCallback((i: number) => {
+    setPlaying(false)
+    setIndex(i)
+    setJumped(i)
   }, [])
   const move = useCallback(
     (delta: number) => {
@@ -128,6 +135,7 @@ export function usePlayer(presentation: Presentation, notice: (message: string) 
     change,
     setIndex,
     go,
+    jump,
     move,
     stop,
     toggleAutoplay,

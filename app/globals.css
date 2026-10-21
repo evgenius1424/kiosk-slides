@@ -85,6 +85,10 @@ a {
   height: 100dvh;
   overflow: hidden;
 }
+.workspace.is-loading > :not(.app-header),
+.workspace.is-loading .app-header > :not(.brand) {
+  visibility: hidden;
+}
 .app-header {
   grid-column: 1/-1;
   display: flex;
