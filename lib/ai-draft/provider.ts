@@ -1,4 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { generateText } from "ai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { getAnthropicApiKey, MAX_SLIDES, MODEL_ID } from "./config";
 
 export type ProviderResult =
@@ -19,10 +20,7 @@ export async function generateDraft(
   brief: string,
   signal: AbortSignal,
 ): Promise<ProviderResult> {
-  return callApi(
-    `Create a presentation about: ${brief}`,
-    signal,
-  );
+  return callApi(`Create a presentation about: ${brief}`, signal);
 }
 
 export async function repairDraft(
@@ -39,39 +37,32 @@ async function callApi(
   userMessage: string,
   signal: AbortSignal,
 ): Promise<ProviderResult> {
-  const client = new Anthropic({ apiKey: getAnthropicApiKey() });
+  const anthropic = createAnthropic({ apiKey: getAnthropicApiKey() });
   try {
-    const response = await client.messages.create(
-      {
-        model: MODEL_ID,
-        max_tokens: 4096,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userMessage }],
-      },
-      { signal },
-    );
+    const result = await generateText({
+      model: anthropic(MODEL_ID),
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userMessage }],
+      maxOutputTokens: 4096,
+      abortSignal: signal,
+    });
 
-    if (response.stop_reason === "max_tokens") {
+    if (result.finishReason === "length") {
       return { kind: "error", message: "output truncated" };
     }
-
-    const block = response.content[0];
-    if (!block || block.type !== "text") {
-      return { kind: "error", message: "unexpected response format" };
+    if (result.finishReason === "content-filter") {
+      return { kind: "refused" };
     }
 
     return {
       kind: "ok",
-      text: block.text,
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
+      text: result.text,
+      inputTokens: result.usage.inputTokens ?? 0,
+      outputTokens: result.usage.outputTokens ?? 0,
     };
   } catch (err) {
     if (signal.aborted) {
       return { kind: "error", message: "cancelled" };
-    }
-    if (err instanceof Anthropic.APIError && err.status >= 400 && err.status < 500) {
-      return { kind: "refused" };
     }
     return { kind: "error", message: (err as Error).message };
   }
