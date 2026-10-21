@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Blocked by: 04
 
 # T05 – POST /api/ai-draft route
@@ -48,3 +48,14 @@ Cache headers: `Cache-Control: no-store`.
 ## Spec reference
 
 `.scratch/public-ai-draft/spec.md` — User Stories 1, 8, 16; Implementation Decisions on route, credentials, and IP handling.
+
+## Answer
+
+Implemented in `app/api/ai-draft/route.ts` (commit a12034b).
+
+- Validates Content-Type (415), JSON body (400), and brief field (400 with "brief must be 1–1500 characters").
+- Returns HTTP 200 with `{ outcome: "limit", reason: "disabled" }` when `AI_DRAFT_ENABLED` is false.
+- Extracts client IP from `x-forwarded-for`, falls back to `null`.
+- Delegates to `generateFreeDraft` and maps `DraftOutcome` kinds to the route response shape.
+- Sets `Cache-Control: no-store` on all responses.
+- Also removed unused exports (`DAILY_PER_HASH_LIMIT`, `releaseReservation`, `setRemoteEnabled`) and trimmed `index.ts` re-exports to fix knip; ran `pnpm format` to bring all `lib/ai-draft/` files into Prettier compliance.
