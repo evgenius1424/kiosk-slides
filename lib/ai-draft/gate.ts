@@ -4,10 +4,13 @@ import {
   type DraftOutcome,
   DAILY_GLOBAL_LIMIT,
   MONTHLY_BUDGET_CENTS,
+  WORST_CASE_COST_CENTS_PER_ATTEMPT,
   getIpHashSalt,
   getUpstashToken,
   getUpstashUrl,
 } from './config'
+
+type GateResult = 'ok' | 'disabled' | 'already-used' | 'capacity' | 'budget'
 
 const LUA_SCRIPT = `
 local enabled = redis.call('GET', KEYS[1])
@@ -23,22 +26,15 @@ if daily > tonumber(ARGV[3]) then
   return 'capacity'
 end
 
-local monthly = redis.call('INCR', KEYS[4])
-if monthly == 1 then redis.call('EXPIRE', KEYS[4], ARGV[4]) end
+local monthly = redis.call('INCRBY', KEYS[4], tonumber(ARGV[6]))
+if monthly == tonumber(ARGV[6]) then redis.call('EXPIRE', KEYS[4], ARGV[4]) end
 if monthly > tonumber(ARGV[5]) then
-  redis.call('DECR', KEYS[4])
+  redis.call('DECRBY', KEYS[4], tonumber(ARGV[6]))
   return 'budget'
 end
 
 return 'ok'
 `
-
-function hashIp(ip: string): string {
-  return createHash('sha256')
-    .update(getIpHashSalt() + ':' + ip)
-    .digest('hex')
-    .slice(0, 32)
-}
 
 export async function admitRequest(clientIp: string | null): Promise<DraftOutcome | null> {
   if (!clientIp) return { kind: 'limit', reason: 'disabled' }
@@ -60,11 +56,12 @@ export async function admitRequest(clientIp: string | null): Promise<DraftOutcom
     String(DAILY_GLOBAL_LIMIT),
     '2851200',
     String(MONTHLY_BUDGET_CENTS),
+    String(WORST_CASE_COST_CENTS_PER_ATTEMPT),
   ]
 
   try {
     const redis = new Redis({ url: getUpstashUrl(), token: getUpstashToken() })
-    const result = await redis.eval(LUA_SCRIPT, keys, args)
+    const result = (await redis.eval(LUA_SCRIPT, keys, args)) as GateResult
 
     if (result === 'ok') return null
     if (result === 'disabled') return { kind: 'limit', reason: 'disabled' }
@@ -76,4 +73,11 @@ export async function admitRequest(clientIp: string | null): Promise<DraftOutcom
   } catch {
     return { kind: 'provider-failure' }
   }
+}
+
+function hashIp(ip: string): string {
+  return createHash('sha256')
+    .update(getIpHashSalt() + ':' + ip)
+    .digest('hex')
+    .slice(0, 32)
 }

@@ -4,6 +4,7 @@ export const MAX_BRIEF_LENGTH = 1500
 export const MAX_SLIDES = 10
 export const DAILY_GLOBAL_LIMIT = 20
 export const MONTHLY_BUDGET_CENTS = 800
+export const WORST_CASE_COST_CENTS_PER_ATTEMPT = 5
 export const MODEL_ID = 'claude-haiku-4-5'
 
 export type DraftOutcome =
