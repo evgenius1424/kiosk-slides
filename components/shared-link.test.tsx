@@ -28,7 +28,7 @@ describe('opening a shared link', () => {
   it('shows the slides read-only until Keep a copy adds them once', async () => {
     history.replaceState(null, '', `/#s=${await encodeShare(shared)}&2`)
     workspace()
-    await screen.findByText('Shared presentation')
+    await screen.findByText('Share link')
     expect(screen.getByText('Made with Kiosk Slides').getAttribute('href')).toBe('/')
     expect(screen.queryByText('Edit')).toBeNull()
     expect(screen.queryByText('Ask AI')).toBeNull()
@@ -46,14 +46,14 @@ describe('opening a shared link', () => {
     history.replaceState(null, '', `/#s=${await encodeShare(shared)}`)
     workspace()
     await screen.findByText('Edit')
-    expect(screen.queryByText('Shared presentation')).toBeNull()
+    expect(screen.queryByText('Share link')).toBeNull()
     expect(library().filter(p => p.source === shared)).toHaveLength(1)
   })
 
   it('drops the credit when the presentation turns it off', async () => {
     history.replaceState(null, '', `/#s=${await encodeShare(`---\ncredit: false\n---\n\n# Hi\n`)}`)
     workspace()
-    await screen.findByText('Shared presentation')
+    await screen.findByText('Share link')
     expect(screen.queryByText('Made with Kiosk Slides')).toBeNull()
   })
 

@@ -75,7 +75,7 @@
       "help": "Help",
       "tidy": "Clean up",
       "tidyHint": "Lines up tables and spacing in your text",
-      "label": "Slide text",
+      "label": "Presentation source",
       "status": "Slides follow your text as you type. Clean up lines up tables and spacing.",
       "goToLine": "Go to line"
     },
@@ -109,15 +109,15 @@
       "promptCopied": "Prompt copied · paste it into any AI chat",
       "copyFailed": "Couldn’t copy. Open “Show the prompt” and copy it from there.",
       "linkCopied": "Link copied · anyone who opens it sees these slides",
-      "kept": "{name} added to your presentations",
+      "kept": "{name} added to your saved presentations",
       "changed": "{count, plural, one {Slide {number} changed} other {Slide {number} is now # slides}}",
       "undone": "Back to the previous version",
       "nothingToUndo": "Nothing to undo"
     },
     "shared": {
-      "label": "Shared presentation",
+      "label": "Share link",
       "keep": "Keep a copy",
-      "keepHint": "Add it to your presentations so you can change it",
+      "keepHint": "Add it to your saved presentations so you can change it",
       "broken": "This link is incomplete. Ask for it again.",
       "home": "Go to my presentations",
       "credit": "Made with Kiosk Slides"
@@ -175,10 +175,10 @@
   },
   "Settings": {
     "title": "Presentation settings",
-    "appearance": "Appearance",
+    "look": "Look",
     "theme": "Theme",
-    "tone": "Color",
-    "toneOption": "{name} color",
+    "tone": "Tone",
+    "toneOption": "{name} tone",
     "toneHelp": "Lights the background and highlighted heading words, in a shade made for this theme.",
     "tones": {
       "Mono": "Black and white",
@@ -188,7 +188,7 @@
       "Amber": "Amber"
     },
     "font": "Font",
-    "textSize": "Text size",
+    "scale": "Scale",
     "sizes": {
       "normal": "Normal",
       "large": "Large",
@@ -198,7 +198,7 @@
     "showBrand": "Show brand",
     "brandHelp": "Shown in the corner of every slide.",
     "credit": "Credit Kiosk Slides",
-    "creditHelp": "Adds “Made with Kiosk Slides” to the end of downloads and to shared links. Never on a slide.",
+    "creditHelp": "Adds “Made with Kiosk Slides” to the end of downloads and to share links. Never on a slide.",
     "playback": "Playback",
     "autoplay": "Autoplay",
     "autoplayHelp": "Let your story tell itself.",
@@ -233,7 +233,7 @@
     "clarityBody": "Your message stays readable,<br></br>even on a slow connection.",
     "status": {
       "ready": "Presentation is ready",
-      "review": "Review layout",
+      "review": "Check slide fit",
       "count": "{count, plural, one {# slide} other {# slides}}",
       "checked": "Slides checked",
       "fits": "Current slide fits the canvas",
@@ -262,11 +262,11 @@
         "rule": "Highlights the key words in a heading."
       },
       "text": {
-        "term": "Text",
+        "term": "Body",
         "rule": "A sentence or two under the heading, after an empty line."
       },
       "extras": {
-        "term": "Extras",
+        "term": "Widget",
         "rule": "A list, table, picture, chart or number. One per slide. AI adds these for you."
       }
     },
@@ -293,7 +293,7 @@
         "keys": "P"
       },
       "present": {
-        "name": "Presentation mode",
+        "name": "Present",
         "keys": "F"
       },
       "shareSafe": {

@@ -9,6 +9,7 @@ export {
 } from './parse'
 export { formatPresentation } from './format'
 export { reviewPresentation } from './review'
+export { avoided, avoidedWording, terms } from './language'
 export { setFrontMatter } from './front-matter'
 export { headingText, type HeadingPart } from './heading'
 export { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'

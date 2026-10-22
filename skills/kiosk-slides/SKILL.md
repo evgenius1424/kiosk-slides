@@ -7,7 +7,7 @@ argument-hint: <presentation request>
 
 # Kiosk Slides
 
-A presentation is one Markdown file, and `scripts/render.mjs` turns it into the same HTML the Kiosk Slides site exports: identical slide markup and styles, every image and font embedded, keyboard and autoplay controls built in, no server or network needed to present it. It needs Node 18 or later and nothing else.
+A presentation is one Markdown file, and `scripts/render.mjs` renders it to the same HTML the Kiosk Slides site downloads: identical slide markup and styles, every image and font embedded, keyboard and autoplay controls built in, no server or network needed to present it. It needs Node 18 or later and nothing else.
 
 The Markdown is always the source. Don't edit the generated HTML by hand; change the Markdown or the render options and render again.
 
@@ -23,14 +23,14 @@ The full grammar is in `references/FORMAT.md` and a presentation that uses every
 1. Find out what the presentation is for: the audience, the one thing they should remember, and where it plays (a room, a call, an unattended screen). If the user already said, don't ask again. If a detail is missing and a sensible default exists, use the default and say which.
 2. Outline before writing: one idea per slide, 5–12 slides, a closing slide that restates the message.
 3. Pick a widget for each slide from what its content is, using the table in "Writing a good presentation" in FORMAT.md. Keep message slides to a third at most and never two in a row.
-4. Write the presentation to a `.md` file. Put the key phrase of every heading in `**bold**`. Every slide gets a settings comment with a `title`, a `label`, and a `footer` that adds one useful line. Set `title:` in the front matter, and `brand:` when you know the organization or product. Leave `font:` unset (it defaults to `classic`) unless the user asks for a different one.
+4. Write the presentation to a `.md` file. Put the key phrase of every heading in `**bold**`. Every slide gets a slide settings comment with a `title` (the slide title), a `label`, and a `footer` that adds one useful line. Set `title:` in the front matter, and `brand:` when you know the organization or product. Leave `font:` unset (it defaults to `classic`) unless the user asks for a different one.
 5. Validate:
 
    ```bash
    node scripts/render.mjs slides.md --check --format
    ```
 
-   It prints one line per slide (number, kind, heading) or a `Line N:` error, then a `Warning:` line for each missing slide setting or for too many plain slides. `--format` also tidies the file (aligned tables, consistent spacing) without changing what it shows. Fix every error and every warning and run it again until it is clean. Never hand back a presentation that fails the check.
+   It prints one line per slide (number, kind, heading) or a `Line N:` error, then a `Warning:` line for each missing slide setting or for too many message slides. `--format` also tidies the file (aligned tables, consistent spacing) without changing what it shows. Fix every error and every warning and run it again until it is clean. Never hand back a presentation that fails the check.
 
 6. Render the HTML next to it, as in "Render", unless the user asked for Markdown only.
 7. Reply with one or two sentences about what you made, the slide list from the check, both files, and the share link if the render printed one. Say the Markdown is the source: they can edit it and ask for the HTML again.
@@ -52,7 +52,7 @@ Options:
 - `--brand <text>` replaces the `kiosk.` mark in the corner of every slide; `--brand none` hides it.
 - `--images <dir>` is the folder that `/images/…` paths resolve against. The default is the presentation's own folder, so `/images/logo.png` is read from `<presentation folder>/images/logo.png`.
 - `--transition gentle|fade|slide|none` overrides the presentation's `transition:`. `gentle` is a soft rise and fade; `none` cuts instantly.
-- `--share-safe` (or `share-safe: true` in the front matter) starts the presentation in screen-share safe mode: every transition becomes a quick flat fade that stays crisp on video calls and meeting-room TVs. Pressing `S` in the exported presentation toggles it.
+- `--share-safe` (or `share-safe: true` in the front matter) starts the presentation in screen-share safe mode: every transition becomes a quick flat fade that stays crisp on video calls and meeting-room TVs. Pressing `S` in the rendered presentation toggles it.
 - `--no-motion` is the same as `--transition none`.
 - `--no-credit` (or `credit: false` in the front matter) drops the “Made with Kiosk Slides” link from the end-of-presentation notice. It never appears on a slide.
 - `--no-link` skips the share link described below.
@@ -65,7 +65,7 @@ For a PDF, open the HTML in a desktop browser and print it with Save as PDF: eve
 
 If it fails, the message starts with `Line N:` and names the rule; fix the Markdown and run it again. An image error means a URL could not be fetched or a `/images/` file is missing; ask the user for the file or remove that slide's image.
 
-Use `room-dark` for screens in dim rooms, TVs, and kiosks, `room-light` for bright rooms and projectors that wash out dark backgrounds, and `studio` for a bold true-black look on stage screens and video. Keep the default black and white `mono` tone unless the user asks for color or names a brand color; then set it with `tone:` in the front matter or `--tone`. For an unattended screen or a big room, pass `--scale hero`.
+Use `room-dark` for screens in dim rooms, TVs, and kiosks, `room-light` for bright rooms and projectors that wash out dark backgrounds, and `studio` for a bold true-black look on stage screens and video. Keep the default black and white `mono` tone unless the user asks for a color or one that matches their organization; then set it with `tone:` in the front matter or `--tone`. For an unattended screen or a big room, pass `--scale hero`.
 
 When you hand over the HTML, say how to present it:
 

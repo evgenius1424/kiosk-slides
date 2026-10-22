@@ -13,9 +13,9 @@ describe('reviewPresentation', () => {
   it('flags a presentation of bare headings', () => {
     const source = ['# One', '# Two', '# Three', '# Four', '# Five'].join('\n\n---\n\n')
     expect(reviewPresentation(parsePresentation(source))).toEqual([
-      'Give the presentation a short title: in its front matter.',
-      'Give every slide a settings comment with a title, a label and a footer (title, label, footer missing on slides 1, 2, 3, 4, 5).',
-      'Slides 1, 2, 3, 4, 5 are only a heading and text. Turn some into steps, before/after, a metric, a chart, a table or a flow, so at most 2 slides have no widget.',
+      'Give the presentation a short presentation title with title: in its front matter.',
+      'Give every slide its slide settings with a slide title, a label and a footer (title, label, footer missing on slides 1, 2, 3, 4, 5).',
+      'Slides 1, 2, 3, 4, 5 are message slides with only a heading and body. Turn some into steps, before/after, a metric, a chart, a table or a flow, so at most 2 slides have no widget.',
     ])
   })
 
@@ -26,7 +26,7 @@ describe('reviewPresentation', () => {
       '<!--\ntitle: A\nlabel: B\n-->\n\n# Two',
     ].join('\n\n---\n\n')
     expect(reviewPresentation(parsePresentation(source))).toEqual([
-      'Give every slide a settings comment with a title, a label and a footer (footer missing on slide 2).',
+      'Give every slide its slide settings with a slide title, a label and a footer (footer missing on slide 2).',
     ])
   })
 
