@@ -25,6 +25,7 @@ export {
   headingSize,
   isScale,
   scales,
+  tableSize,
   type PresentationLook,
   type Scale,
 } from './look'

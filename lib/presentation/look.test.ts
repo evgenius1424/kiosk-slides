@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fonts, headingSize, type HeadingPart } from '@/lib/presentation'
+import { fonts, headingSize, scales, tableSize, type HeadingPart } from '@/lib/presentation'
 
 const slide = (text: string, body = '') => ({
   kind: 'message' as const,
@@ -55,7 +55,7 @@ describe('headingSize', () => {
     const short = headingSize(table(text, 2), hero)!
     const tall = headingSize(table(text, 5), hero)!
     expect(tall).toBeLessThan(short)
-    expect(tall).toBeGreaterThanOrEqual(6)
+    expect(tall).toBeGreaterThanOrEqual(5.5)
     expect(headingSize(table(text, 6), { scale: 'large', font: 'inter' })).toBe(5)
   })
 
@@ -72,5 +72,29 @@ describe('headingSize', () => {
   it('gives every bundled font a Cyrillic face', () => {
     for (const font of fonts.filter(f => f.files.length))
       expect(font.files.some(f => f.script === 'cyrillic')).toBe(true)
+  })
+})
+
+describe('tableSize', () => {
+  const text = 'Not every flour comes from wheat'
+
+  it('keeps a small table at full size', () => {
+    for (const scale of scales)
+      expect(tableSize(table(text, 3), { scale, font: 'inter' })).toBeUndefined()
+  })
+
+  it('shrinks a tall table so it clears the footer', () => {
+    const normal = { scale: 'normal', font: 'inter' } as const
+    const six = tableSize(table(text, 6), normal)!
+    expect(six).toBeLessThan(2)
+    expect(tableSize({ ...table(text, 6), body: 'x '.repeat(80) }, normal)).toBeLessThan(six)
+    expect(
+      tableSize(table(text, 6), { scale: 'normal', font: 'archivo-expanded' }),
+    ).toBeLessThanOrEqual(six)
+  })
+
+  it('never goes below a readable size', () => {
+    const long = { ...table(text, 6), body: 'x '.repeat(150) }
+    expect(tableSize(long, { scale: 'normal', font: 'archivo-expanded' })).toBe(1.3)
   })
 })

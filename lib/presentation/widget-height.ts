@@ -7,6 +7,7 @@ type WidgetText = {
   quote: number
   small: number
   caption: number
+  table: number
 }
 
 export const WIDGET_GAP = 2.5
@@ -48,9 +49,18 @@ export function widgetHeight(
       return 6.8 + most * text.small * 1.4
     }
     case 'table': {
-      const width = text.width / widget.header.length - 3.2
-      const rows = widget.rows.map(row => Math.max(1, ...row.map(cell => lines(cell, width, 2))))
-      return 4.25 + rows.reduce((sum, count) => sum + 2.05 + count * 2.7, 0)
+      const size = text.table
+      const char = charWidth * TABLE_CHAR
+      const widths = columnWidths(widget, text.width, char * size, 1.6 * size)
+      const rows = widget.rows.map(row =>
+        Math.max(
+          1,
+          ...widths.map((width, c) => wrapped(plain(row[c] ?? ''), width / (char * size))),
+        ),
+      )
+      return (
+        2.1 * size + 0.05 + rows.reduce((sum, count) => sum + size + 0.05 + count * 1.35 * size, 0)
+      )
     }
     case 'buttons': {
       const used = widget.buttons.reduce(
@@ -69,6 +79,27 @@ export function widgetHeight(
     case 'chart':
       return 25
   }
+}
+
+const TABLE_CHAR = 0.85
+
+function columnWidths(
+  { header, rows }: Extract<Widget, { kind: 'table' }>,
+  room: number,
+  char: number,
+  padding: number,
+) {
+  const natural = header.map(
+    (label, c) =>
+      padding +
+      Math.max(label.length * (char * 0.8), ...rows.map(row => plain(row[c] ?? '').length * char)),
+  )
+  const total = natural.reduce((sum, width) => sum + width, 0)
+  return natural.map(width => (width * room) / total - padding)
+}
+
+function plain(text: string) {
+  return text.replace(/[*_`~]/g, '')
 }
 
 function list(rows: number[], size: number) {

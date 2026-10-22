@@ -75,14 +75,12 @@ export const fontFace = ({ family, weights, script }: FontFile, src: string) =>
 export const hasCyrillic = (text: string) => CYRILLIC.test(text)
 
 export function headingSize(
-  slide: Pick<SlideChrome, 'heading' | 'body'> & (MessageWidget | Widget),
+  slide: SizedSlide,
   { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
 ): number | undefined {
   if (scale === 'normal') return undefined
   const box = boxes[scale]
-  const text = slide.heading.map(p => p.text).join('')
-  const charWidth = mostlyCyrillic(text) ? findFont(font).cyrillicWidth : findFont(font).width
-  const body = bodyHeight(slide.body, box.body, charWidth)
+  const { text, charWidth, body } = measure(slide, box, font)
   if (slide.kind === 'message') {
     const height = box.height - body
     return fit(
@@ -97,19 +95,47 @@ export function headingSize(
   const width = slide.kind === 'code' ? box.width * 0.48 : box.width
   const most = Math.max(2, text.split('\n').length)
   const below =
-    slide.kind === 'code' ? 0 : WIDGET_GAP + widgetHeight(slide, box.text, charWidth + 0.04)
-  const height = box.room - body - below
+    slide.kind === 'code'
+      ? 0
+      : WIDGET_GAP +
+        widgetHeight(
+          slide,
+          { ...box.text, table: tableSize(slide, { scale, font }) ?? TABLE_TEXT },
+          charWidth + 0.04,
+        )
+  const height = box.room - CLEARANCE - body - below
   return fit(
     text,
     charWidth,
     width,
     box.widget,
-    5,
+    MIN_HEADING,
     (lines, size) => lines <= most && lines * box.lineHeight * size <= height,
   )
 }
 
+export function tableSize(
+  slide: SizedSlide,
+  { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
+): number | undefined {
+  if (slide.kind !== 'table') return undefined
+  const box = boxes[scale]
+  const { text, charWidth, body } = measure(slide, box, font)
+  const perLine = box.width / (charWidth * HEADING_CHAR * MIN_HEADING)
+  const heading = Math.max(1, wrap(text, perLine)) * box.lineHeight * MIN_HEADING
+  const room = box.room - CLEARANCE - body - heading - WIDGET_GAP
+  for (let size = TABLE_TEXT; size > MIN_TABLE_TEXT; size = round(size - 0.05)) {
+    const height = widgetHeight(slide, { ...box.text, table: size }, charWidth + 0.04)
+    if (height <= room) return size === TABLE_TEXT ? undefined : size
+  }
+  return MIN_TABLE_TEXT
+}
+
 type Script = 'latin' | 'cyrillic'
+
+type SizedSlide = Pick<SlideChrome, 'heading' | 'body'> & (MessageWidget | Widget)
+
+type Box = (typeof boxes)[Scale]
 
 const RANGES: Record<Script, string> = {
   latin:
@@ -121,7 +147,23 @@ const CYRILLIC = /[\u0400-\u04ff]/
 const CYRILLIC_LETTERS = /[\u0400-\u04ff]/g
 const LATIN_LETTERS = /[a-z]/gi
 
+const MIN_HEADING = 5
+const TABLE_TEXT = 2
+const MIN_TABLE_TEXT = 1.3
+const CLEARANCE = 1.5
+const HEADING_CHAR = 0.85
+
 const boxes = {
+  normal: {
+    width: 80,
+    height: 35,
+    room: 40,
+    lineHeight: 1.08,
+    message: 6.5,
+    widget: 5,
+    body: 2.2,
+    text: { width: 90, list: 2.2, quote: 3.1, small: 2.1, caption: 2.6 },
+  },
   large: {
     width: 86,
     height: 35,
@@ -142,6 +184,16 @@ const boxes = {
     body: 2.7,
     text: { width: 92, list: 2.6, quote: 3.6, small: 2.4, caption: 3 },
   },
+}
+
+function measure(slide: SizedSlide, box: Box, font: string) {
+  const text = slide.heading.map(p => p.text).join('')
+  const charWidth = mostlyCyrillic(text) ? findFont(font).cyrillicWidth : findFont(font).width
+  return { text, charWidth, body: bodyHeight(slide.body, box.body, charWidth) }
+}
+
+function round(size: number) {
+  return Math.round(size * 100) / 100
 }
 
 function fit(
