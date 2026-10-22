@@ -62,9 +62,9 @@ describe('shared link', () => {
     store(item('mine', example))
     history.replaceState(null, '', `/#s=${await encodeShare('# Shared\n')}`)
     workspace()
-    await screen.findByText('Shared presentation')
+    await screen.findByText('Share link')
     paste('# Pasted **here**\n')
-    expect(screen.queryByText('Shared presentation')).toBeNull()
+    expect(screen.queryByText('Share link')).toBeNull()
     expect(screen.getByRole('button', { name: 'Edit' })).toBeTruthy()
     expect(location.hash).not.toContain('#s=')
     expect(stored().some(p => p.source === '# Pasted **here**\n')).toBe(true)
@@ -77,8 +77,8 @@ describe('last style', () => {
     workspace()
     await screen.findByText('The example')
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Violet color' }))
-    fireEvent.change(screen.getByRole('combobox', { name: 'Text size' }), {
+    fireEvent.click(screen.getByRole('button', { name: 'Violet tone' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Scale' }), {
       target: { value: 'hero' },
     })
     paste('---\ntheme: room-light\ntone: Coral\n---\n\n# Pasted\n')
@@ -147,9 +147,11 @@ function stored(): ReturnType<typeof item>[] {
 }
 
 function type(value: string) {
-  if (!screen.queryByRole('textbox', { name: 'Slide text' }))
+  if (!screen.queryByRole('textbox', { name: 'Presentation source' }))
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-  fireEvent.change(screen.getByRole('textbox', { name: 'Slide text' }), { target: { value } })
+  fireEvent.change(screen.getByRole('textbox', { name: 'Presentation source' }), {
+    target: { value },
+  })
 }
 
 function shownSlide() {

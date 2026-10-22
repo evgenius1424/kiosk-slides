@@ -112,7 +112,7 @@ export function SettingsPanel({
         <h2>{ts('title')}</h2>
       </div>
       <section className="settings-section">
-        <h3>{ts('appearance')}</h3>
+        <h3>{ts('look')}</h3>
         <label className="field-label" htmlFor="theme">
           {ts('theme')}
         </label>
@@ -161,7 +161,7 @@ export function SettingsPanel({
           <ChevronDown size={13} />
         </div>
         <label className="field-label" htmlFor="scale">
-          {ts('textSize')}
+          {ts('scale')}
         </label>
         <div className="select-wrap">
           <select

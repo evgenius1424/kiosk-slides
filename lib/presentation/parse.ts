@@ -5,6 +5,7 @@ import { parseAnnotation, type Annotation } from './annotation'
 import { defaultChrome, parseChrome } from './chrome'
 import { widgetComponents, type Widget } from './components'
 import { headingLength, parseHeading } from './heading'
+import { terms } from './language'
 import { defaultLook, fontId, fonts, isScale, scales } from './look'
 import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'
 import { defaultTone, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
@@ -40,7 +41,7 @@ export function parsePresentation(source: string): Presentation {
   const { duration, start, look, ...settings } = parseFrontMatter(lines)
   const chunks = splitSlides(lines, start).filter(c => c.text.trim())
   const slides = chunks.map(parseSlide)
-  if (!slides.length) failAt(1, 'Add a slide with a # headline.')
+  if (!slides.length) failAt(1, `Add a slide with a # ${terms.heading}.`)
   if (slides.length > 40) failAt(chunks[40].line, 'Use at most 40 slides per presentation.')
   return { ...settings, ...look, duration: Math.max(2, Math.min(120, duration)), slides }
 }
@@ -237,7 +238,7 @@ function parseSlide(chunk: Chunk): Slide {
       : undefined
   const heading = parseHeading([headingNode, continued], message => fail(message, headingLine))
   if (headingLength(heading) > 115)
-    fail('Shorten the headline to 115 characters or split the slide.', headingLine)
+    fail(`Shorten the ${terms.heading} to 115 characters or split the slide.`, headingLine)
 
   // The settings comment is the slide's first node, directly followed by the heading.
   const first = nodes[0]

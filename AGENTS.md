@@ -1,6 +1,6 @@
 # Kiosk Slides
 
-A Next.js site where you write or chat a presentation in Markdown and present it as HTML slides. An agent skill in `skills/kiosk-slides/` does the same without the site. Read [README.md](README.md) for the product and [FORMAT.md](FORMAT.md) for the presentation format. Use the words in [GLOSSARY.md](GLOSSARY.md): "presentation" and "slide", never "deck", in anything a person or an AI reads.
+A Next.js site where you write or chat a presentation in Markdown and present it as HTML slides. An agent skill in `skills/kiosk-slides/` does the same without the site. Read [README.md](README.md) for the product and [FORMAT.md](FORMAT.md) for the presentation format. Use the words in [GLOSSARY.md](GLOSSARY.md) in anything a person or an AI reads. Code takes them from `lib/presentation/language.ts`, and `language.test.ts` checks every surface against them.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
@@ -36,9 +36,9 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `app/`                  | Next.js routes: the page, metadata, ChatGPT sign-in and chat API routes                |
 | `components/`           | Workspace panels and dialogs (`presentation-chat.tsx`, `presentation-editor.tsx`, ...) |
 | `components/workspace/` | The workspace: `kiosk-workspace.tsx` wires one hook or panel per job (see below)       |
-| `components/slide/`     | Shared slide renderer and the exported single-file HTML (`presentation-html.tsx`)      |
-| `lib/presentation/`     | Markdown presentation parser, widgets, themes, fonts and front matter                  |
-| `lib/slide-styles.ts`   | Slide CSS shared by the site, the export and the skills                                |
+| `components/slide/`     | Shared slide renderer and the downloaded single-file HTML (`presentation-html.tsx`)    |
+| `lib/presentation/`     | Markdown presentation parser, widgets, themes, fonts, front matter and glossary terms  |
+| `lib/slide-styles.ts`   | Slide CSS shared by the site, the download and the skills                              |
 | `lib/player.ts`         | Transitions, keys, swipe and wheel rules shared by every player                        |
 | `lib/chat*.ts`          | AI prompt and the local ChatGPT plan-usage client                                      |
 | `lib/last-style.ts`     | Remembers the last chosen theme, color, font and text size for new presentations       |
@@ -55,9 +55,9 @@ One core turns Markdown into slides for the site preview, presenting mode, thumb
 
 1. **Parse**: `lib/presentation` turns Markdown into a `Presentation` (slides, look, theme, timing).
 2. **Render**: `components/slide` turns each slide into markup with `SlideView`, styled by `lib/slide-styles.ts`. `presentation-html.tsx` wraps those slides into the single-file presentation.
-3. **Play**: `lib/player.ts` holds the transitions and navigation rules. The site's React player and the export's inline script both read them.
+3. **Play**: `lib/player.ts` holds the transitions and navigation rules. The site's React player and the download's inline script both read them.
 
-Everything else is a thin adapter: `app/` and `components/workspace/` for the site, `skills/render.ts` for the command line, and `scripts/bundle-renderer.mjs` for the skills' esbuild bundle. The core imports only itself, React and remark, with no Next.js, Node or browser-only code, so changing the site's compiler or bundler never touches it. Tests hold this in place: `lib/core.test.ts` checks the core's imports, `components/slide/parity.test.tsx` checks the preview and thumbnails match the export, `components/slide/player.test.ts` checks the export player follows the shared rules, and `skills/render.test.ts` checks the esbuild-built skill writes the same file as the site.
+Everything else is a thin adapter: `app/` and `components/workspace/` for the site, `skills/render.ts` for the command line, and `scripts/bundle-renderer.mjs` for the skills' esbuild bundle. The core imports only itself, React and remark, with no Next.js, Node or browser-only code, so changing the site's compiler or bundler never touches it. Tests hold this in place: `lib/core.test.ts` checks the core's imports, `components/slide/parity.test.tsx` checks the preview and thumbnails match the download, `components/slide/player.test.ts` checks the download player follows the shared rules, and `skills/render.test.ts` checks the esbuild-built skill writes the same file as the site.
 
 ## Workspace
 
@@ -66,7 +66,7 @@ Everything else is a thin adapter: `app/` and `components/workspace/` for the si
 | File                   | Job                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------- |
 | `use-player.ts`        | Current slide, autoplay, presenting, fullscreen, idle, share-safe, `#N` address |
-| `use-library.ts`       | Saved presentations, shared links, paste anywhere                               |
+| `use-library.ts`       | Saved presentations, share links, paste anywhere                                |
 | `use-versions.ts`      | Undo history                                                                    |
 | `use-shortcuts.ts`     | Keyboard shortcuts                                                              |
 | `use-download.ts`      | Web page and PDF downloads                                                      |
@@ -81,7 +81,7 @@ Everything else is a thin adapter: `app/` and `components/workspace/` for the si
 
 - UI text goes in `messages/en.json` and is read with `useTranslations`. Parser errors, the AI prompt and the shared renderer stay English in code.
 - Site copy is plain and non-technical, with no product or brand names.
-- The site export and `skills/render.ts` share one renderer and must never drift. After touching `components/slide/`, `lib/presentation/` or `lib/slide-styles.ts`, run `pnpm build:skills`, commit what it generates (installers copy the skill straight from GitHub), and check a skill-rendered presentation matches the site download.
+- The site download and `skills/render.ts` share one renderer and must never drift. After touching `components/slide/`, `lib/presentation/` or `lib/slide-styles.ts`, run `pnpm build:skills`, commit what it generates (installers copy the skill straight from GitHub), and check a skill-rendered presentation matches the site download.
 - Presentation format changes update `FORMAT.md` and `public/example.md` together; tests read both.
 - Keep comments to a minimum and skip doc comments on functions.
 - Public functions and constants go at the top of a file, helpers at the bottom.
