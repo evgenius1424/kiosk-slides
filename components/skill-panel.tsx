@@ -2,11 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { ArrowDownToLine, Check, Copy, ExternalLink, X } from 'lucide-react'
+import { Check, Copy, X } from 'lucide-react'
 
 const REPO = 'evgenius1424/kiosk-slides'
-const ZIP_URL = `https://github.com/${REPO}/releases/latest/download/kiosk-slides.zip`
-const CLAUDE_SETTINGS_URL = 'https://claude.ai/settings/capabilities'
 const COPIED_MS = 2000
 
 const COMMANDS = {
@@ -21,14 +19,14 @@ const COMMANDS = {
   other: [`npx skills@latest add ${REPO}`],
 }
 
-const PLACES = ['claude', ...(Object.keys(COMMANDS) as (keyof typeof COMMANDS)[])] as const
+const PLACES = Object.keys(COMMANDS) as Place[]
 
-type Place = (typeof PLACES)[number]
+type Place = keyof typeof COMMANDS
 
 export function SkillPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations('Skill')
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const [place, setPlace] = useState<Place>('claude')
+  const [place, setPlace] = useState<Place>('claudeCode')
   useEffect(() => {
     if (open) dialogRef.current?.showModal()
     else dialogRef.current?.close()
@@ -65,42 +63,18 @@ export function SkillPanel({ open, onClose }: { open: boolean; onClose: () => vo
         ))}
       </div>
       <div id="skill-steps" role="tabpanel" aria-labelledby={`skill-tab-${place}`}>
-        {place === 'claude' ? <ClaudeSteps /> : <CommandSteps place={place} />}
+        <CommandSteps place={place} />
         <div className="skill-try">
           <strong>{t('tryTitle')}</strong>
-          <CopyLine text={t('tryAsk')} />
+          <CopyLine text={t(`${place}.ask`)} />
+          <p className="skill-note">{t('tryNote')}</p>
         </div>
       </div>
     </dialog>
   )
 }
 
-function ClaudeSteps() {
-  const t = useTranslations('Skill')
-  return (
-    <ol className="skill-steps">
-      <li>
-        <span>{t('claude.download')}</span>
-        <a className="btn primary" href={ZIP_URL} download>
-          <ArrowDownToLine size={15} />
-          {t('claude.downloadButton')}
-        </a>
-      </li>
-      <li>
-        <span>{t('claude.settings')}</span>
-        <a className="btn" href={CLAUDE_SETTINGS_URL} target="_blank" rel="noreferrer">
-          <ExternalLink size={14} />
-          {t('claude.settingsButton')}
-        </a>
-      </li>
-      <li>
-        <span>{t('claude.upload')}</span>
-      </li>
-    </ol>
-  )
-}
-
-function CommandSteps({ place }: { place: keyof typeof COMMANDS }) {
+function CommandSteps({ place }: { place: Place }) {
   const t = useTranslations('Skill')
   return (
     <>
