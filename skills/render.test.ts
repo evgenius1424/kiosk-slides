@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { cp, mkdtemp, readFile, rm } from 'node:fs/promises'
+import { chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -37,12 +37,21 @@ describe('skill renderer', () => {
     expect(await readFile(path.join(dir, 'example.html'), 'utf8')).toBe(site)
   })
 
-  it('prints the same share link as the site', async () => {
-    const link = await shareLink(await readFile('public/example.md', 'utf8'), SITE_URL)
-    expect(link).toHaveProperty('url')
-    expect(render('linked.html').split('\n')).toContain(terminalLink((link as { url: string }).url))
-    expect(render('quiet.html', '--no-link')).not.toContain('Open in your browser')
-  })
+  it.skipIf(process.platform === 'win32')(
+    'opens the same share link as the site and never prints it',
+    async () => {
+      const link = await shareLink(await readFile('public/example.md', 'utf8'), SITE_URL)
+      const url = (link as { url: string }).url
+      const output = await renderWithBrowser('opened.html')
+      expect(output.printed).toContain('Opened in your browser')
+      expect(output.printed).not.toContain('https://')
+      expect(output.opened).toBe(url)
+      expect((await renderWithBrowser('local.html', '--no-link')).opened).toBe(
+        path.join(dir, 'local.html'),
+      )
+      expect(render('quiet.html')).not.toContain('https://')
+    },
+  )
 
   it('credits the site in the download unless --no-credit', async () => {
     render('credited.html')
@@ -55,13 +64,41 @@ describe('skill renderer', () => {
 })
 
 function render(out: string, ...options: string[]) {
-  const script = path.join(dir, 'scripts/render.mjs')
-  const args = [script, path.join(dir, 'example.md'), '-o', path.join(dir, out), ...options]
-  return execFileSync('node', args, { encoding: 'utf8' })
+  return run(out, ['--no-open', ...options])
 }
 
-function terminalLink(url: string) {
-  return `Open in your browser: \x1b]8;;${url}\x1b\\${url}\x1b]8;;\x1b\\`
+async function renderWithBrowser(out: string, ...options: string[]) {
+  const bin = path.join(dir, 'bin')
+  const log = path.join(dir, `${out}.opened`)
+  await mkdir(bin, { recursive: true })
+  for (const name of ['open', 'xdg-open']) {
+    await writeFile(path.join(bin, name), `#!/bin/sh\nprintf '%s' "$1" > "$OPENED_LOG"\n`)
+    await chmod(path.join(bin, name), 0o755)
+  }
+  const printed = run(out, options, {
+    ...process.env,
+    CI: '',
+    SSH_CONNECTION: '',
+    SSH_TTY: '',
+    PATH: `${bin}${path.delimiter}${process.env.PATH}`,
+    DISPLAY: ':0',
+    OPENED_LOG: log,
+  })
+  return { printed, opened: await waitForFile(log) }
+}
+
+function run(out: string, options: string[], env = process.env) {
+  const script = path.join(dir, 'scripts/render.mjs')
+  const args = [script, path.join(dir, 'example.md'), '-o', path.join(dir, out), ...options]
+  return execFileSync('node', args, { encoding: 'utf8', env })
+}
+
+async function waitForFile(file: string) {
+  for (let i = 0; i < 50; i++) {
+    const text = await readFile(file, 'utf8').catch(() => undefined)
+    if (text) return text
+    await new Promise(resolve => setTimeout(resolve, 100))
+  }
 }
 
 async function dataUrl(file: string, type: string) {
