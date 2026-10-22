@@ -29,15 +29,18 @@ pnpm dev
 | `pnpm format`       | Format every file with Prettier                                              |
 | `pnpm lint:fix`     | Lint with Oxlint and apply safe fixes                                        |
 | `pnpm test`         | Run the Vitest suite                                                         |
+| `pnpm e2e`          | Run the Playwright suite of main flows and slide layout in Chromium          |
 | `pnpm build`        | Production build of the site                                                 |
 | `pnpm build:skills` | Package the agent skill from the shared renderer                             |
 
 Open http://127.0.0.1:3000. Ask AI only works on 127.0.0.1, signed in with your own ChatGPT plan.
 
+Before the first `pnpm e2e`, run `pnpm exec playwright install chromium`. The suite reuses a running `pnpm dev`, or starts one. To check slide layout in another language, add a presentation in that language to `e2e/layout/`: every slide is rendered by the skill at each scale and font and must keep 2.5cqw clear of the label and the footer.
+
 ## Pull requests
 
 - Keep each pull request to one change.
-- Run `pnpm check` and `pnpm build` before you push. CI runs the same steps.
+- Run `pnpm check` and `pnpm build` before you push, and `pnpm e2e` when you change a flow or the slide layout. CI runs the same steps.
 - If you change the renderer, also run `pnpm build:skills`, commit the files it generates, and check that a presentation rendered by the skill looks the same as one downloaded from the site. The two must never drift.
 - If you change the presentation format, update [FORMAT.md](FORMAT.md) and [public/example.md](public/example.md) in the same pull request.
 - Keep site copy plain and non-technical. People come here to get a presentation in a minute.
