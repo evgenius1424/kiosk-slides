@@ -128,7 +128,7 @@ describe('start screen', () => {
     await vi.waitFor(() => expect(menuName()).toBe('Four days'))
     expect(briefs[0]).toMatch(/^My talk: Moving to a four-day week\nLength: about 5 slides\./)
     expect(screen.queryByRole('heading', { name: 'What’s your talk about?' })).toBeNull()
-    expect(library().map(p => p.name)).toEqual(['Four days'])
+    await vi.waitFor(() => expect(library().map(p => p.name)).toEqual(['Four days']))
   })
 
   it('shows the free AI draft before the status check answers', () => {
