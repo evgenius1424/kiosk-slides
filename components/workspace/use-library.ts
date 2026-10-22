@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { sameApartFromStyle, withLastStyle } from '@/lib/last-style'
 import { parsePresentation } from '@/lib/presentation'
 import {
   createPresentation,
@@ -55,6 +56,7 @@ export function useLibrary({
   const [shared, setShared] = useState<string | null>(null)
   const [broken, setBroken] = useState(false)
   const current = library.items.find(p => p.id === library.current) ?? library.items[0]
+  const isBlank = (value: string) => sameApartFromStyle(value, blank)
   const openRef = useRef({ show, onStart })
   const baseRef = useRef(library)
   const latestRef = useRef({ library, source, shared })
@@ -72,12 +74,12 @@ export function useLibrary({
 
   useEffect(() => {
     const { show, onStart } = openRef.current
-    const next = loadLibrary(blank, untitled)
+    const next = loadLibrary(withLastStyle(blank), untitled)
     baseRef.current = next
     setLibrary(next)
     const link = readShareHash(location.hash)
     if (!link) {
-      const first = next.items.length === 1 && next.items[0].source === blank
+      const first = next.items.length === 1 && sameApartFromStyle(next.items[0].source, blank)
       if (resumingStart() || first) onStart(first ? 'first' : 'new')
       show(next.items.find(p => p.id === next.current)!.source, location.hash)
       setLoaded(true)
@@ -129,15 +131,15 @@ export function useLibrary({
     restartChat()
   }
   const addBlank = () => {
-    if (current.source === blank) return current
-    const created = createPresentation(untitled, blank, library.items)
+    if (isBlank(current.source)) return current
+    const created = createPresentation(untitled, withLastStyle(blank), library.items)
     setLibrary(l => ({ current: created.id, items: [...l.items, created] }))
-    show(blank)
+    show(created.source)
     return created
   }
   const openExample = () => {
     const name = presentationName(example) || untitled
-    const reuse = current.source === blank
+    const reuse = isBlank(current.source)
     const target = {
       ...(reuse ? current : createPresentation(name, example, library.items)),
       name: uniqueName(name, library.items, reuse ? current.id : undefined),
@@ -167,15 +169,17 @@ export function useLibrary({
       return
     }
     const next =
-      rest.sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? createPresentation(untitled, blank, [])
+      rest.sort((a, b) => b.updatedAt - a.updatedAt)[0] ??
+      createPresentation(untitled, withLastStyle(blank), [])
     setLibrary({ current: next.id, items: rest.length ? rest : [next] })
     show(next.source)
     restartChat()
   }
-  const paste = (value: string) => {
+  const paste = (pasted: string) => {
+    const value = withLastStyle(pasted)
     const previous = current
     const name = presentationName(value) || untitled
-    const reuse = previous.source === blank
+    const reuse = isBlank(previous.source)
     if (reuse) versions.remember(previous.id, source)
     const target = reuse
       ? {
@@ -206,9 +210,10 @@ export function useLibrary({
       },
     })
   }
-  const generated = (value: string, fresh: boolean, latest: string) => {
+  const generated = (answer: string, fresh: boolean, latest: string) => {
+    const value = fresh ? withLastStyle(answer) : answer
     const name = presentationName(value) || untitled
-    const reuse = !fresh || current.source === blank
+    const reuse = !fresh || isBlank(current.source)
     if (reuse) versions.remember(current.id, latest)
     const target = reuse
       ? {
@@ -231,7 +236,7 @@ export function useLibrary({
           )
         : [...l.items, target],
     }))
-    return { name: target.name, reuse }
+    return { name: target.name, reuse, value }
   }
   const keep = () => {
     const known = library.items.find(p => p.source === source)
@@ -239,7 +244,7 @@ export function useLibrary({
       known ?? createPresentation(presentationName(source) || untitled, source, library.items)
     setLibrary(l => ({
       current: kept.id,
-      items: known ? l.items : [...l.items.filter(p => p.source !== blank), kept],
+      items: known ? l.items : [...l.items.filter(p => !isBlank(p.source)), kept],
     }))
     setShared(null)
     restartChat()

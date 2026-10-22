@@ -200,8 +200,11 @@ export function KioskWorkspace({
     library.paste(value)
   }
   const loadGenerated = (generated: string, fresh: boolean) => {
-    const value = formatPresentation(generated)
-    const { name, reuse } = library.generated(value, fresh, sourceRef.current)
+    const { name, reuse, value } = library.generated(
+      formatPresentation(generated),
+      fresh,
+      sourceRef.current,
+    )
     const next = live.load(value)
     setIndex(0)
     notice(
