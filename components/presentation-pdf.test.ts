@@ -50,22 +50,20 @@ describe('presentationPdf', () => {
     drawn.forEach(({ args }) => expect(args).toEqual([0, 0, 5120, 2880]))
   })
 
-  it('lays each slide out at the canvas size instead of scaling the SVG', async () => {
+  it('leaves all scaling to the canvas, with no SVG viewBox or zoom', async () => {
     await presentationPdf(await html(), 'Example')
     for (const { svg } of drawn) {
       const doc = new DOMParser().parseFromString(svg, 'image/svg+xml')
       const root = doc.documentElement
       const object = root.querySelector('foreignObject')!
-      const zoomed = object.firstElementChild as HTMLElement
-      const slide = zoomed.firstElementChild as HTMLElement
-      expect(root.getAttribute('width')).toBe('5120')
-      expect(root.getAttribute('height')).toBe('2880')
+      const slide = object.firstElementChild as HTMLElement
       expect(root.hasAttribute('viewBox')).toBe(false)
-      expect(object.getAttribute('width')).toBe('5120')
-      expect(object.getAttribute('height')).toBe('2880')
-      const zoom = Number(/zoom:([\d.]+)/.exec(zoomed.getAttribute('style')!)![1])
-      expect(cssSize(slide, 'width') * zoom).toBeCloseTo(5120)
-      expect(cssSize(slide, 'height') * zoom).toBeCloseTo(2880)
+      expect(svg).not.toMatch(/zoom:|transform:\s*scale/)
+      for (const element of [root, object]) {
+        expect(element.getAttribute('width')).toBe(String(cssSize(slide, 'width')))
+        expect(element.getAttribute('height')).toBe(String(cssSize(slide, 'height')))
+      }
+      expect(cssSize(slide, 'width') / cssSize(slide, 'height')).toBeCloseTo(16 / 9)
     }
   })
 })
