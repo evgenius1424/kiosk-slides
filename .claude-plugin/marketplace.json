@@ -1,7 +1,7 @@
 {
   "name": "kiosk-slides",
   "owner": {
-    "name": "Evgenii",
+    "name": "Evgenii Glinskii",
     "url": "https://github.com/evgenius1424"
   },
   "description": "Kiosk Slides skills: write a presentation in Markdown and render it to one HTML file.",

@@ -1648,6 +1648,16 @@ html:has(.is-presenting .studio) {
 .format-details {
   margin-top: 14px;
 }
+.dialog-credit {
+  margin-top: 22px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.dialog-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .format-details summary {
   cursor: pointer;
   font-weight: 500;
