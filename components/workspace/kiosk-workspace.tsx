@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useTranslations } from 'next-intl'
-import { Keyboard, ShieldCheck } from 'lucide-react'
+import { Keyboard } from 'lucide-react'
 import {
   formatPresentation,
   insertSlide,
@@ -316,7 +316,6 @@ export function KioskWorkspace({
             tab={tab}
             readOnly={!!shared}
             sidebar={sidebar}
-            fit={canvas.fit}
             onTab={setTab}
             onShowSidebar={() => setSidebar(true)}
           />
@@ -387,13 +386,6 @@ export function KioskWorkspace({
               </button>
             </div>
           </div>
-          <footer className="workspace-footer">
-            <span>
-              <ShieldCheck size={13} />
-              {t('footer.tagline')}
-            </span>
-            <span>{t('footer.quiet')}</span>
-          </footer>
         </section>
         <SettingsPanel
           panelRef={settings.panelRef}
@@ -403,12 +395,10 @@ export function KioskWorkspace({
           presentation={presentation}
           look={look}
           player={player}
-          fit={canvas.fit}
           onChange={(next, previous) => {
             if (previous !== undefined) versions.remember(current.id, previous)
             live.replace(next)
           }}
-          onHelp={() => setModal('help')}
         />
         <div className="sr-only" aria-live="polite">
           {player.change.count ? player.slideName : ''}

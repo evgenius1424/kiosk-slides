@@ -121,19 +121,6 @@ a {
   background: var(--primary);
   color: white;
 }
-.beta,
-.local-label,
-.header-divider,
-.eyebrow,
-.presentation-heading p,
-.workspace-footer,
-.ready-label,
-.build-panel,
-.shortcuts-button,
-.mini-note,
-.performance-note {
-  display: none;
-}
 .header-actions {
   margin-left: auto;
   display: flex;
@@ -291,19 +278,6 @@ kbd {
   padding: 26px 36px;
   overflow: auto;
   flex: 1;
-}
-.presentation-heading {
-  max-width: 1200px;
-  margin: 0 auto 22px;
-}
-.presentation-heading h1 {
-  font-size: 27px;
-  letter-spacing: -1px;
-  font-weight: 500;
-  margin: 0;
-}
-.presentation-heading h1 > span {
-  display: none;
 }
 .canvas-shell {
   display: grid;
@@ -1079,7 +1053,6 @@ kbd {
 .is-presenting .app-header,
 .is-presenting .slides-sidebar,
 .is-presenting .editor-toolbar,
-.is-presenting .presentation-heading,
 .is-presenting .presenter-tip,
 .is-presenting .inspector,
 .is-presenting .slide-actions,
@@ -1762,9 +1735,6 @@ html:has(.is-presenting .studio) {
   }
   .editor-toolbar {
     padding: 0 16px;
-  }
-  .presentation-heading h1 {
-    font-size: 23px;
   }
   .canvas-shell {
     width: 100%;

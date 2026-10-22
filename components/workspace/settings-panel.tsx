@@ -2,15 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { useTranslations } from 'next-intl'
-import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  CircleHelp,
-  RotateCcw,
-  Settings2,
-  ShieldCheck,
-} from 'lucide-react'
+import { Check, ChevronDown, Settings2 } from 'lucide-react'
 import {
   DEFAULT_BRAND,
   DEFAULT_TRANSITION,
@@ -68,9 +60,7 @@ export function SettingsPanel({
   presentation,
   look,
   player,
-  fit,
   onChange,
-  onHelp,
 }: {
   panelRef: RefObject<HTMLElement | null>
   hidden: boolean
@@ -79,14 +69,12 @@ export function SettingsPanel({
   presentation: Presentation
   look: PresentationLook
   player: Player
-  fit: boolean
   onChange: (source: string, previous?: string) => void
-  onHelp: () => void
 }) {
   const t = useTranslations('Workspace')
   const ts = useTranslations('Settings')
   const [brandDraft, setBrandDraft] = useState<string | null>(null)
-  const { theme, tone: accent, transition, duration, loop, credit, slides } = presentation
+  const { theme, tone: accent, transition, duration, loop, credit } = presentation
   const { safe, playing } = player
   const latest = useRef({ source, presentationId })
   const lastChange = useRef({ key: '', wrote: '' })
@@ -259,10 +247,6 @@ export function SettingsPanel({
             label={ts('loop')}
           />
         </div>
-        <div className="mini-note">
-          <RotateCcw size={12} />
-          <span>{ts('startsPaused')}</span>
-        </div>
       </section>
       <section className="settings-section">
         <h3>{ts('motion')}</h3>
@@ -295,34 +279,7 @@ export function SettingsPanel({
           <Toggle checked={safe} onChange={() => setShareSafe(!safe)} label={ts('shareSafe')} />
         </div>
         <p className="setting-help">{ts('shareSafeHelp')}</p>
-        <div className="performance-note">
-          <ShieldCheck size={16} />
-          <div>
-            <strong>{ts('clarityTitle')}</strong>
-            <p>{ts.rich('clarityBody', { br: () => <br /> })}</p>
-          </div>
-        </div>
       </section>
-      <div className="build-panel">
-        <div>
-          <span className="status-dot" />
-          <strong>{fit ? ts('status.ready') : ts('status.review')}</strong>
-          <span>{ts('status.count', { count: slides.length })}</span>
-        </div>
-        <p>
-          <Check size={12} />
-          {ts('status.checked')}
-        </p>
-        <p>
-          <Check size={12} />
-          {fit ? ts('status.fits') : ts('status.overflows')}
-        </p>
-      </div>
-      <button className="shortcuts-button" onClick={onHelp}>
-        <CircleHelp size={15} />
-        {ts('help')}
-        <ArrowRight size={13} />
-      </button>
     </aside>
   )
 }
