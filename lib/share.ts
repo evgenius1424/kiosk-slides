@@ -1,6 +1,6 @@
-// A shared link carries the whole presentation after the `#`, so nothing reaches a server:
+// A share link carries the whole presentation after the `#`, so nothing reaches a server:
 // `#s=1<base64url(deflate-raw(markdown))>`, where `1` is the encoding version.
-// While a shared link is open, the slide number follows as `&N`: `#s=1…&3`.
+// While a share link is open, the slide number follows as `&N`: `#s=1…&3`.
 
 export const SHARE_PREFIX = '#s='
 export const SHARE_LIMIT = 16_000

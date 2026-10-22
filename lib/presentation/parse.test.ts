@@ -358,7 +358,7 @@ describe('parsePresentation: errors', () => {
     const words = 'a'.repeat(113)
     expect(heading(`# **${words}**`)).toEqual([{ text: words, highlight: true }])
     expect(error(md(`# **${'a'.repeat(116)}**`))).toBe(
-      'Line 1: Shorten the headline to 115 characters or split the slide.',
+      'Line 1: Shorten the heading to 115 characters or split the slide.',
     )
   })
 
@@ -468,9 +468,9 @@ describe('parsePresentation: errors', () => {
   })
 
   it('rejects a presentation with no slides on line 1', () => {
-    expect(error('')).toBe('Line 1: Add a slide with a # headline.')
+    expect(error('')).toBe('Line 1: Add a slide with a # heading.')
     expect(error(md('---', 'title: Empty', '---', ''))).toBe(
-      'Line 1: Add a slide with a # headline.',
+      'Line 1: Add a slide with a # heading.',
     )
   })
 

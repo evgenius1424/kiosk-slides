@@ -101,7 +101,7 @@ describe('start screen', () => {
     fireEvent.click(document.querySelector('.presentation-selector')!)
     fireEvent.click(screen.getByRole('button', { name: /New presentation/ }))
     fireEvent.click(screen.getByRole('button', { name: /Start blank/ }))
-    expect(screen.getByRole('textbox', { name: 'Slide text' })).toBeTruthy()
+    expect(screen.getByRole('textbox', { name: 'Presentation source' })).toBeTruthy()
     expect(library()).toHaveLength(2)
   })
 

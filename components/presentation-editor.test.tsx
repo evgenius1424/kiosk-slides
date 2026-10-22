@@ -96,7 +96,9 @@ describe('paste anywhere', () => {
   it('opens Edit with the error when the pasted presentation is broken', () => {
     renderWorkspace()
     paste('# One\n# Two\n')
-    const textarea = screen.getByRole('textbox', { name: 'Slide text' }) as HTMLTextAreaElement
+    const textarea = screen.getByRole('textbox', {
+      name: 'Presentation source',
+    }) as HTMLTextAreaElement
     expect(textarea.value).toBe('# One\n# Two\n')
     expect(
       screen
@@ -149,7 +151,7 @@ function menuName() {
 function openEditor() {
   if (!document.querySelector('.workspace')) renderWorkspace()
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-  return screen.getByRole('textbox', { name: 'Slide text' }) as HTMLTextAreaElement
+  return screen.getByRole('textbox', { name: 'Presentation source' }) as HTMLTextAreaElement
 }
 
 function type(textarea: HTMLTextAreaElement, value: string) {

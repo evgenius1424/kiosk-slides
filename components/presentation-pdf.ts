@@ -53,7 +53,7 @@ function slideRoot(page: Document, css: string, frame: Element) {
 
 function slideSvg(root: HTMLElement) {
   const markup = new XMLSerializer().serializeToString(root)
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${PIXEL_WIDTH}" height="${PIXEL_HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}"><foreignObject width="${WIDTH}" height="${HEIGHT}">${markup}</foreignObject></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}"><foreignObject width="${WIDTH}" height="${HEIGHT}">${markup}</foreignObject></svg>`
 }
 
 function linkSandbox() {

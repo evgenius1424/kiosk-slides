@@ -1,11 +1,12 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { MAX_SLIDES } from './ai-draft'
+import { terms } from './presentation'
 import { SLIDES_CLOSE, SLIDES_OPEN } from './slide-actions'
 
-const QUALITY = `Follow "Writing a good presentation" just as strictly. Every slide needs its settings comment with a title, label and footer, and most slides need a widget such as steps, before/after, a metric, a chart, a table or a flow. A presentation that is only one heading per slide, or that skips the settings comments, is wrong even when it parses. Run the checklist at the end of the format before you reply.`
+const QUALITY = `Follow "Writing a good presentation" just as strictly. Every slide needs its ${terms.slideSettings} comment with a ${terms.slideTitle}, a ${terms.label} and a ${terms.footer}, and most slides need a ${terms.widget} such as steps, before/after, a metric, a chart, a table or a flow. A presentation that is only one heading per slide, or that skips the ${terms.slideSettings} comments, is wrong even when it parses. Run the checklist at the end of the format before you reply.`
 
-const SLIDE_RULES = `The presentation format is specified below. A parser enforces every grammar rule and rejects the slide otherwise. Keep the slide's settings comment with a title, a label and a footer, and follow "Writing a good presentation".`
+const SLIDE_RULES = `The presentation format is specified below. A parser enforces every grammar rule and rejects the slide otherwise. Keep the slide's ${terms.slideSettings} comment with a ${terms.slideTitle}, a ${terms.label} and a ${terms.footer}, and follow "Writing a good presentation".`
 
 const CHAT_GUIDE = `You write presentations for Kiosk Slides, a tool for presenting one clear idea per slide on a TV, in a room, or on a call.
 
@@ -27,13 +28,13 @@ The presentation format is specified below. A parser enforces every grammar rule
 
 const SLIDE_GUIDE = `You change one slide of a Kiosk Slides presentation. You get the whole presentation for context, the slide to change, and what to do with it.
 
-Reply with only the new slide inside ${SLIDES_OPEN}${SLIDES_CLOSE} tags: its settings comment and its content, with no front matter and none of the other slides. When the change makes more than one slide, separate them with a line holding only ---.
+Reply with only the new slide inside ${SLIDES_OPEN}${SLIDES_CLOSE} tags: its ${terms.slideSettings} comment and its content, with no front matter and none of the other slides. When the change makes more than one slide, separate them with a line holding only ---.
 
 ${SLIDE_RULES}`
 
 const SLIDE_COPY_GUIDE = `You change one slide of a Kiosk Slides presentation. Below I give you the whole presentation for context, the slide to change, and what to do with it.
 
-Reply with only the new slide in a single \`\`\`markdown code block so I can paste it back: its settings comment and its content, with no front matter and none of the other slides. When the change makes more than one slide, separate them with a line holding only ---.
+Reply with only the new slide in a single \`\`\`markdown code block so I can paste it back: its ${terms.slideSettings} comment and its content, with no front matter and none of the other slides. When the change makes more than one slide, separate them with a line holding only ---.
 
 ${SLIDE_RULES}`
 
