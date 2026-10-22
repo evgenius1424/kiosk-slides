@@ -31,7 +31,7 @@ loop: true
   - `font:` is `classic` (default, Arial), `inter`, `figtree`, `bricolage-grotesque`, `space-grotesk`, `archivo-expanded`, or `golos-text`. The font's name works too, like `Space Grotesk`. Every font also covers Russian and other Cyrillic text.
   - `scale:` is `normal` (default), `large`, or `hero`. `large` and `hero` size every heading to its length, so a one-word slide fills the screen and a long one still fits, and `hero` also enlarges the body and makes every heading, widget slides included, as large as the frame allows.
   - `brand:` is the word in the corner of every slide, at most 24 characters. The default is `kiosk`; `none` hides it.
-  - `credit: false` drops the “Made with Kiosk Slides” line from the end of a downloaded presentation and from shared links. It never appears on a slide. It is on by default.
+  - `credit: false` drops the “Made with Kiosk Slides” line from the end of a downloaded presentation and from share links. It never appears on a slide. It is on by default.
 - **Slides** are separated by a line containing only `---`. A `---` line inside a ```` ``` ```` code fence does not split slides.
 - A presentation has 1–40 slides. Prefer 5–12.
 
@@ -54,11 +54,11 @@ Big type. One idea. No visual clutter.
 In order, a slide has:
 
 1. **Slide settings** (optional): one HTML comment that is the slide's first block, directly followed by the `#` heading. It has one `key: value` per line, and every key is optional:
-   - `title`, `label`, `footer` are free text shown around the slide.
+   - `title` is the slide title (top left), `label` the label (top right), and `footer` the footer (bottom left). All three are free text.
    - `duration` overrides the presentation's autoplay time for this slide, written like `20s`.
    - Any other key is an error.
 2. **Exactly one `#` heading** of at most 115 characters. Wrap the key phrase in `**bold**` to highlight it. Headings may also use `*italic*`, `` `code` `` and `[links](https://...)`; nothing else, and the 115 characters count the visible text, not the markup. Other heading levels (`##` and deeper) are not supported. To break the heading onto a new line, write the next part on the line directly under it, with no blank line between: that line stays part of the heading and starts a new line on the slide. Leave a blank line after the heading before the body.
-3. **Body paragraphs** (optional): plain paragraphs. Inline Markdown (`**bold**`, `*italic*`, `` `code` ``, `~~strike~~` and `[links](https://...)`) is shown as formatting here and in steps, bullets, checklists, quotes, tables, before/after and metric captions. A line break inside a paragraph stays a line break on the slide. All the body text together must be at most 320 characters.
+3. **Body** (optional): plain paragraphs. Inline Markdown (`**bold**`, `*italic*`, `` `code` ``, `~~strike~~` and `[links](https://...)`) is shown as formatting here and in steps, bullets, checklists, quotes, tables, before/after and metric captions. A line break inside a paragraph stays a line break on the slide. All the body text together must be at most 320 characters.
 4. **At most one supporting widget** (optional). It can go before, between, or after the body paragraphs. A slide with no widget is a *message* slide.
 
 > **`-->` can't appear inside any HTML comment**, slide settings included. It closes the comment early. Write `->` or "to" instead (for example, `footer: Draft -> Slides`).
@@ -249,11 +249,11 @@ The first line is the bold value (`**…**` or `__…__`). The caption is on the
 
 ## Writing a good presentation
 
-The parser accepts a slide with no settings comment and no widget, but the result looks unfinished: every such slide shows the same placeholder title and label, no footer, and a wall of headings. Treat these rules as strictly as the grammar above.
+The parser accepts a slide with no settings comment and no widget, but the result looks unfinished: every such slide shows the same placeholder slide title and label, no footer, and a wall of headings. Treat these rules as strictly as the grammar above.
 
 - **Front matter.** Always set `title:`. Set `brand:` to the organization, product or event in one or two words when you know it. Set `tone:` only when the talk suggests a mood (`teal` calm, `coral` warm, `violet` creative, `amber` classic), and leave `transition:` and `share-safe:` to the person presenting.
-- **Every slide starts with a settings comment holding `title`, `label` and `footer`.** No exceptions, the first and last slides included.
-  - `title` names the part of the talk in one to three words (`Problem`, `Plan`, `Results`), shown top left.
+- **Every slide starts with a slide settings comment holding `title`, `label` and `footer`.** No exceptions, the first and last slides included.
+  - `title`, the slide title, names the part of the talk in one to three words (`Problem`, `Plan`, `Results`), shown top left.
   - `label` says what this slide shows in two to four words (`Three steps`, `Before / after`), shown top right.
   - `footer` is one short sentence that adds a fact, a source or the takeaway. It never repeats the heading.
 - **Show, don't just say.** Pick each slide's widget from what its content is:
