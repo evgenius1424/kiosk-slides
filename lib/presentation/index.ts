@@ -26,6 +26,7 @@ export {
   isScale,
   scales,
   tableSize,
+  textFit,
   type PresentationLook,
   type Scale,
 } from './look'

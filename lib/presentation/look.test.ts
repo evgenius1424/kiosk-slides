@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { fonts, headingSize, scales, tableSize, type HeadingPart } from '@/lib/presentation'
+import {
+  fonts,
+  headingSize,
+  scales,
+  tableSize,
+  textFit,
+  type HeadingPart,
+} from '@/lib/presentation'
 
 const slide = (text: string, body = '') => ({
   kind: 'message' as const,
@@ -96,5 +103,73 @@ describe('tableSize', () => {
   it('never goes below a readable size', () => {
     const long = { ...table(text, 6), body: 'x '.repeat(150) }
     expect(tableSize(long, { scale: 'normal', font: 'archivo-expanded' })).toBe(1.3)
+  })
+})
+
+describe('textFit', () => {
+  const bullets = (heading: string, body: string, items: string[]) => ({
+    kind: 'bullets' as const,
+    body,
+    heading: [{ text: heading }] as HeadingPart[],
+    items,
+  })
+  const russian = bullets(
+    'Нюша: если мной не восхищаются, существую ли я?',
+    'Её мечты о красоте, романтике и статусе легко принять за поверхностность.\n\nНо под ними можно увидеть болезненную зависимость самооценки от чужого взгляда.',
+    [
+      'Хочет быть исключительной, а не просто принятой.',
+      'Романтизирует отношения ещё до их начала.',
+      'Сравнивает себя с воображаемым идеалом.',
+      'Скрывает уязвимость за требовательностью.',
+    ],
+  )
+  const english = bullets(
+    'Nyusha: if nobody admires me, do I even exist?',
+    'Her dreams of beauty, romance and status are easy to mistake for shallowness.\n\nBut underneath you can see a painful dependence of self-worth on how others see her.',
+    [
+      'Wants to be exceptional, not merely accepted.',
+      'Romanticizes relationships before they even begin.',
+      'Compares herself with an imagined ideal.',
+      'Hides vulnerability behind being demanding.',
+    ],
+  )
+
+  it('keeps text that fits at full size', () => {
+    for (const scale of scales)
+      expect(
+        textFit(bullets('Ship it', 'One line.', ['Write', 'Review']), { scale, font: 'inter' }),
+      ).toBeUndefined()
+  })
+
+  it('shrinks body and widget text when the heading is already at its smallest', () => {
+    for (const scale of scales)
+      for (const font of fonts.map(f => f.id)) {
+        const latin = textFit(english, { scale, font })!
+        expect(latin).toBeLessThan(1)
+        expect(textFit(russian, { scale, font })).toBeLessThanOrEqual(latin)
+      }
+  })
+
+  it('measures a Latin heading over Cyrillic text with the Cyrillic face', () => {
+    const mixed = { ...russian, heading: english.heading }
+    expect(textFit(mixed, { scale: 'normal', font: 'archivo-expanded' })).toBeLessThan(
+      textFit(english, { scale: 'normal', font: 'archivo-expanded' })!,
+    )
+  })
+
+  it('never goes below a readable size', () => {
+    const long = { ...russian, body: russian.body.repeat(4) }
+    expect(textFit(long, { scale: 'hero', font: 'archivo-expanded' })).toBe(0.6)
+  })
+
+  it('leaves slides with nothing to shrink alone', () => {
+    const image = {
+      ...slide('Show it, do not describe it'),
+      kind: 'image' as const,
+      src: 'a.png',
+      caption: '',
+      alt: '',
+    }
+    expect(textFit(image, { scale: 'normal', font: 'inter' })).toBeUndefined()
   })
 })

@@ -3,6 +3,7 @@ import type { MessageWidget } from './types'
 
 type WidgetText = {
   width: number
+  gap: number
   list: number
   quote: number
   small: number
@@ -18,7 +19,7 @@ export function widgetHeight(
   charWidth: number,
 ): number {
   const lines = (value: string, width: number, size: number) =>
-    wrapped(value, width / (charWidth * size))
+    textLines(value, width, size, charWidth)
   switch (widget.kind) {
     case 'message':
     case 'code':
@@ -27,16 +28,19 @@ export function widgetHeight(
       return list(
         widget.steps.map(step => lines(step, text.width - 4.5, text.list)),
         text.list,
+        text.gap,
       )
     case 'bullets':
       return list(
         widget.items.map(item => lines(item, text.width - 3, text.list)),
         text.list,
+        text.gap,
       )
     case 'checklist':
       return list(
         widget.items.map(item => lines(item.text, text.width - 3.8, text.list)),
         text.list,
+        text.gap,
       )
     case 'quote':
       return lines(widget.text, 69.6, text.quote) * text.quote * 1.3 + (widget.by ? 3.1 : 0)
@@ -50,7 +54,7 @@ export function widgetHeight(
     }
     case 'table': {
       const size = text.table
-      const char = charWidth * TABLE_CHAR
+      const char = (charWidth + 0.04) * TABLE_CHAR
       const widths = columnWidths(widget, text.width, char * size, 1.6 * size)
       const rows = widget.rows.map(row =>
         Math.max(
@@ -64,7 +68,7 @@ export function widgetHeight(
     }
     case 'buttons': {
       const used = widget.buttons.reduce(
-        (sum, button) => sum + button.label.length * charWidth * text.small + 9.3,
+        (sum, button) => sum + button.label.length * (charWidth + 0.04) * text.small + 9.3,
         0,
       )
       const rows = Math.ceil(used / text.width)
@@ -81,7 +85,15 @@ export function widgetHeight(
   }
 }
 
+export function textLines(text: string, width: number, size: number, charWidth: number) {
+  const perLine = width / (charWidth * TEXT_CHAR * size)
+  return plain(text)
+    .split('\n')
+    .reduce((sum, line) => sum + wordLines(line, perLine), 0)
+}
+
 const TABLE_CHAR = 0.85
+const TEXT_CHAR = 0.9
 
 function columnWidths(
   { header, rows }: Extract<Widget, { kind: 'table' }>,
@@ -99,15 +111,32 @@ function columnWidths(
 }
 
 function plain(text: string) {
-  return text.replace(/[*_`~]/g, '')
+  return text.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`~]/g, '')
 }
 
-function list(rows: number[], size: number) {
-  return rows.reduce((sum, count) => sum + count, 0) * size * 1.4 + (rows.length - 1) * 1.7
+function list(rows: number[], size: number, gap: number) {
+  return rows.reduce((sum, count) => sum + count, 0) * size * 1.4 + (rows.length - 1) * 1.7 * gap
 }
 
 function wrapped(text: string, perLine: number) {
   return text
     .split('\n')
     .reduce((sum, line) => sum + Math.max(1, Math.ceil(line.length / perLine)), 0)
+}
+
+function wordLines(line: string, perLine: number) {
+  let lines = 1
+  let used = 0
+  for (const word of line.split(/\s+/).filter(Boolean)) {
+    if (used && used + 1 + word.length > perLine) {
+      lines++
+      used = 0
+    }
+    used += (used ? 1 : 0) + word.length
+    while (used > perLine) {
+      lines++
+      used -= perLine
+    }
+  }
+  return lines
 }

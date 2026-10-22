@@ -1,6 +1,6 @@
 import type { Widget } from './components'
 import type { MessageWidget, Presentation, SlideChrome } from './types'
-import { WIDGET_GAP, widgetHeight } from './widget-height'
+import { WIDGET_GAP, textLines, widgetHeight } from './widget-height'
 
 export const scales = ['normal', 'large', 'hero'] as const
 export type Scale = (typeof scales)[number]
@@ -80,7 +80,7 @@ export function headingSize(
 ): number | undefined {
   if (scale === 'normal') return undefined
   const box = boxes[scale]
-  const { text, charWidth, body } = measure(slide, box, font)
+  const { text, charWidth, textWidth, body } = measure(slide, box, font)
   if (slide.kind === 'message') {
     const height = box.height - body
     return fit(
@@ -101,7 +101,7 @@ export function headingSize(
         widgetHeight(
           slide,
           { ...box.text, table: tableSize(slide, { scale, font }) ?? TABLE_TEXT },
-          charWidth + 0.04,
+          textWidth,
         )
   const height = box.room - CLEARANCE - body - below
   return fit(
@@ -120,15 +120,33 @@ export function tableSize(
 ): number | undefined {
   if (slide.kind !== 'table') return undefined
   const box = boxes[scale]
-  const { text, charWidth, body } = measure(slide, box, font)
-  const perLine = box.width / (charWidth * HEADING_CHAR * MIN_HEADING)
-  const heading = Math.max(1, wrap(text, perLine)) * box.lineHeight * MIN_HEADING
-  const room = box.room - CLEARANCE - body - heading - WIDGET_GAP
+  const { text, charWidth, textWidth, body } = measure(slide, box, font)
+  const room = box.room - CLEARANCE - body - headingHeight(text, charWidth, box, MIN_HEADING)
   for (let size = TABLE_TEXT; size > MIN_TABLE_TEXT; size = round(size - 0.05)) {
-    const height = widgetHeight(slide, { ...box.text, table: size }, charWidth + 0.04)
+    const height = WIDGET_GAP + widgetHeight(slide, { ...box.text, table: size }, textWidth)
     if (height <= room) return size === TABLE_TEXT ? undefined : size
   }
   return MIN_TABLE_TEXT
+}
+
+export function textFit(
+  slide: SizedSlide,
+  { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
+): number | undefined {
+  if (slide.kind === 'code' || slide.kind === 'table') return undefined
+  const box = boxes[scale]
+  const { text, charWidth, textWidth } = measure(slide, box, font)
+  const size = headingSize(slide, { scale, font }) ?? NORMAL_HEADING[slide.kind] ?? MIN_HEADING
+  const room = box.room - CLEARANCE - headingHeight(text, charWidth, box, size)
+  const height = (fit: number) =>
+    bodyHeight(slide.body, box, textWidth, fit) +
+    (slide.kind === 'message'
+      ? 0
+      : WIDGET_GAP + widgetHeight(slide, scaled(box.text, fit), textWidth))
+  if (height(1) <= room || height(MIN_TEXT_FIT) === height(1)) return undefined
+  for (let fit = 0.95; fit > MIN_TEXT_FIT; fit = round(fit - 0.05))
+    if (height(fit) <= room) return fit
+  return MIN_TEXT_FIT
 }
 
 type Script = 'latin' | 'cyrillic'
@@ -152,9 +170,17 @@ const TABLE_TEXT = 2
 const MIN_TABLE_TEXT = 1.3
 const CLEARANCE = 1.5
 const HEADING_CHAR = 0.85
+const MIN_TEXT_FIT = 0.6
+
+const NORMAL_HEADING: Partial<Record<SizedSlide['kind'], number>> = {
+  message: 6.5,
+  image: 6.5,
+  buttons: 6.5,
+}
 
 const boxes = {
   normal: {
+    bodyWidth: 75,
     width: 80,
     height: 35,
     room: 40,
@@ -162,9 +188,10 @@ const boxes = {
     message: 6.5,
     widget: 5,
     body: 2.2,
-    text: { width: 90, list: 2.2, quote: 3.1, small: 2.1, caption: 2.6 },
+    text: { width: 90, gap: 1, list: 2.2, quote: 3.1, small: 2.1, caption: 2.6 },
   },
   large: {
+    bodyWidth: 80,
     width: 86,
     height: 35,
     room: 40,
@@ -172,9 +199,10 @@ const boxes = {
     message: 9,
     widget: 6,
     body: 2.4,
-    text: { width: 90, list: 2.2, quote: 3.1, small: 2.1, caption: 2.6 },
+    text: { width: 90, gap: 1, list: 2.2, quote: 3.1, small: 2.1, caption: 2.6 },
   },
   hero: {
+    bodyWidth: 80,
     width: 92,
     height: 39,
     room: 43.5,
@@ -182,14 +210,46 @@ const boxes = {
     message: 16,
     widget: 11,
     body: 2.7,
-    text: { width: 92, list: 2.6, quote: 3.6, small: 2.4, caption: 3 },
+    text: { width: 92, gap: 1, list: 2.6, quote: 3.6, small: 2.4, caption: 3 },
   },
 }
 
 function measure(slide: SizedSlide, box: Box, font: string) {
   const text = slide.heading.map(p => p.text).join('')
-  const charWidth = mostlyCyrillic(text) ? findFont(font).cyrillicWidth : findFont(font).width
-  return { text, charWidth, body: bodyHeight(slide.body, box.body, charWidth) }
+  const textWidth = fontWidth(font, slideText(slide))
+  return {
+    text,
+    charWidth: fontWidth(font, text),
+    textWidth,
+    body: bodyHeight(slide.body, box, textWidth, 1),
+  }
+}
+
+function headingHeight(text: string, charWidth: number, box: Box, size: number) {
+  const perLine = box.width / (charWidth * HEADING_CHAR * size)
+  return Math.max(1, wrap(text, perLine)) * box.lineHeight * size
+}
+
+function fontWidth(font: string, text: string) {
+  return mostlyCyrillic(text) ? findFont(font).cyrillicWidth : findFont(font).width
+}
+
+function slideText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value.map(slideText).join(' ')
+  if (value && typeof value === 'object')
+    return Object.entries(value)
+      .filter(([key]) => key !== 'kind')
+      .map(([, item]) => slideText(item))
+      .join(' ')
+  return ''
+}
+
+function scaled<T extends Record<string, number>>(text: T, fit: number): T & { table: number } {
+  const sizes = Object.fromEntries(
+    Object.entries(text).map(([key, size]) => [key, key === 'width' ? size : size * fit]),
+  )
+  return { ...(sizes as T), table: TABLE_TEXT }
 }
 
 function round(size: number) {
@@ -227,13 +287,10 @@ function wrap(text: string, perLine: number) {
   return lines
 }
 
-function bodyHeight(body: string, size: number, charWidth: number) {
+function bodyHeight(body: string, box: Box, charWidth: number, fit: number) {
   if (!body) return 0
-  const perLine = 75 / ((charWidth + 0.04) * size)
-  const lines = body
-    .split('\n')
-    .reduce((sum, line) => sum + Math.max(1, Math.ceil(line.length / perLine)), 0)
-  return lines * 1.5 * size + 2.5
+  const size = box.body * fit
+  return textLines(body, box.bodyWidth, size, charWidth) * 1.5 * size + 2.5 * fit
 }
 
 function font(
