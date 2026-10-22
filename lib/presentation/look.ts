@@ -1,4 +1,6 @@
-import type { Presentation, Slide } from './types'
+import type { Widget } from './components'
+import type { MessageWidget, Presentation, SlideChrome } from './types'
+import { WIDGET_GAP, widgetHeight } from './widget-height'
 
 export const scales = ['normal', 'large', 'hero'] as const
 export type Scale = (typeof scales)[number]
@@ -73,15 +75,16 @@ export const fontFace = ({ family, weights, script }: FontFile, src: string) =>
 export const hasCyrillic = (text: string) => CYRILLIC.test(text)
 
 export function headingSize(
-  slide: Pick<Slide, 'kind' | 'heading' | 'body'>,
+  slide: Pick<SlideChrome, 'heading' | 'body'> & (MessageWidget | Widget),
   { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
 ): number | undefined {
   if (scale === 'normal') return undefined
   const box = boxes[scale]
   const text = slide.heading.map(p => p.text).join('')
   const charWidth = mostlyCyrillic(text) ? findFont(font).cyrillicWidth : findFont(font).width
+  const body = bodyHeight(slide.body, box.body, charWidth)
   if (slide.kind === 'message') {
-    const height = box.height - bodyHeight(slide.body, box.body, charWidth)
+    const height = box.height - body
     return fit(
       text,
       charWidth,
@@ -93,7 +96,17 @@ export function headingSize(
   }
   const width = slide.kind === 'code' ? box.width * 0.48 : box.width
   const most = Math.max(2, text.split('\n').length)
-  return fit(text, charWidth, width, box.widget, 5, lines => lines <= most)
+  const below =
+    slide.kind === 'code' ? 0 : WIDGET_GAP + widgetHeight(slide, box.text, charWidth + 0.04)
+  const height = box.room - body - below
+  return fit(
+    text,
+    charWidth,
+    width,
+    box.widget,
+    5,
+    (lines, size) => lines <= most && lines * box.lineHeight * size <= height,
+  )
 }
 
 type Script = 'latin' | 'cyrillic'
@@ -109,8 +122,26 @@ const CYRILLIC_LETTERS = /[\u0400-\u04ff]/g
 const LATIN_LETTERS = /[a-z]/gi
 
 const boxes = {
-  large: { width: 86, height: 35, lineHeight: 1.05, message: 9, widget: 6, body: 2.4 },
-  hero: { width: 92, height: 39, lineHeight: 1, message: 16, widget: 11, body: 2.7 },
+  large: {
+    width: 86,
+    height: 35,
+    room: 40,
+    lineHeight: 1.05,
+    message: 9,
+    widget: 6,
+    body: 2.4,
+    text: { width: 90, list: 2.2, quote: 3.1, small: 2.1, caption: 2.6 },
+  },
+  hero: {
+    width: 92,
+    height: 39,
+    room: 43.5,
+    lineHeight: 1,
+    message: 16,
+    widget: 11,
+    body: 2.7,
+    text: { width: 92, list: 2.6, quote: 3.6, small: 2.4, caption: 3 },
+  },
 }
 
 function fit(
