@@ -1,12 +1,15 @@
 import type { ComponentType } from 'react'
 import type { SlideKind, SlideOfKind } from '@/lib/presentation'
 import { BeforeAfterView } from './before-after'
+import { BulletsView } from './bullets'
 import { ButtonsView } from './buttons'
 import { ChartView } from './chart'
+import { ChecklistView } from './checklist'
 import { CodeView } from './code'
 import { FlowView } from './flow'
 import { ImageView } from './image'
 import { MetricView } from './metric'
+import { QuoteView } from './quote'
 import { StepsView } from './steps'
 import { TableView } from './table'
 
@@ -14,6 +17,9 @@ import { TableView } from './table'
 export const widgets: { [K in SlideKind]: ComponentType<{ slide: SlideOfKind<K> }> | null } = {
   message: null,
   steps: StepsView,
+  bullets: BulletsView,
+  checklist: ChecklistView,
+  quote: QuoteView,
   code: CodeView,
   image: ImageView,
   'before-after': BeforeAfterView,

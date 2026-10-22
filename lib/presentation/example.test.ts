@@ -11,13 +11,16 @@ describe('public/example.md', () => {
     // Each component ticket adds its kind here along with a slide in the example.
     expect([...kinds].sort()).toEqual([
       'before-after',
+      'bullets',
       'buttons',
       'chart',
+      'checklist',
       'code',
       'flow',
       'image',
       'message',
       'metric',
+      'quote',
       'steps',
       'table',
     ])

@@ -58,12 +58,12 @@ In order, a slide has:
    - `duration` overrides the presentation's autoplay time for this slide, written like `20s`.
    - Any other key is an error.
 2. **Exactly one `#` heading** of at most 115 characters. Wrap the key phrase in `**bold**` to highlight it. Headings may also use `*italic*`, `` `code` `` and `[links](https://...)`; nothing else, and the 115 characters count the visible text, not the markup. Other heading levels (`##` and deeper) are not supported. To break the heading onto a new line, write the next part on the line directly under it, with no blank line between: that line stays part of the heading and starts a new line on the slide. Leave a blank line after the heading before the body.
-3. **Body paragraphs** (optional): plain paragraphs, with inline Markdown kept as written. A line break inside a paragraph stays a line break on the slide. All the body text together must be at most 320 characters.
+3. **Body paragraphs** (optional): plain paragraphs. Inline Markdown (`**bold**`, `*italic*`, `` `code` ``, `~~strike~~` and `[links](https://...)`) is shown as formatting here and in steps, bullets, checklists, quotes, tables, before/after and metric captions. A line break inside a paragraph stays a line break on the slide. All the body text together must be at most 320 characters.
 4. **At most one supporting widget** (optional). It can go before, between, or after the body paragraphs. A slide with no widget is a *message* slide.
 
 > **`-->` can't appear inside any HTML comment**, slide settings included. It closes the comment early. Write `->` or "to" instead (for example, `footer: Draft -> Slides`).
 
-**Unsupported Markdown is an error, not ignored.** Blockquotes, `##` headings, bullet lists without an annotation, raw HTML, horizontal rules other than the slide separator, and anything else not listed here are rejected with `This slide has markdown the format doesn’t support (…)`.
+**Unsupported Markdown is an error, not ignored.** `##` headings, nested lists, raw HTML, horizontal rules other than the slide separator, and anything else not listed here are rejected with `This slide has markdown the format doesn’t support (…)`.
 
 ## Annotations
 
@@ -80,7 +80,7 @@ Some widgets are written as ordinary Markdown with one annotation comment on the
 - Each annotation accepts only its own settings. `chart` takes `type`, `x`, and `y`; `flow`, `metric`, and `buttons` take none. Any other key is an error that names the allowed keys, so a typo like `typ=bar` is caught.
 - `-->` can't appear inside an annotation either.
 
-Tables, before/after, steps, code, and images are never annotated. They are detected from their Markdown shape. An annotation always wins over shape detection: `<!-- chart -->` above a `Before | After` table makes a chart, not a before/after.
+Tables, before/after, steps, bullets, checklists, quotes, code, and images are never annotated. They are detected from their Markdown shape. An annotation always wins over shape detection: `<!-- chart -->` above a `Before | After` table makes a chart, not a before/after.
 
 ## Widgets
 
@@ -89,6 +89,9 @@ A slide may have **one** of these widgets. A second one is an error (`Use one su
 | Kind | Write | Detected by | Caps |
 |---|---|---|---|
 | steps | `1.` `2.` `3.` numbered list | an ordered list | 5 items, 95 characters each, no nested lists |
+| bullets | `-` bullet list | an unordered list with no annotation | 5 items, 95 characters each, no nested lists |
+| checklist | `- [x]` and `- [ ]` items | a bullet list whose items are ticked or unticked | 5 items, 95 characters each, every item ticked or unticked |
+| quote | `>` lines, optionally ending in `— Name` | a blockquote | 200 characters of quote, 60 of name |
 | code | a fenced ```` ``` ```` block | a code fence (the info string is the language) | 12 lines, 450 characters |
 | image | `![alt](src "caption")` on its own line | a paragraph holding only one image | `src` is `https://…`, `/images/…`, or `data:image/(png\|jpeg\|webp);base64,…`. Always write alt text that describes the image for people who can’t see it. Alt and caption are each 450 characters or fewer |
 | table | a GFM table | any table not headed `Before \| After` and not under `<!-- chart -->` | 5 columns, 1–6 body rows |
@@ -109,6 +112,37 @@ A slide may have **one** of these widgets. A second one is an error (`Use one su
 ````
 
 The list must be flat. A nested list under a step is an error (`Flatten the list — nesting isn’t supported.`).
+
+### Bullets
+
+````markdown
+# Less on the slide, **more in the room**
+
+- One idea per slide, **big enough** to read from the back.
+- Plain Markdown you can *edit anywhere*.
+````
+
+Use bullets for points in no particular order, and a numbered list when the order matters.
+
+### Checklist
+
+````markdown
+# Ready to **present**
+
+- [x] Write the talk
+- [ ] Share the link
+````
+
+### Quote
+
+````markdown
+# People **remember** the point
+
+> I made the whole talk on the train.
+> — A happy presenter
+````
+
+The last line becomes the attribution when it starts with `—`, `--` or `-`.
 
 ### Code
 
@@ -228,6 +262,9 @@ The parser accepts a slide with no settings comment and no widget, but the resul
   | ------------------------------- | --------------------------------------- |
   | One statement                   | a message slide (heading and body only) |
   | A sequence of actions           | steps                                   |
+  | A few points in no order        | bullets                                 |
+  | Done and to-do items            | checklist                               |
+  | Someone's words                 | quote                                   |
   | A single striking number        | metric                                  |
   | A change or comparison          | before-after                            |
   | Several items with attributes   | table                                   |

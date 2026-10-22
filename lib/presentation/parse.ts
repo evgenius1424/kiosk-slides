@@ -17,7 +17,6 @@ export const UNTITLED = 'Untitled presentation'
 const markdown = remark().use(remarkGfm)
 
 const unsupportedHints: Partial<Record<string, string>> = {
-  list: ' Use a numbered list for steps, or annotate the block.',
   heading: ' Use one # heading per slide.',
 }
 

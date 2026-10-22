@@ -8,6 +8,7 @@ import {
   type HeadingPart,
   type Slide,
 } from '@/lib/presentation'
+import { Inline } from './inline'
 import { widgets } from './widgets'
 
 export function HeadingText({ parts }: { parts: HeadingPart[] }) {
@@ -67,7 +68,11 @@ export function SlideView({
           <h2>
             <HeadingText parts={slide.heading} />
           </h2>
-          {slide.body && <p className="slide-body">{slide.body}</p>}
+          {slide.body && (
+            <p className="slide-body">
+              <Inline text={slide.body} />
+            </p>
+          )}
         </div>
         {Widget && <Widget slide={slide} />}
       </div>
