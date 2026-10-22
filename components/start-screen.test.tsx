@@ -158,6 +158,25 @@ describe('start screen', () => {
     expect(screen.getByRole('heading', { name: 'Now paste the answer here' })).toBeTruthy()
   })
 
+  it('stays open while the free AI draft is being written', async () => {
+    let answer: (outcome: object) => void = () => {}
+    vi.stubGlobal('fetch', async (url: string) => {
+      if (url.includes('status')) return Response.json({ available: false, reason: 'Hosted.' })
+      return new Promise<Response>(resolve => (answer = outcome => resolve(Response.json(outcome))))
+    })
+    workspace({ freeDraft: true })
+    fireEvent.change(topic(), { target: { value: 'Our onboarding' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
+    expect(screen.getByRole('button', { name: 'Start blank' }).hasAttribute('disabled')).toBe(true)
+    expect(screen.getByRole('button', { name: 'Open this example' }).hasAttribute('disabled')).toBe(
+      true,
+    )
+    paste('# Pasted while waiting\n')
+    expect(screen.getByRole('heading', { name: 'What’s your talk about?' })).toBeTruthy()
+    await act(async () => answer({ kind: 'presentation', source: '# Four days\n' }))
+    await vi.waitFor(() => expect(menuName()).toBe('Four days'))
+  })
+
   it('prefers the local ChatGPT plan over the free AI draft', async () => {
     signedIn()
     workspace({ freeDraft: true })

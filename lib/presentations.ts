@@ -9,7 +9,7 @@ export type SavedPresentation = {
 }
 export type Library = { current: string; items: SavedPresentation[] }
 
-const STORAGE_KEY = 'kiosk-presentations'
+export const STORAGE_KEY = 'kiosk-presentations'
 const FRONT_MATTER = /^---\n[\s\S]*?\n---(\n|$)/
 const HEADING = /^# \S/m
 const OUTER_FENCE = /^(`{3,}|~{3,})[^\n]*\n([\s\S]*?)\n\1\s*$/
@@ -31,10 +31,39 @@ export function loadLibrary(blank: string, untitled: string): Library {
   return { current: first.id, items: [first] }
 }
 
-export function saveLibrary(library: Library) {
+export function saveLibrary(base: Library, library: Library) {
+  const merged = mergeLibrary(base, library, read())
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(library))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
   } catch {}
+  return merged
+}
+
+export function refreshLibrary(base: Library, library: Library) {
+  const stored = read()
+  return { base: stored ?? base, library: mergeLibrary(base, library, stored) }
+}
+
+export function mergeLibrary(base: Library, ours: Library, theirs: Library | null): Library {
+  if (!theirs) return ours
+  const before = byId(base.items)
+  const mine = byId(ours.items)
+  const other = byId(theirs.items)
+  const ids = new Set([...theirs.items, ...ours.items].map(p => p.id))
+  const items = [...ids].flatMap(id => {
+    const own = mine.get(id)
+    const kept = same(own, before.get(id)) ? other.get(id) : own
+    return kept ? [same(kept, own) ? own! : kept] : []
+  })
+  if (!items.length) return ours
+  const current = items.some(p => p.id === ours.current)
+    ? ours.current
+    : items.reduce((a, b) => (b.updatedAt > a.updatedAt ? b : a)).id
+  const unchanged =
+    current === ours.current &&
+    items.length === ours.items.length &&
+    items.every((p, i) => p === ours.items[i])
+  return unchanged ? ours : { current, items }
 }
 
 export function createPresentation(
@@ -77,6 +106,14 @@ export function pastedPresentation(text: string) {
 
 function unfence(text: string) {
   return text.match(OUTER_FENCE)?.[2].trim() ?? text
+}
+
+function byId(items: SavedPresentation[]) {
+  return new Map(items.map(p => [p.id, p]))
+}
+
+function same(a?: SavedPresentation, b?: SavedPresentation) {
+  return a === b || (!!a && !!b && JSON.stringify(a) === JSON.stringify(b))
 }
 
 function newId() {

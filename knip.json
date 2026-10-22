@@ -3,5 +3,6 @@
   "entry": ["skills/render.ts", "scripts/*.mjs"],
   "ignoreExportsUsedInFile": true,
   "ignoreDependencies": ["postcss-load-config"],
+  "ignoreBinaries": ["java"],
   "ignore": ["skills/*/scripts/**"]
 }

@@ -6,7 +6,9 @@ import {
   loadLibrary,
   pastedPresentation,
   presentationName,
+  refreshLibrary,
   saveLibrary,
+  STORAGE_KEY,
   uniqueName,
   type Library,
 } from '@/lib/presentations'
@@ -54,13 +56,24 @@ export function useLibrary({
   const [broken, setBroken] = useState(false)
   const current = library.items.find(p => p.id === library.current) ?? library.items[0]
   const openRef = useRef({ show, onStart })
+  const baseRef = useRef(library)
+  const latestRef = useRef({ library, source, shared })
   useEffect(() => {
     openRef.current = { show, onStart }
+    latestRef.current = { library, source, shared }
   })
+  const adopt = (next: Library) => {
+    const { source, shared } = latestRef.current
+    setLibrary(next)
+    const shown = next.items.find(p => p.id === next.current)
+    if (!shared && shown && shown.source !== source)
+      openRef.current.show(shown.source, location.hash)
+  }
 
   useEffect(() => {
     const { show, onStart } = openRef.current
     const next = loadLibrary(blank, untitled)
+    baseRef.current = next
     setLibrary(next)
     const link = readShareHash(location.hash)
     if (!link) {
@@ -82,8 +95,22 @@ export function useLibrary({
       .finally(() => setLoaded(true))
   }, [blank, untitled])
   useEffect(() => {
-    if (loaded) saveLibrary(library)
+    if (!loaded) return
+    const saved = saveLibrary(baseRef.current, library)
+    baseRef.current = saved
+    if (saved !== library) adopt(saved)
   }, [library, loaded])
+  useEffect(() => {
+    if (!loaded) return
+    const sync = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return
+      const { base, library } = refreshLibrary(baseRef.current, latestRef.current.library)
+      baseRef.current = base
+      if (library !== latestRef.current.library) adopt(library)
+    }
+    window.addEventListener('storage', sync)
+    return () => window.removeEventListener('storage', sync)
+  }, [loaded])
   useEffect(() => {
     if (shared) return
     setLibrary(l => ({
@@ -162,6 +189,7 @@ export function useLibrary({
       current: target.id,
       items: reuse ? l.items.map(p => (p.id === target.id ? target : p)) : [...l.items, target],
     }))
+    setShared(null)
     show(value)
     restartChat()
     notice(t('toast.pasted', { name: target.name }), {

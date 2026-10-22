@@ -88,13 +88,19 @@ export function StartScreen({
     if (online) fetchStatus().then(setStatus, () => setStatus(null))
   }, [online])
   useEffect(() => {
-    if (!onClose) return
+    if (!onClose || drafting) return
     const escape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', escape)
     return () => window.removeEventListener('keydown', escape)
-  }, [onClose])
+  }, [onClose, drafting])
+  useEffect(() => {
+    if (!drafting) return
+    const hold = (event: ClipboardEvent) => event.stopImmediatePropagation()
+    window.addEventListener('paste', hold, true)
+    return () => window.removeEventListener('paste', hold, true)
+  }, [drafting])
 
   const update = (next: Talk) => {
     setTalk(next)
@@ -155,7 +161,13 @@ export function StartScreen({
           </span>
         </span>
         {onClose && (
-          <button className="icon-btn" aria-label={t('close')} title={t('close')} onClick={onClose}>
+          <button
+            className="icon-btn"
+            aria-label={t('close')}
+            title={t('close')}
+            disabled={drafting}
+            onClick={onClose}
+          >
             <X size={18} />
           </button>
         )}
@@ -269,10 +281,10 @@ export function StartScreen({
             )}
           </form>
         )}
-        <Showcase example={example} onOpen={onExample} />
+        <Showcase example={example} busy={drafting} onOpen={onExample} />
       </div>
       <footer className="start-footer">
-        <button className="link-button" onClick={onBlank}>
+        <button className="link-button" disabled={drafting} onClick={onBlank}>
           {t('blank')}
           <ArrowRight size={13} />
         </button>
@@ -281,7 +293,15 @@ export function StartScreen({
   )
 }
 
-function Showcase({ example, onOpen }: { example: string; onOpen: () => void }) {
+function Showcase({
+  example,
+  busy,
+  onOpen,
+}: {
+  example: string
+  busy: boolean
+  onOpen: () => void
+}) {
   const t = useTranslations('Start.showcase')
   const presentation = useMemo(() => parsePresentation(example), [example])
   const look = presentationLook(presentation)
@@ -334,7 +354,7 @@ function Showcase({ example, onOpen }: { example: string; onOpen: () => void }) 
         <button className="icon-btn" aria-label={t('next')} onClick={() => move(1)}>
           <ChevronRight size={18} />
         </button>
-        <button className="btn" onClick={onOpen}>
+        <button className="btn" disabled={busy} onClick={onOpen}>
           {t('open')}
           <ArrowRight size={14} />
         </button>
