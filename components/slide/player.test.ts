@@ -6,6 +6,7 @@ import { parsePresentation } from '@/lib/presentation'
 import {
   PLAYER_KEYS,
   PLAYER_WORDS,
+  SETTLE_MS,
   SWIPE,
   slideFromHash,
   slideLabel,
@@ -112,6 +113,17 @@ describe('exported presentation player', () => {
     await vi.waitFor(() => expect(page.wakeLock.request).toHaveBeenCalledWith('screen'))
     page.press({ key: 'p' })
     await vi.waitFor(() => expect(page.wakeLock.release).toHaveBeenCalled())
+  })
+
+  it('hides the slide until the window stops resizing', async () => {
+    const page = await open()
+    expect(page.settling()).toBe(false)
+    page.resize()
+    await new Promise(done => setTimeout(done, SETTLE_MS / 2))
+    page.resize()
+    await new Promise(done => setTimeout(done, SETTLE_MS / 2 + 20))
+    expect(page.settling()).toBe(true)
+    await vi.waitFor(() => expect(page.settling()).toBe(false))
   })
 })
 
@@ -222,5 +234,7 @@ async function open(hash = '', { site = '', credit = true } = {}) {
       fire('touchend', { changedTouches: [{ clientX: 100 + dx, clientY: 100 + dy }] })
     },
     wheel: (deltaY: number, deltaMode: number) => fire('wheel', { deltaY, deltaMode }),
+    resize: () => window.dispatchEvent(new window.Event('resize')),
+    settling: () => document.documentElement.hasAttribute('data-settling'),
   }
 }

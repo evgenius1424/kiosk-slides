@@ -374,6 +374,15 @@ kbd {
   opacity: 0.6;
   transition: opacity 0.3s;
 }
+.canvas-shell::before,
+.canvas-slide > * {
+  transition: opacity 0.2s ease-out;
+}
+.canvas-shell[data-settling]::before,
+.canvas-shell[data-settling] .canvas-slide > * {
+  opacity: 0;
+  transition: none;
+}
 .slide-nav.is-changing .thumbnail {
   opacity: 0.5;
   animation: slide-changing 1.2s ease-in-out infinite alternate;
