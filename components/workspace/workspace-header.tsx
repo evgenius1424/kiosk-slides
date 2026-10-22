@@ -2,17 +2,7 @@
 
 import type { RefObject } from 'react'
 import { useTranslations } from 'next-intl'
-import {
-  CheckCheck,
-  Code2,
-  Layers2,
-  Monitor,
-  Play,
-  Plus,
-  Settings2,
-  Share2,
-  Sparkles,
-} from 'lucide-react'
+import { Code2, Layers2, Monitor, Play, Plus, Settings2, Share2, Sparkles } from 'lucide-react'
 import { DownloadMenu, type DownloadFormat } from '../download-menu'
 import { PresentationMenu } from '../presentation-menu'
 import type { useLibrary } from './use-library'
@@ -56,9 +46,7 @@ export function WorkspaceHeader({
           Kiosk<span className="brand-light">Slides</span>
         </span>
         <span className="sr-only">{t('home')}</span>
-        <span className="beta">{t('beta')}</span>
       </a>
-      <div className="header-divider" />
       {shared ? (
         <div className="shared-bar">
           <span>{t('shared.label')}</span>
@@ -73,20 +61,14 @@ export function WorkspaceHeader({
           )}
         </div>
       ) : (
-        <>
-          <PresentationMenu
-            items={library.items}
-            current={library.current}
-            onOpen={library.open}
-            onCreate={onCreate}
-            onRename={library.rename}
-            onDelete={library.remove}
-          />
-          <span className="local-label">
-            <span />
-            {t('savedHere')}
-          </span>
-        </>
+        <PresentationMenu
+          items={library.items}
+          current={library.current}
+          onOpen={library.open}
+          onCreate={onCreate}
+          onRename={library.rename}
+          onDelete={library.remove}
+        />
       )}
       <div className="header-actions">
         {!shared && (
@@ -129,14 +111,12 @@ export function EditorToolbar({
   tab,
   readOnly,
   sidebar,
-  fit,
   onTab,
   onShowSidebar,
 }: {
   tab: Tab
   readOnly: boolean
   sidebar: boolean
-  fit: boolean
   onTab: (tab: Tab) => void
   onShowSidebar: () => void
 }) {
@@ -169,10 +149,6 @@ export function EditorToolbar({
           </>
         )}
       </div>
-      <span className="ready-label">
-        <CheckCheck size={14} />
-        {fit ? t('fit.ready') : t('fit.check')}
-      </span>
     </div>
   )
 }

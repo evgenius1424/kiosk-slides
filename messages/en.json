@@ -22,8 +22,6 @@
   },
   "Workspace": {
     "home": "Kiosk Slides home",
-    "beta": "Beta",
-    "savedHere": "Saved in this browser",
     "settings": "Settings",
     "download": "Download",
     "downloadHint": "Download as a web page or a PDF",
@@ -41,10 +39,6 @@
       "preview": "Preview",
       "edit": "Edit",
       "ask": "Ask AI"
-    },
-    "fit": {
-      "ready": "Ready for the room",
-      "check": "Check slide fit"
     },
     "sidebar": {
       "title": "Slides",
@@ -81,10 +75,6 @@
     },
     "tip": "Use <kbd>↑</kbd> <kbd>↓</kbd> or scroll to move.<extra> <kbd>P</kbd> to autoplay. <kbd>F</kbd> to present.</extra>",
     "allShortcuts": "All shortcuts",
-    "footer": {
-      "tagline": "Made for the room. And everyone on the call.",
-      "quiet": "Quiet by design."
-    },
     "themes": {
       "room-dark": "Dark",
       "room-light": "Light",
@@ -205,7 +195,6 @@
     "duration": "Slide duration",
     "seconds": "sec",
     "loop": "Loop presentation",
-    "startsPaused": "Starts paused. Always in your control.",
     "motion": "Motion",
     "transition": "Slide transition",
     "transitions": {
@@ -228,18 +217,7 @@
     },
     "shareSafeActive": "Screen-share safe is on, so every transition becomes a quick flat fade.",
     "shareSafe": "Screen-share safe",
-    "shareSafeHelp": "Quick flat fades with no movement, blur or glow. Stays crisp when screen sharing and on meeting-room TVs.",
-    "clarityTitle": "Clarity comes first.",
-    "clarityBody": "Your message stays readable,<br></br>even on a slow connection.",
-    "status": {
-      "ready": "Presentation is ready",
-      "review": "Check slide fit",
-      "count": "{count, plural, one {# slide} other {# slides}}",
-      "checked": "Slides checked",
-      "fits": "Current slide fits the canvas",
-      "overflows": "Content may overflow"
-    },
-    "help": "A little help goes a long way"
+    "shareSafeHelp": "Quick flat fades with no movement, blur or glow. Stays crisp when screen sharing and on meeting-room TVs."
   },
   "Help": {
     "title": "Getting your slides in",

@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-  type RefObject,
-} from 'react'
+import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react'
 import type { Presentation, PresentationLook } from '@/lib/presentation'
@@ -17,8 +10,7 @@ import type { Player } from './use-player'
 
 export function useCanvas({ player, preview }: { player: Player; preview: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [fit, setFit] = useState(true)
-  const { move, presenting, index, slide } = player
+  const { move, presenting } = player
   useEffect(() => {
     const target = ref.current
     if (!target) return
@@ -48,19 +40,7 @@ export function useCanvas({ player, preview }: { player: Player; preview: boolea
       clearTimeout(timer)
     }
   }, [move, preview, presenting])
-  useEffect(() => {
-    const target = ref.current
-    if (!target) return
-    const check = () => {
-      const content = target.querySelector('.slide-content')
-      setFit(!content || content.scrollHeight <= content.clientHeight + 3)
-    }
-    const observer = new ResizeObserver(check)
-    observer.observe(target)
-    check()
-    return () => observer.disconnect()
-  }, [index, preview, presenting, slide])
-  return { ref, fit }
+  return { ref }
 }
 
 export function SlideCanvas({

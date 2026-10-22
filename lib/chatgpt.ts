@@ -17,10 +17,8 @@ export type ChatGPTStatus =
   | { available: true; connected: true; email: string; planUsage: boolean }
 export type ChatGPTModel = { slug: string; name: string }
 
-const AUTH_ORIGIN = process.env.CHATGPT_AUTH_ORIGIN || 'https://auth.openai.com'
-const API_BASE = process.env.CHATGPT_API_BASE || 'https://api.openai.com/v1'
-const ISSUER = 'https://auth.openai.com'
-const RESOURCE = 'https://api.openai.com/v1'
+const AUTH_ORIGIN = 'https://auth.openai.com'
+const API_BASE = 'https://api.openai.com/v1'
 const SCOPES = 'openid profile email offline_access resource.invoke chatgpt.tokens.use.direct'
 const PLAN_SCOPE = 'chatgpt.tokens.use.direct'
 const APP_NAME = 'Kiosk Slides'
@@ -79,7 +77,7 @@ export async function startSignIn(request: Request) {
     response_type: 'code',
     redirect_uri: redirectUri,
     scope: SCOPES,
-    resource: RESOURCE,
+    resource: API_BASE,
     state,
     nonce,
     code_challenge_method: 'S256',
@@ -121,13 +119,13 @@ export async function finishSignIn(params: URLSearchParams) {
     code,
     code_verifier: attempt.verifier,
     redirect_uri: attempt.redirectUri,
-    resource: RESOURCE,
+    resource: API_BASE,
   })
   const claims = await verifyIdToken(tokens.id_token, clientId, attempt.nonce)
   const store = await readStore()
   const account: Account = {
     email: typeof claims.email === 'string' ? claims.email : '',
-    issuer: ISSUER,
+    issuer: AUTH_ORIGIN,
     subject: String(claims.sub),
     idToken: tokens.id_token,
     accessToken: tokens.access_token,
@@ -311,7 +309,7 @@ async function refresh() {
       grant_type: 'refresh_token',
       client_id: store.clientId,
       refresh_token: account.refreshToken,
-      resource: RESOURCE,
+      resource: API_BASE,
     })
     const next: Account = {
       ...account,
@@ -369,7 +367,7 @@ async function verifyIdToken(idToken: string, clientId: string, nonce: string) {
   const audience = Array.isArray(claims.aud) ? claims.aud : [claims.aud]
   if (
     !valid ||
-    claims.iss !== ISSUER ||
+    claims.iss !== AUTH_ORIGIN ||
     !audience.includes(clientId) ||
     claims.exp * 1000 < Date.now() ||
     claims.nonce !== nonce ||

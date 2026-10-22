@@ -73,7 +73,7 @@ Everything else is a thin adapter: `app/` and `components/workspace/` for the si
 | `use-shortcuts.ts`     | Keyboard shortcuts                                                              |
 | `use-download.ts`      | Web page and PDF downloads                                                      |
 | `settings-panel.tsx`   | Settings panel, writes each setting to the front matter                         |
-| `slide-canvas.tsx`     | Preview canvas, wheel and swipe, fit check                                      |
+| `slide-canvas.tsx`     | Preview canvas, wheel and swipe                                                 |
 | `slide-sidebar.tsx`    | Slide list                                                                      |
 | `workspace-header.tsx` | Header and the Preview / Edit / Ask AI tabs                                     |
 | `help-dialog.tsx`      | Shortcuts and format help                                                       |
