@@ -28,6 +28,7 @@ import {
   type Scale,
   type Theme,
 } from '@/lib/presentation'
+import { isStyleKey, rememberStyle } from '@/lib/last-style'
 import type { Player } from './use-player'
 
 export function useSettingsPanel() {
@@ -83,7 +84,11 @@ export function SettingsPanel({
   const [brandDraft, setBrandDraft] = useState<string | null>(null)
   const { theme, tone: accent, transition, duration, loop, credit, slides } = presentation
   const { safe, playing } = player
-  const set = (key: string, value?: string) => onChange(setFrontMatter(source, key, value))
+  const set = (key: string, value?: string) => {
+    const next = setFrontMatter(source, key, value)
+    onChange(next)
+    if (isStyleKey(key)) rememberStyle(next)
+  }
   const setTone = (color: string) =>
     set('tone', color === defaultTone(theme) ? undefined : toneName(color, theme))
   const setFont = async (id: string) => {
