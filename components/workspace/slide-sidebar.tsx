@@ -1,5 +1,6 @@
 'use client'
 
+import type { KeyboardEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { PanelLeftClose, Plus } from 'lucide-react'
 import type { Presentation, PresentationLook } from '@/lib/presentation'
@@ -53,7 +54,17 @@ export function SlideSidebar({
               e.currentTarget.focus({ preventScroll: true })
               onSelect(i)
             }}
+            tabIndex={index === i ? 0 : -1}
             onKeyDown={e => {
+              const to = listStep(e, i, slides.length)
+              if (to !== undefined) {
+                e.preventDefault()
+                const target = e.currentTarget.parentElement?.children[to] as
+                  HTMLElement | undefined
+                target?.focus({ preventScroll: true })
+                target?.scrollIntoView({ block: 'nearest' })
+                return onSelect(to)
+              }
               if (!editable || (e.key !== 'Delete' && e.key !== 'Backspace')) return
               e.preventDefault()
               onDelete(i)
@@ -87,4 +98,17 @@ export function SlideSidebar({
       </button>
     </aside>
   )
+}
+
+function listStep(event: KeyboardEvent, i: number, count: number) {
+  if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return
+  const to = {
+    ArrowUp: i - 1,
+    ArrowLeft: i - 1,
+    ArrowDown: i + 1,
+    ArrowRight: i + 1,
+    Home: 0,
+    End: count - 1,
+  }[event.key]
+  return to === undefined ? undefined : Math.max(0, Math.min(count - 1, to))
 }
