@@ -114,14 +114,14 @@ export function useLibrary({
     return () => window.removeEventListener('storage', sync)
   }, [loaded])
   useEffect(() => {
-    if (shared) return
+    if (shared || !loaded) return
     setLibrary(l => ({
       ...l,
       items: l.items.map(p =>
         p.id === l.current && p.source !== source ? { ...p, source, updatedAt: Date.now() } : p,
       ),
     }))
-  }, [source, shared])
+  }, [source, shared, loaded])
 
   const open = (id: string) => {
     const target = library.items.find(p => p.id === id)
@@ -244,7 +244,7 @@ export function useLibrary({
       known ?? createPresentation(presentationName(source) || untitled, source, library.items)
     setLibrary(l => ({
       current: kept.id,
-      items: known ? l.items : [...l.items.filter(p => !isBlank(p.source)), kept],
+      items: known ? l.items : [...l.items.filter(p => p.userNamed || !isBlank(p.source)), kept],
     }))
     setShared(null)
     restartChat()

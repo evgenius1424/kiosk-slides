@@ -31,6 +31,8 @@ import {
 import { isStyleKey, rememberStyle } from '@/lib/last-style'
 import type { Player } from './use-player'
 
+const GRADUAL = ['brand', 'duration']
+
 export function useSettingsPanel() {
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLElement>(null)
@@ -62,6 +64,7 @@ export function SettingsPanel({
   panelRef,
   hidden,
   source,
+  presentationId,
   presentation,
   look,
   player,
@@ -72,11 +75,12 @@ export function SettingsPanel({
   panelRef: RefObject<HTMLElement | null>
   hidden: boolean
   source: string
+  presentationId: string
   presentation: Presentation
   look: PresentationLook
   player: Player
   fit: boolean
-  onChange: (source: string) => void
+  onChange: (source: string, previous?: string) => void
   onHelp: () => void
 }) {
   const t = useTranslations('Workspace')
@@ -84,16 +88,26 @@ export function SettingsPanel({
   const [brandDraft, setBrandDraft] = useState<string | null>(null)
   const { theme, tone: accent, transition, duration, loop, credit, slides } = presentation
   const { safe, playing } = player
-  const set = (key: string, value?: string) => {
-    const next = setFrontMatter(source, key, value)
-    onChange(next)
+  const latest = useRef({ source, presentationId })
+  const lastChange = useRef({ key: '', wrote: '' })
+  useEffect(() => {
+    latest.current = { source, presentationId }
+  })
+  const set = (key: string, value?: string, from = source) => {
+    const next = setFrontMatter(from, key, value)
+    const again =
+      GRADUAL.includes(key) && lastChange.current.key === key && lastChange.current.wrote === from
+    lastChange.current = { key, wrote: next }
+    onChange(next, again ? undefined : from)
     if (isStyleKey(key)) rememberStyle(next)
   }
   const setTone = (color: string) =>
     set('tone', color === defaultTone(theme) ? undefined : toneName(color, theme))
   const setFont = async (id: string) => {
+    const chosenFor = presentationId
     await loadFonts()
-    set('font', id === fonts[0].id ? undefined : id)
+    if (latest.current.presentationId !== chosenFor) return
+    set('font', id === fonts[0].id ? undefined : id, latest.current.source)
   }
   const setShareSafe = (next: boolean) => {
     player.resetSafe()
