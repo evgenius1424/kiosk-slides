@@ -5,10 +5,12 @@ import {
   headingSize,
   tableSize,
   textFit,
+  slideWords,
   DEFAULT_BRAND,
   type PresentationLook,
   type HeadingPart,
   type Slide,
+  type SlideWords,
 } from '@/lib/presentation'
 import { Inline } from './inline'
 import { Punctuated } from './punctuated'
@@ -47,10 +49,14 @@ export function SlideView({
   miniature?: boolean
 }) {
   // `widgets` pairs each kind with its own component, so this lookup always matches `slide`.
-  const Widget = widgets[slide.kind] as ComponentType<{ slide: Slide }> | null
+  const Widget = widgets[slide.kind] as ComponentType<{
+    slide: Slide
+    words: SlideWords
+  }> | null
   const size = headingSize(slide, look)
   const table = tableSize(slide, look)
   const fit = textFit(slide, look)
+  const words = slideWords[look.language]
   const style = {
     '--slide-tone': accent,
     '--slide-font': findFont(look.font).stack,
@@ -60,6 +66,7 @@ export function SlideView({
   } as React.CSSProperties
   return (
     <article
+      lang={look.language}
       className={`slide ${theme} kind-${slide.kind} scale-${look.scale} ${miniature ? 'miniature' : ''}`}
       style={style}
     >
@@ -67,7 +74,7 @@ export function SlideView({
         <span>{slide.title || (look.brand === DEFAULT_BRAND ? 'Kiosk Slides' : look.brand)}</span>
         <span className="slide-label">
           <span className="label-dot" />
-          {slide.label || 'One clear idea'}
+          {slide.label || words.label}
         </span>
       </header>
       <div className="slide-content">
@@ -81,7 +88,7 @@ export function SlideView({
             </p>
           )}
         </div>
-        {Widget && <Widget slide={slide} />}
+        {Widget && <Widget slide={slide} words={words} />}
       </div>
       <footer className="slide-footer">
         <span>{slide.footer}</span>

@@ -6,6 +6,7 @@ export const terms = {
   savedPresentation: 'saved presentation',
   presentationLibrary: 'presentation library',
   presentationName: 'presentation name',
+  language: 'language',
   slide: 'slide',
   slideSettings: 'slide settings',
   slideTitle: 'slide title',

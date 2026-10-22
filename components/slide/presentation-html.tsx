@@ -4,6 +4,7 @@ import {
   findFont,
   fontFace,
   hasCyrillic,
+  slideWords,
   type Presentation,
   type Theme,
   type Transition,
@@ -12,7 +13,6 @@ import { slideStyles } from '@/lib/slide-styles'
 import {
   IDLE_MS,
   PLAYER_KEYS,
-  PLAYER_WORDS,
   SLIDE_HASH,
   SWIPE,
   TRANSITION_MS,
@@ -45,6 +45,7 @@ export async function presentationHtml(
   }: PresentationHtmlOptions,
 ): Promise<string> {
   const look = presentationLook(presentation)
+  const words = slideWords[look.language]
   const cyrillic = hasCyrillic(JSON.stringify(presentation))
   const files = findFont(presentation.font).files.filter(f => cyrillic || f.script === 'latin')
   const faces = await Promise.all(files.map(async f => fontFace(f, await embedFont(f.file))))
@@ -52,7 +53,7 @@ export async function presentationHtml(
     presentation.slides.map(async (slide, i, all) => {
       const embedded =
         slide.kind === 'image' ? { ...slide, src: await embedImage(slide.src) } : slide
-      const label = escapeAttribute(slideLabel(slide, i, all.length))
+      const label = escapeAttribute(slideLabel(slide, i, all.length, look.language))
       return `<div class="portable-slide" role="region" aria-roledescription="slide" aria-label="${label}"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
     }),
   )
@@ -67,11 +68,11 @@ export async function presentationHtml(
     swipe: SWIPE,
     wheel: WHEEL,
     idle: IDLE_MS,
-    words: PLAYER_WORDS,
+    words: words.player,
     credit: presentation.credit && site ? site : '',
     hash: SLIDE_HASH.source,
   })
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${faces.join('')}${slideStyles}${pageStyles(theme)}${printStyles}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls}<div id="notice" role="status"></div><div id="spoken" aria-live="polite"></div><script>const config=${config};${player}</script></body></html>`
+  return `<!doctype html><html lang="${look.language}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${faces.join('')}${slideStyles}${pageStyles(theme)}${printStyles}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls(words.fullScreen)}<div id="notice" role="status"></div><div id="spoken" aria-live="polite"></div><script>const config=${config};${player}</script></body></html>`
 }
 
 export async function fetchAsDataUrl(src: string): Promise<string> {
@@ -99,7 +100,8 @@ const printStyles = `@page{size:16in 9in;margin:0}@media print{html,body{width:a
 const icon = (path: string, className: string) =>
   `<svg class="${className}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`
 
-const controls = `<button id="full" type="button" aria-label="Toggle full screen" hidden>${icon('M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3', 'enter')}${icon('M18 6 6 18M6 6l12 12', 'exit')}</button>`
+const controls = (label: string) =>
+  `<button id="full" type="button" aria-label="${label}" hidden>${icon('M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3', 'enter')}${icon('M18 6 6 18M6 6l12 12', 'exit')}</button>`
 
 const player = `const slides=[...document.querySelectorAll('.portable-slide')],full=document.querySelector('#full');
 const root=document.documentElement,canFull=!!(root.requestFullscreen||root.webkitRequestFullscreen);

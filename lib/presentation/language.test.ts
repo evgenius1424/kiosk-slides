@@ -11,8 +11,10 @@ import {
 import {
   avoided,
   avoidedWording,
+  languages,
   parsePresentation,
   reviewPresentation,
+  slideWords,
   terms,
 } from '@/lib/presentation'
 import messages from '@/messages/en.json'
@@ -20,6 +22,7 @@ import messages from '@/messages/en.json'
 const surfaces: Record<string, () => string | Promise<string>> = {
   'site copy': () => strings(messages).join('\n'),
   'parser diagnostics': () => diagnostics().join('\n'),
+  'slide words': () => strings(slideWords.en).join('\n'),
   'AI prompts': async () =>
     (
       await Promise.all([
@@ -101,6 +104,13 @@ describe('presentation language', () => {
     expect(messages.Shortcuts.items.present.name).toBe(terms.present)
     expect(messages.Shortcuts.items.autoplay.name).toContain(terms.autoplay)
     expect(messages.Workspace.toast.keys).toContain(`to ${terms.autoplay}`)
+  })
+
+  it('documents every language the slides speak', () => {
+    const [first, ...rest] = languages.map(code => `\`${code}\``)
+    expect(read('FORMAT.md')).toContain(
+      `\`${terms.language}:\` is ${first} (default) or ${rest.join(', ')}.`,
+    )
   })
 
   it('calls a link a share link, not a saved presentation', () => {

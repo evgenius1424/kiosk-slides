@@ -1,6 +1,7 @@
 import type { Widget } from './components'
 import type { MessageWidget, Presentation, SlideChrome } from './types'
 import { WIDGET_GAP, textLines, widgetHeight } from './widget-height'
+import type { Language } from './words'
 
 export const scales = ['normal', 'large', 'hero'] as const
 export type Scale = (typeof scales)[number]
@@ -16,7 +17,7 @@ export type Font = {
   files: FontFile[]
 }
 
-export type PresentationLook = { font: string; scale: Scale; brand: string }
+export type PresentationLook = { font: string; scale: Scale; brand: string; language: Language }
 
 export const fonts: Font[] = [
   font('classic', 'Classic', 0.56, 0.62, []),
@@ -51,13 +52,15 @@ export const defaultLook = (): PresentationLook => ({
   font: fonts[0].id,
   scale: 'normal',
   brand: DEFAULT_BRAND,
+  language: 'en',
 })
 
-export const presentationLook = ({ font, scale, brand }: Presentation): PresentationLook => ({
+export const presentationLook = ({
   font,
   scale,
   brand,
-})
+  language,
+}: Presentation): PresentationLook => ({ font, scale, brand, language })
 
 export const isScale = (value: string | undefined): value is Scale =>
   scales.includes(value as Scale)

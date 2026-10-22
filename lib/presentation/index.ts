@@ -42,4 +42,5 @@ export {
   tones,
   type Theme,
 } from './theme'
+export { languages, slideWords, type SlideWords } from './words'
 export type { Presentation, Slide, SlideChrome, SlideKind, SlideOfKind } from './types'
