@@ -393,10 +393,26 @@ describe('parsePresentation: errors', () => {
     )
   })
 
+  it('reads bullets, checklists and quotes', () => {
+    const [bullets, checklist, quote] = parsePresentation(
+      [
+        md('# A', '', '- one **bold**', '- two'),
+        md('# B', '', '- [x] done', '- [ ] next'),
+        md('# C', '', '> Say less.', '> — Someone'),
+      ].join('\n\n---\n\n'),
+    ).slides
+    expect(bullets).toMatchObject({ kind: 'bullets', items: ['one **bold**', 'two'] })
+    expect(checklist).toMatchObject({
+      kind: 'checklist',
+      items: [
+        { text: 'done', done: true },
+        { text: 'next', done: false },
+      ],
+    })
+    expect(quote).toMatchObject({ kind: 'quote', text: 'Say less.', by: 'Someone' })
+  })
+
   it('rejects markdown the format does not support', () => {
-    expect(error(md('# Hi', '', '- a bullet'))).toBe(
-      'Line 3: This slide has markdown the format doesn’t support (list). Use a numbered list for steps, or annotate the block.',
-    )
     expect(error(md('# Hi', '', '## Sub'))).toBe(
       'Line 3: This slide has markdown the format doesn’t support (heading). Use one # heading per slide.',
     )

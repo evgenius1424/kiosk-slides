@@ -23,13 +23,16 @@ describe('FORMAT.md', () => {
     )
     expect([...kinds].sort()).toEqual([
       'before-after',
+      'bullets',
       'buttons',
       'chart',
+      'checklist',
       'code',
       'flow',
       'image',
       'message',
       'metric',
+      'quote',
       'steps',
       'table',
     ])

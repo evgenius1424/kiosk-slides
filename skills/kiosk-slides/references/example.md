@@ -33,6 +33,47 @@ footer: Describe your talk. Review the slides. Present anywhere.
 ---
 
 <!--
+title: Why it works
+label: Key points
+footer: Bold, italic and links work in any text.
+-->
+
+# Less on the slide, **more in the room**
+
+- One idea per slide, **big enough** to read from the back.
+- Plain Markdown you can *edit anywhere*.
+- One file to share, no account needed.
+
+---
+
+<!--
+title: Feedback
+label: In their words
+footer: Quotes keep the speaker's voice.
+-->
+
+# People **remember** the point
+
+> I made the whole talk on the train, and it looked like we hired a designer.
+> — A happy presenter
+
+---
+
+<!--
+title: Launch
+label: Checklist
+footer: Ticked items show what is already done.
+-->
+
+# Ready to **present**
+
+- [x] Write the talk
+- [x] Pick a look
+- [ ] Share the link
+
+---
+
+<!--
 title: Code
 label: When you need it
 footer: Code keeps its spacing, ready to read on screen.
