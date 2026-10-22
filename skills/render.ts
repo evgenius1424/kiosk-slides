@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process'
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
@@ -24,7 +25,7 @@ import { shareLink } from '@/lib/share'
 import { SITE_URL } from '@/lib/site'
 
 const usage =
-  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light|studio] [--tone mono|violet|coral|teal|amber|#hex] [--font name] [--scale normal|large|hero] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--no-credit] [--no-link] [--check] [--format]'
+  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light|studio] [--tone mono|violet|coral|teal|amber|#hex] [--font name] [--scale normal|large|hero] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--no-credit] [--no-link] [--no-open] [--check] [--format]'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -41,6 +42,7 @@ const { values, positionals } = parseArgs({
     'no-motion': { type: 'boolean', default: false },
     'no-credit': { type: 'boolean', default: false },
     'no-link': { type: 'boolean', default: false },
+    'no-open': { type: 'boolean', default: false },
     check: { type: 'boolean', default: false },
     format: { type: 'boolean', default: false },
   },
@@ -85,8 +87,10 @@ async function main() {
   const out = values.out ?? input.replace(/\.(md|markdown)$/i, '') + '.html'
   await writeFile(out, html)
   console.log(`${summary(presentation)}\nWrote ${out}`)
-  const link = values['no-link'] ? undefined : await openLink(source)
-  if (link) console.log(`Open in your browser: \x1b]8;;${link}\x1b\\${link}\x1b]8;;\x1b\\`)
+  const link = values['no-link'] ? undefined : await shareUrl(source)
+  if (!values['no-open'] && (await openInBrowser(link ?? path.resolve(out))))
+    console.log('Opened in your browser')
+  else if (link) console.log(`Open in your browser: \x1b]8;;${link}\x1b\\${link}\x1b]8;;\x1b\\`)
 }
 
 function withLook(presentation: Presentation): Presentation {
@@ -101,9 +105,30 @@ function withLook(presentation: Presentation): Presentation {
   return { ...presentation, font, scale, brand, credit }
 }
 
-async function openLink(source: string) {
+async function shareUrl(source: string) {
   const link = await shareLink(source, SITE_URL).catch(() => undefined)
   return link && 'url' in link ? link.url : undefined
+}
+
+function openInBrowser(target: string) {
+  const command = browserCommand(target)
+  if (!command) return Promise.resolve(false)
+  return new Promise<boolean>(resolve => {
+    const child = spawn(command[0], command[1], { detached: true, stdio: 'ignore' })
+    child.once('error', () => resolve(false))
+    child.once('spawn', () => {
+      child.unref()
+      resolve(true)
+    })
+  })
+}
+
+function browserCommand(target: string): [string, string[]] | undefined {
+  const env = process.env
+  if (env.CI || env.SSH_CONNECTION || env.SSH_TTY) return
+  if (process.platform === 'darwin') return ['open', [target]]
+  if (process.platform === 'win32') return ['rundll32', ['url.dll,FileProtocolHandler', target]]
+  if (env.DISPLAY || env.WAYLAND_DISPLAY) return ['xdg-open', [target]]
 }
 
 function summary(presentation: Presentation) {
