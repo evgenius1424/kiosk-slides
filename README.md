@@ -2,6 +2,12 @@
 
 **Slides made to be seen. Ready in seconds.**
 
+Tell an AI what you want to say. Get a clean, finished presentation back, and put it on the screen. No dragging boxes, no picking layouts, no nudging text. Just your point, big and clear.
+
+**[Try it at kiosk-slides.com](https://kiosk-slides.com)**: free, no account, works in your browser. Or add the [skill](#install-the-skill) to your AI and ask it for a presentation.
+
+![The Kiosk Slides workspace with an example presentation open](docs/images/workspace.png)
+
 ## Install the skill
 
 Install it once for each agent you use. It is then available in new projects on your computer. Claude Code and Codex keep separate plugin installs, so run both sets of commands if you use both.
@@ -33,8 +39,6 @@ codex plugin add kiosk-slides@kiosk-slides
 In Codex, name the skill in your request: "Use kiosk-slides to make a 6-slide presentation about our Q3 results."
 
 Need another agent? See [more installation options](#more-installation-options).
-
-Tell an AI what you want to say. Get a clean, finished presentation back, and put it on the screen. No dragging boxes, no picking layouts, no nudging text. Just your point, big and clear.
 
 ## Why "Kiosk"
 
@@ -86,13 +90,6 @@ It shares the site's own renderer, so a presentation looks exactly the same wher
 ### More installation options
 
 The `npx skills` route copies the skill into your current project. Use one installation route per agent.
-
-<details>
-<summary><strong>Claude app</strong> (claude.ai and desktop)</summary>
-
-Download `kiosk-slides.zip` from the [latest release](https://github.com/evgenius1424/kiosk-slides/releases/latest), then add it under **Settings → Capabilities → Skills**.
-
-</details>
 
 <details>
 <summary><strong>GitHub Copilot</strong> (CLI and VS Code)</summary>
@@ -149,9 +146,19 @@ The free AI draft is off unless `AI_DRAFT_ENABLED=true`. It also needs `ANTHROPI
 
 The presentation format is described in [FORMAT.md](FORMAT.md), with a full example in [public/example.md](public/example.md).
 
+## How it was made
+
+Kiosk Slides is a one-person product built with AI coding agents. Evgenii decides what to build and what to leave out, and the agents write most of the code. A few choices shaped it:
+
+- **A point of view first.** No manual layout, on purpose. Every feature is weighed against one question: does it make slides easier to read from across a room?
+- **Saying no.** Speaker notes, presenter view, timers and progress bars were all considered and turned down, because they pull attention from the slide.
+- **Markdown as the product.** A plain text format AI writes well, people can fix by hand, and every path renders the same way: the site, the downloaded file and the agent skill share one renderer, and tests keep them identical.
+- **Private by default.** No accounts and no server storage. Presentations live in your browser, and a shared link carries the whole presentation inside it.
+- **Checked before shipping.** The riskiest flows, like two open tabs or pasting over your work, are modeled in [TLA+](specs/) to find data loss before users do.
+
 ## Made by
 
-Kiosk Slides is the idea and work of [Evgenii](https://github.com/evgenius1424): slides that are seen, not built.
+Kiosk Slides is the idea and work of [Evgenii Glinskii](https://www.linkedin.com/in/evgenii-glinskii-869805a8) ([@evgenius1424](https://github.com/evgenius1424)). If it helped you, a star on GitHub or a note on LinkedIn means a lot.
 
 ## License
 

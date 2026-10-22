@@ -16,12 +16,21 @@ beforeAll(() => {
 afterEach(cleanup)
 
 describe('adding the skill to an AI', () => {
-  it('starts with Claude and links the latest release download', () => {
+  it('starts with Claude Code and shows its named command', () => {
     panel()
-    expect(screen.getByRole('tab', { name: 'Claude' }).getAttribute('aria-selected')).toBe('true')
-    expect(screen.getByText('Download').closest('a')?.getAttribute('href')).toBe(
-      'https://github.com/evgenius1424/kiosk-slides/releases/latest/download/kiosk-slides.zip',
+    expect(screen.getByRole('tab', { name: 'Claude Code' }).getAttribute('aria-selected')).toBe(
+      'true',
     )
+    expect(screen.queryByRole('tab', { name: 'Claude' })).toBeNull()
+    expect(screen.getByText(/^\/kiosk-slides Make/)).toBeTruthy()
+  })
+
+  it('names the skill in the example ask for every app', () => {
+    panel()
+    for (const tab of screen.getAllByRole('tab')) {
+      fireEvent.click(tab)
+      expect(document.querySelector('.skill-try .copy-line')?.textContent).toContain('kiosk-slides')
+    }
   })
 
   it('copies each install line for the chosen app', async () => {
@@ -36,9 +45,9 @@ describe('adding the skill to an AI', () => {
     vi.unstubAllGlobals()
   })
 
-  it('shows a command for every app besides Claude', () => {
+  it('shows a command for every app', () => {
     panel()
-    for (const tab of screen.getAllByRole('tab').slice(1)) {
+    for (const tab of screen.getAllByRole('tab')) {
       fireEvent.click(tab)
       expect(document.querySelectorAll('.skill-commands code').length).toBeGreaterThan(0)
     }

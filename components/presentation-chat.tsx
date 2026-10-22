@@ -16,6 +16,7 @@ import {
   TriangleAlert,
   WifiOff,
 } from 'lucide-react'
+import { REPO_URL } from '@/lib/author'
 import {
   type ChatGPTModel,
   type ChatGPTStatus,
@@ -36,7 +37,6 @@ import { useOnline } from './use-online'
 type Entry = ChatMessage & { presentation?: string; notes?: string[]; error?: string }
 
 const WELCOME_KEY = 'kiosk-chatgpt-welcomed'
-const REPO_URL = 'https://github.com/evgenius1424/kiosk-slides'
 const LOCAL_URL = 'http://127.0.0.1:3000'
 
 export function PresentationChat({

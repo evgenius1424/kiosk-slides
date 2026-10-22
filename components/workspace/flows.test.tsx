@@ -20,6 +20,7 @@ beforeAll(() => {
   HTMLDialogElement.prototype.showModal = () => {}
   HTMLDialogElement.prototype.close = () => {}
   Element.prototype.scrollTo = () => {}
+  Element.prototype.scrollIntoView = () => {}
   vi.stubGlobal('fetch', async () => new Response(null, { status: 404 }))
 })
 beforeEach(() => {
@@ -68,6 +69,25 @@ describe('shared link', () => {
   })
 })
 
+describe('slide list', () => {
+  it('moves the selected slide with the arrow keys', async () => {
+    store(item('mine', example))
+    workspace()
+    await screen.findByText('The example')
+    fireEvent.click(slideButton(1))
+    fireEvent.keyDown(slideButton(1), { key: 'ArrowDown' })
+    expect(shownSlide()).toContain('Two')
+    expect(document.activeElement).toBe(slideButton(2))
+    fireEvent.keyDown(slideButton(2), { key: 'End' })
+    fireEvent.keyDown(slideButton(3), { key: 'ArrowRight' })
+    expect(document.activeElement).toBe(slideButton(3))
+    fireEvent.keyDown(slideButton(3), { key: 'ArrowUp' })
+    expect(shownSlide()).toContain('Two')
+    expect(slideButton(2).tabIndex).toBe(0)
+    expect(slideButton(3).tabIndex).toBe(-1)
+  })
+})
+
 function workspace() {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
@@ -79,6 +99,10 @@ function workspace() {
       />
     </NextIntlClientProvider>,
   )
+}
+
+function slideButton(number: number) {
+  return screen.getByRole('button', { name: new RegExp(`^Slide ${number}:`) })
 }
 
 function item(id: string, source: string) {

@@ -141,40 +141,37 @@
     "copy": "Copy",
     "copied": "Copied",
     "tryTitle": "Then ask for a presentation",
-    "tryAsk": "Make a 6-slide presentation about our quarterly results",
-    "claude": {
-      "name": "Claude",
-      "download": "Download the Kiosk Slides file. Keep it zipped.",
-      "downloadButton": "Download",
-      "settings": "Open Claude settings, go to Capabilities, and make sure code execution is on.",
-      "settingsButton": "Open Claude settings",
-      "upload": "Under Skills, choose Upload skill and pick the file you downloaded. It works on the website and in the Claude apps."
-    },
     "claudeCode": {
       "name": "Claude Code",
       "where": "Paste each line into Claude Code and press Enter.",
-      "note": "It updates itself when a new version comes out."
+      "note": "It updates itself when a new version comes out.",
+      "ask": "/kiosk-slides Make a 6-slide presentation about our quarterly results"
     },
     "codex": {
       "name": "Codex",
       "where": "Paste each line into your terminal and press Enter.",
-      "note": "It updates itself when a new version comes out."
+      "note": "It updates itself when a new version comes out.",
+      "ask": "Use kiosk-slides to make a 6-slide presentation about our quarterly results"
     },
     "copilot": {
       "name": "Copilot",
       "where": "Paste the first two lines into your terminal and press Enter after each. In VS Code, run Chat: Install Plugin From Source and paste the last line.",
-      "note": "It updates itself when a new version comes out."
+      "note": "It updates itself when a new version comes out.",
+      "ask": "Use kiosk-slides to make a 6-slide presentation about our quarterly results"
     },
     "gemini": {
       "name": "Gemini CLI",
       "where": "Paste this into your terminal and press Enter.",
-      "note": "Run it again to get a new version."
+      "note": "Run it again to get a new version.",
+      "ask": "Use kiosk-slides to make a 6-slide presentation about our quarterly results"
     },
     "other": {
       "name": "Other apps",
       "where": "For Cursor, OpenCode, Windsurf, Amp and others. Paste this into a terminal in your project folder and press Enter.",
-      "note": "Run the same line with update instead of add to get a new version."
-    }
+      "note": "Run the same line with update instead of add to get a new version.",
+      "ask": "Use kiosk-slides to make a 6-slide presentation about our quarterly results"
+    },
+    "tryNote": "Your AI uses Kiosk Slides only when you name it like this."
   },
   "Settings": {
     "title": "Presentation settings",
@@ -275,8 +272,9 @@
     },
     "showPrompt": "Show the prompt",
     "skillTitle": "Make slides right inside your AI",
-    "skillBody": "Add Kiosk Slides to Claude or another AI once. Then just ask it for a presentation.",
-    "addSkill": "Add to your AI"
+    "skillBody": "Add Kiosk Slides to your AI once. Then ask it for a presentation by name.",
+    "addSkill": "Add to your AI",
+    "credit": "Made by <author>{name}</author>. Free and <source>open source</source>."
   },
   "Shortcuts": {
     "title": "Make yourself at home.",

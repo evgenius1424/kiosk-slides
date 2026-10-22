@@ -2,7 +2,23 @@
   "name": "kiosk-slides",
   "version": "0.1.0",
   "private": true,
+  "description": "Describe your talk to AI and get a clean, finished presentation in seconds, as HTML slides built for screen sharing and meeting-room TVs.",
+  "keywords": [
+    "presentation",
+    "slides",
+    "ai",
+    "markdown",
+    "html-slides",
+    "agent-skill"
+  ],
+  "homepage": "https://kiosk-slides.com",
+  "bugs": "https://github.com/evgenius1424/kiosk-slides/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evgenius1424/kiosk-slides.git"
+  },
   "license": "MIT",
+  "author": "Evgenii Glinskii (https://github.com/evgenius1424)",
   "packageManager": "pnpm@12.3.4",
   "engines": {
     "node": ">=20.9"

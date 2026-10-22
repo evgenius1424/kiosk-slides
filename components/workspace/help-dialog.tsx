@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Blocks, Copy, X } from 'lucide-react'
+import { AUTHOR, REPO_URL } from '@/lib/author'
 import { requestPrompt } from '@/lib/talk'
 
 export type HelpTopic = 'help' | 'format'
@@ -96,6 +97,21 @@ export function HelpDialog({
             <summary>{th('showPrompt')}</summary>
             <pre>{requestPrompt(prompt)}</pre>
           </details>
+          <p className="dialog-credit">
+            {th.rich('credit', {
+              name: AUTHOR.name,
+              author: text => (
+                <a href={AUTHOR.linkedin} target="_blank" rel="author noopener">
+                  {text}
+                </a>
+              ),
+              source: text => (
+                <a href={REPO_URL} target="_blank" rel="noopener">
+                  {text}
+                </a>
+              ),
+            })}
+          </p>
         </>
       ) : (
         <>
