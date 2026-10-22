@@ -51,9 +51,12 @@ test('autoplay without a loop stops at the end', async ({ page }) => {
   await page.clock.install()
   await page.reload()
   await page.keyboard.press('p')
-  await page.clock.runFor(12_000)
+  await page.clock.runFor(5_500)
   await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 2 of 2/)
+  await page.clock.runFor(5_000)
   await expect(page.getByText('End of presentation')).toBeVisible()
+  await page.clock.runFor(30_000)
+  await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 2 of 2/)
 })
 
 test('turns screen-share safe on with S', async ({ page }) => {
