@@ -56,13 +56,13 @@ Options:
 - `--no-motion` is the same as `--transition none`.
 - `--no-credit` (or `credit: false` in the front matter) drops the “Made with Kiosk Slides” link from the end-of-presentation notice. It never appears on a slide.
 - `--no-link` skips the share link described below, so the HTML file opens instead.
-- `--no-open` prints the share link instead of opening the browser.
+- `--no-open` writes the HTML without opening the browser.
 - `--check` only validates and prints the slide list and any warnings, without writing HTML.
 - `--format` tidies the Markdown file in place without changing what it shows.
 
-After writing the HTML, the renderer opens the presentation in the person's browser and prints `Opened in your browser`. It opens the share link when the presentation is small enough: the whole presentation lives in that link, so it shows the same slides on a phone, a TV or another computer with nothing uploaded. Otherwise it opens the HTML file. Say in one sentence that it is open in their browser, and don't paste the link into your reply.
+After writing the HTML, the renderer opens the presentation in the person's browser and prints `Opened in your browser`. It opens the share link when the presentation is small enough: the whole presentation lives in that link, so it shows the same slides on a phone, a TV or another computer with nothing uploaded. Otherwise it opens the HTML file. Say in one sentence that it is open in their browser. Never print, paste or shorten the link.
 
-When there is no browser to open, such as over SSH or in a cloud session, it prints `Open in your browser: https://…` instead. Then give the person that link next to the files in one sentence as a Markdown link `[Open in your browser](url)`; never shorten it with a link service. When neither is printed, the HTML file is the way to share it.
+When there is no browser to open, such as over SSH or in a cloud session, nothing opens and nothing is printed. Then the HTML file is how the person sees the slides: hand it over and say how to present it.
 
 For a PDF, open the HTML in a desktop browser and print it with Save as PDF: every slide prints on its own 16:9 page, in the same theme, tone and font, with selectable text. No other tool is needed.
 

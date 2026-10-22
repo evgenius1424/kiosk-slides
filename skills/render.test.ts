@@ -37,24 +37,19 @@ describe('skill renderer', () => {
     expect(await readFile(path.join(dir, 'example.html'), 'utf8')).toBe(site)
   })
 
-  it('prints the same share link as the site', async () => {
-    const link = await shareLink(await readFile('public/example.md', 'utf8'), SITE_URL)
-    expect(link).toHaveProperty('url')
-    expect(render('linked.html').split('\n')).toContain(terminalLink((link as { url: string }).url))
-    expect(render('quiet.html', '--no-link')).not.toContain('Open in your browser')
-  })
-
   it.skipIf(process.platform === 'win32')(
-    'opens the share link in the browser instead of printing it',
+    'opens the same share link as the site and never prints it',
     async () => {
       const link = await shareLink(await readFile('public/example.md', 'utf8'), SITE_URL)
+      const url = (link as { url: string }).url
       const output = await renderWithBrowser('opened.html')
       expect(output.printed).toContain('Opened in your browser')
-      expect(output.printed).not.toContain('Open in your browser:')
-      expect(output.opened).toBe((link as { url: string }).url)
+      expect(output.printed).not.toContain('https://')
+      expect(output.opened).toBe(url)
       expect((await renderWithBrowser('local.html', '--no-link')).opened).toBe(
         path.join(dir, 'local.html'),
       )
+      expect(render('quiet.html')).not.toContain('https://')
     },
   )
 
@@ -104,10 +99,6 @@ async function waitForFile(file: string) {
     if (text) return text
     await new Promise(resolve => setTimeout(resolve, 100))
   }
-}
-
-function terminalLink(url: string) {
-  return `Open in your browser: \x1b]8;;${url}\x1b\\${url}\x1b]8;;\x1b\\`
 }
 
 async function dataUrl(file: string, type: string) {

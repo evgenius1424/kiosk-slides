@@ -87,10 +87,9 @@ async function main() {
   const out = values.out ?? input.replace(/\.(md|markdown)$/i, '') + '.html'
   await writeFile(out, html)
   console.log(`${summary(presentation)}\nWrote ${out}`)
+  if (values['no-open']) return
   const link = values['no-link'] ? undefined : await shareUrl(source)
-  if (!values['no-open'] && (await openInBrowser(link ?? path.resolve(out))))
-    console.log('Opened in your browser')
-  else if (link) console.log(`Open in your browser: \x1b]8;;${link}\x1b\\${link}\x1b]8;;\x1b\\`)
+  if (await openInBrowser(link ?? path.resolve(out))) console.log('Opened in your browser')
 }
 
 function withLook(presentation: Presentation): Presentation {
