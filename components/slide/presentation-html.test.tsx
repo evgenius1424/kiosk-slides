@@ -96,4 +96,17 @@ describe('presentationHtml', () => {
     )
     expect(html).not.toContain('golos-text.woff2')
   })
+
+  it('speaks the presentation language in the page and the player', async () => {
+    const russian = parsePresentation('---\nlanguage: ru\n---\n# Привет')
+    const html = await presentationHtml(russian, {
+      embedImage: async src => src,
+      embedFont: async file => file,
+    })
+    expect(html).toContain('<html lang="ru">')
+    expect(html).toContain('aria-label="Слайд 1 из 1: Привет"')
+    expect(html).toContain('"end":"Конец презентации"')
+    expect(html).toContain('aria-label="Полный экран"')
+    expect(await render()).toContain('<html lang="en">')
+  })
 })

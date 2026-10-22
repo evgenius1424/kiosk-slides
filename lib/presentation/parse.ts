@@ -9,6 +9,7 @@ import { terms } from './language'
 import { defaultLook, fontId, fonts, isScale, scales } from './look'
 import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'
 import { defaultTone, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
+import { isLanguage, languages } from './words'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
 import type { Presentation, MessageWidget, Slide } from './types'
@@ -143,6 +144,10 @@ function parseFrontMatter(lines: string[]) {
     if (isScale(scale.value)) look.scale = scale.value
     else if (scale.value)
       failAt(scale.line, `Unknown scale “${scale.value}”. Use ${scales.join(', ')}.`)
+    const language = field('language')
+    if (isLanguage(language.value)) look.language = language.value
+    else if (language.value)
+      failAt(language.line, `Unknown language “${language.value}”. Use ${languages.join(' or ')}.`)
     const brand = field('brand')
     if (brand.value && brand.value.length > 24)
       failAt(brand.line, 'Keep the brand to 24 characters.')

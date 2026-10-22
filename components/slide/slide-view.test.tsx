@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { Slide, SlideChrome } from '@/lib/presentation'
+import { defaultLook, type Slide, type SlideChrome } from '@/lib/presentation'
 import { SlideView } from '@/components/slide'
 
 afterEach(cleanup)
@@ -193,6 +193,30 @@ describe('SlideView: table and before/after', () => {
     ])
     expect(sections.map(s => s.classList.contains('comparison-after'))).toEqual([false, true])
   })
+
+  it('writes its built-in words in the presentation language', () => {
+    const look = { ...defaultLook(), language: 'ru' as const }
+    const comparison = render(
+      <SlideView
+        slide={{ ...chrome, label: '', kind: 'before-after', before: 'А', after: 'Б' }}
+        look={look}
+      />,
+    ).container.querySelector('article')!
+    expect(comparison.lang).toBe('ru')
+    expect(comparison.querySelector('.slide-label')?.textContent).toBe('Одна ясная мысль')
+    expect([...comparison.querySelectorAll('.widget-label')].map(l => l.textContent)).toEqual([
+      'До',
+      'После',
+    ])
+    cleanup()
+    const checklist = render(
+      <SlideView
+        slide={{ ...chrome, kind: 'checklist', items: [{ text: 'А', done: true }] }}
+        look={look}
+      />,
+    ).container.querySelector('article')!
+    expect(checklist.querySelector('[aria-label]')?.getAttribute('aria-label')).toBe('Сделано')
+  })
 })
 
 describe('SlideView: flow', () => {
@@ -237,7 +261,7 @@ describe('SlideView: flow', () => {
   })
 
   it('hides the brand or shows a custom one', () => {
-    const look = { font: 'inter', scale: 'hero' as const, brand: '' }
+    const look = { font: 'inter', scale: 'hero' as const, brand: '', language: 'en' as const }
     const hidden = render(
       <SlideView slide={{ ...chrome, kind: 'message', title: '' }} look={look} />,
     ).container.querySelector('article')!

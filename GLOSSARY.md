@@ -33,6 +33,9 @@ _Avoid_: File list
 The user-editable name that identifies a saved presentation in the presentation library.
 _Avoid_: Presentation title
 
+**Language**:
+The language a presentation is written in, set in its front matter. It picks the words the slides add themselves, such as the before and after labels.
+
 ### Slide structure
 
 **Slide**:
