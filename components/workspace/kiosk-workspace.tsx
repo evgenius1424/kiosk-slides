@@ -399,11 +399,15 @@ export function KioskWorkspace({
           panelRef={settings.panelRef}
           hidden={!settings.open || !!shared}
           source={source}
+          presentationId={current.id}
           presentation={presentation}
           look={look}
           player={player}
           fit={canvas.fit}
-          onChange={live.replace}
+          onChange={(next, previous) => {
+            if (previous !== undefined) versions.remember(current.id, previous)
+            live.replace(next)
+          }}
           onHelp={() => setModal('help')}
         />
         <div className="sr-only" aria-live="polite">
