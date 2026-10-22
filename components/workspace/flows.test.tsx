@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { KioskWorkspace } from '@/components/workspace/kiosk-workspace'
+import { STYLE_KEY } from '@/lib/last-style'
 import { encodeShare } from '@/lib/share'
 import messages from '@/messages/en.json'
 
@@ -21,6 +22,7 @@ beforeAll(() => {
   HTMLDialogElement.prototype.close = () => {}
   Element.prototype.scrollTo = () => {}
   Element.prototype.scrollIntoView = () => {}
+  Object.defineProperty(document, 'fonts', { value: [] })
   vi.stubGlobal('fetch', async () => new Response(null, { status: 404 }))
 })
 beforeEach(() => {
@@ -66,6 +68,33 @@ describe('shared link', () => {
     expect(screen.getByRole('button', { name: 'Edit' })).toBeTruthy()
     expect(location.hash).not.toContain('#s=')
     expect(stored().some(p => p.source === '# Pasted **here**\n')).toBe(true)
+  })
+})
+
+describe('last style', () => {
+  it('starts a pasted presentation in the style chosen last', async () => {
+    store(item('mine', example))
+    workspace()
+    await screen.findByText('The example')
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Violet color' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Text size' }), {
+      target: { value: 'hero' },
+    })
+    paste('---\ntheme: room-light\ntone: Coral\n---\n\n# Pasted\n')
+    const pasted = stored().find(p => p.source.includes('# Pasted'))!.source
+    expect(pasted).toBe('---\ntone: violet\nscale: hero\n---\n\n# Pasted\n')
+  })
+
+  it('keeps the style of a shared presentation', async () => {
+    localStorage.setItem(STYLE_KEY, JSON.stringify({ tone: 'Violet' }))
+    store(item('mine', example))
+    const shared = '---\ntone: Coral\n---\n\n# Shared\n'
+    history.replaceState(null, '', `/#s=${await encodeShare(shared)}`)
+    workspace()
+    fireEvent.click(await screen.findByRole('button', { name: 'Keep a copy' }))
+    expect(stored().some(p => p.source === shared)).toBe(true)
+    expect(JSON.parse(localStorage.getItem(STYLE_KEY)!)).toEqual({ tone: 'Violet' })
   })
 })
 
