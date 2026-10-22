@@ -109,7 +109,7 @@ Rename(p) ==
   /\ named' = [named EXCEPT ![p] = TRUE]
   /\ UNCHANGED <<doc, want, open, last, wantLast, pending, history, undos, shared>>
 
-\* Reloading the page on a shared link. Old code: the open presentation was
+\* Reloading the page on a shared or cut-off link. Old code: the open presentation was
 \* saved over with the example before the link was read.
 OpenSharedLink ==
   /\ Step /\ ~shared

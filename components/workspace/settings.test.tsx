@@ -95,6 +95,15 @@ describe('settings', () => {
     expect(stored()[0].source).toBe('# Mine\n')
   })
 
+  it('leaves the open presentation as it was when a cut-off link opens', async () => {
+    store(item('mine', '# Mine\n'))
+    history.replaceState(null, '', '/#s=cut')
+    workspace()
+    await screen.findByText('This link is incomplete. Ask for it again.')
+    await act(async () => {})
+    expect(stored()[0].source).toBe('# Mine\n')
+  })
+
   it('keeps a renamed empty presentation when a shared one is kept', async () => {
     store(item('mine', blank, 'Board meeting'))
     history.replaceState(null, '', `/#s=${await encodeShare('# Shared\n')}`)

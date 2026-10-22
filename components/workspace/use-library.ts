@@ -114,14 +114,14 @@ export function useLibrary({
     return () => window.removeEventListener('storage', sync)
   }, [loaded])
   useEffect(() => {
-    if (shared || !loaded) return
+    if (!loaded || shared || broken) return
     setLibrary(l => ({
       ...l,
       items: l.items.map(p =>
         p.id === l.current && p.source !== source ? { ...p, source, updatedAt: Date.now() } : p,
       ),
     }))
-  }, [source, shared, loaded])
+  }, [source, shared, loaded, broken])
 
   const open = (id: string) => {
     const target = library.items.find(p => p.id === id)
