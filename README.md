@@ -92,13 +92,6 @@ It shares the site's own renderer, so a presentation looks exactly the same wher
 The `npx skills` route copies the skill into your current project. Use one installation route per agent.
 
 <details>
-<summary><strong>Claude app</strong> (claude.ai and desktop)</summary>
-
-Download `kiosk-slides.zip` from the [latest release](https://github.com/evgenius1424/kiosk-slides/releases/latest), then add it under **Settings → Capabilities → Skills**.
-
-</details>
-
-<details>
 <summary><strong>GitHub Copilot</strong> (CLI and VS Code)</summary>
 
 ```bash
