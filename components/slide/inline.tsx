@@ -33,6 +33,7 @@ function phrasing(node: RootContent): ReactNode {
     case 'delete':
       return <s>{inner}</s>
     case 'link':
+      if (!/^(https?:|mailto:)/i.test(node.url)) return inner
       return (
         <a href={node.url} target="_blank" rel="noopener noreferrer">
           {inner}

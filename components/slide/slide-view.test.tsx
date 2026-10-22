@@ -239,3 +239,17 @@ describe('SlideView: flow', () => {
     expect(custom.querySelector('.slide-brand')?.textContent).toBe('ZEOS')
   })
 })
+
+describe('inline markdown', () => {
+  it('renders bold and safe links, and drops unsafe links', () => {
+    const slide: Slide = {
+      ...chrome,
+      kind: 'message',
+      body: '**Bold** [ok](https://a.example) [bad](javascript:alert(1))',
+    }
+    const html = render(<SlideView slide={slide} />).container.innerHTML
+    expect(html).toContain('<strong>Bold</strong>')
+    expect(html).toContain('href="https://a.example"')
+    expect(html).not.toContain('javascript:')
+  })
+})
