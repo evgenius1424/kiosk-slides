@@ -4,7 +4,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject }
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react'
 import type { Presentation, PresentationLook } from '@/lib/presentation'
-import { SWIPE, WHEEL, swipeDelta } from '@/lib/player'
+import { SETTLE_MS, SWIPE, WHEEL, swipeDelta } from '@/lib/player'
 import { SlideView } from '../slide'
 import type { Player } from './use-player'
 
@@ -40,6 +40,10 @@ export function useCanvas({ player, preview }: { player: Player; preview: boolea
       clearTimeout(timer)
     }
   }, [move, preview, presenting])
+  useEffect(() => {
+    const target = ref.current
+    if (target) return hideWhileResizing(target)
+  }, [preview])
   return { ref }
 }
 
@@ -144,6 +148,23 @@ export function SlideCanvas({
       )}
     </>
   )
+}
+
+function hideWhileResizing(target: HTMLElement) {
+  let measured = false
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const observer = new ResizeObserver(() => {
+    if (!measured) return void (measured = true)
+    target.dataset.settling = ''
+    clearTimeout(timer)
+    timer = setTimeout(() => delete target.dataset.settling, SETTLE_MS)
+  })
+  observer.observe(target)
+  return () => {
+    observer.disconnect()
+    clearTimeout(timer)
+    delete target.dataset.settling
+  }
 }
 
 function onSwipe(target: HTMLElement, move: (delta: number) => void, vertical: boolean) {
