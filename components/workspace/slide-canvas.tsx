@@ -124,12 +124,6 @@ export function SlideCanvas({
         )}
       </div>
       <div className="canvas-controls">
-        <span>
-          <span className="status-dot" />
-          {presenting ? t('canvas.presenting') : '16:9'}
-          <span className="control-separator">/</span>
-          {t(`themes.${theme}`)}
-        </span>
         <div className="slide-pagination">
           <button
             className="icon-btn"

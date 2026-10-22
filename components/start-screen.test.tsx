@@ -47,8 +47,12 @@ describe('start screen', () => {
 
   it('copies a prompt ending in the topic on the hosted site, then takes the pasted answer', async () => {
     workspace()
-    fireEvent.click(screen.getByRole('button', { name: 'Leadership' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Short (5)' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Who is it for?' }), {
+      target: { value: 'leadership' },
+    })
+    fireEvent.change(screen.getByRole('combobox', { name: 'How long?' }), {
+      target: { value: 'short' },
+    })
     fireEvent.change(topic(), { target: { value: 'Moving to a four-day week' } })
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy prompt' })))
     expect(clipboard).toMatch(/^GUIDE\n\nHere is my request:\n/)
@@ -122,11 +126,15 @@ describe('start screen', () => {
     })
     workspace({ freeDraft: true })
     fireEvent.change(topic(), { target: { value: 'Moving to a four-day week' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Short (5)' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'How long?' }), {
+      target: { value: 'short' },
+    })
     fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
     expect(screen.getByText(/Your request goes to Anthropic/)).toBeTruthy()
     await vi.waitFor(() => expect(menuName()).toBe('Four days'))
-    expect(briefs[0]).toMatch(/^My talk: Moving to a four-day week\nLength: about 5 slides\./)
+    expect(briefs[0]).toMatch(
+      /^My talk: Moving to a four-day week\nAudience: my team\.\nLength: about 5 slides\./,
+    )
     expect(screen.queryByRole('heading', { name: 'What’s your talk about?' })).toBeNull()
     await vi.waitFor(() => expect(library().map(p => p.name)).toEqual(['Four days']))
   })
@@ -188,7 +196,9 @@ describe('start screen', () => {
     signedIn()
     workspace()
     fireEvent.change(topic(), { target: { value: 'Our onboarding' } })
-    fireEvent.click(screen.getByRole('button', { name: 'A class' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Who is it for?' }), {
+      target: { value: 'class' },
+    })
     fireEvent.click(await screen.findByRole('button', { name: 'Make slides' }))
     await vi.waitFor(() => expect(chats).toHaveLength(1))
     expect(chats[0].messages[0].content).toMatch(/^My talk: Our onboarding\nAudience: a class/)

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   ArrowRight,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ClipboardPaste,
@@ -24,6 +25,7 @@ import {
   requestPrompt,
   selectGap,
   talkRequest,
+  type Audience,
   type Length,
   type Talk,
 } from '@/lib/talk'
@@ -34,6 +36,9 @@ const DRAFT_KEY = 'kiosk-talk'
 const RESUME_KEY = 'kiosk-talk-resume'
 const SHOWCASE_MS = 5000
 const FEATURES = ['room', 'share', 'saved'] as const
+const DEFAULT_AUDIENCE: Audience = 'team'
+const DEFAULT_LENGTH: Length = 'standard'
+const NEW_TALK: Talk = { topic: '', audience: DEFAULT_AUDIENCE, length: DEFAULT_LENGTH }
 const MAX_TOPIC_LENGTH =
   MAX_BRIEF_LENGTH - talkRequest({ topic: '', audience: 'screen', length: 'long' }).length
 
@@ -63,7 +68,7 @@ export function StartScreen({
   onClose?: () => void
 }) {
   const t = useTranslations('Start')
-  const [talk, setTalk] = useState<Talk>({ topic: '' })
+  const [talk, setTalk] = useState<Talk>(NEW_TALK)
   const [status, setStatus] = useState<ChatGPTStatus | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
@@ -80,7 +85,7 @@ export function StartScreen({
 
   useEffect(() => {
     const saved = draft()
-    if (saved) setTalk(saved)
+    if (saved) setTalk({ ...NEW_TALK, ...saved })
     topicRef.current?.focus()
   }, [])
   useEffect(() => () => draftRef.current?.abort(), [])
@@ -188,6 +193,15 @@ export function StartScreen({
               <button className="link-button" onClick={() => setCopied(null)}>
                 {t('paste.back')}
               </button>
+              <button
+                className="link-button start-blank"
+                type="button"
+                disabled={drafting}
+                onClick={onBlank}
+              >
+                {t('blank')}
+                <ArrowRight size={13} />
+              </button>
             </div>
           </div>
         ) : (
@@ -225,20 +239,24 @@ export function StartScreen({
                   e.currentTarget.form?.requestSubmit()
               }}
             />
-            <ChipRow
-              label={t('audience')}
-              options={AUDIENCES}
-              value={talk.audience}
-              text={id => t(`audiences.${id}`)}
-              onChange={audience => update({ ...talk, audience })}
-            />
-            <ChipRow
-              label={t('length')}
-              options={Object.keys(LENGTHS) as Length[]}
-              value={talk.length}
-              text={id => t(`lengths.${id}`, { count: LENGTHS[id] })}
-              onChange={length => update({ ...talk, length })}
-            />
+            <p className="start-line">
+              {t('for')}
+              <Choice
+                label={t('audience')}
+                options={AUDIENCES}
+                value={talk.audience ?? DEFAULT_AUDIENCE}
+                text={id => t(`audiences.${id}`)}
+                onChange={audience => update({ ...talk, audience })}
+              />
+              <span aria-hidden="true">·</span>
+              <Choice
+                label={t('length')}
+                options={Object.keys(LENGTHS) as Length[]}
+                value={talk.length ?? DEFAULT_LENGTH}
+                text={id => t('lengths', { count: LENGTHS[id] })}
+                onChange={length => update({ ...talk, length })}
+              />
+            </p>
             <div className="start-actions">
               {ready ? (
                 <button className="btn primary" type="submit" disabled={!hasTopic}>
@@ -272,6 +290,15 @@ export function StartScreen({
                   {t('copyPrompt')}
                 </button>
               )}
+              <button
+                className="link-button start-blank"
+                type="button"
+                disabled={drafting}
+                onClick={onBlank}
+              >
+                {t('blank')}
+                <ArrowRight size={13} />
+              </button>
             </div>
             {offerDraft && <p className="start-note">{t('draft.privacy')}</p>}
             {draftNote && (
@@ -283,12 +310,6 @@ export function StartScreen({
         )}
         <Showcase example={example} busy={drafting} onOpen={onExample} />
       </div>
-      <footer className="start-footer">
-        <button className="link-button" disabled={drafting} onClick={onBlank}>
-          {t('blank')}
-          <ArrowRight size={13} />
-        </button>
-      </footer>
     </section>
   )
 }
@@ -371,7 +392,7 @@ function Showcase({
   )
 }
 
-function ChipRow<T extends string>({
+function Choice<T extends string>({
   label,
   options,
   value,
@@ -380,26 +401,22 @@ function ChipRow<T extends string>({
 }: {
   label: string
   options: readonly T[]
-  value?: T
+  value: T
   text: (id: T) => string
-  onChange: (value?: T) => void
+  onChange: (value: T) => void
 }) {
   return (
-    <div className="start-row" role="group" aria-label={label}>
-      <span>{label}</span>
-      <div className="start-chips">
+    <span className="start-choice">
+      <span aria-hidden="true">{text(value)}</span>
+      <ChevronDown size={14} aria-hidden="true" />
+      <select aria-label={label} value={value} onChange={e => onChange(e.target.value as T)}>
         {options.map(id => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={value === id}
-            onClick={() => onChange(value === id ? undefined : id)}
-          >
+          <option key={id} value={id}>
             {text(id)}
-          </button>
+          </option>
         ))}
-      </div>
-    </div>
+      </select>
+    </span>
   )
 }
 

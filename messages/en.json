@@ -63,7 +63,6 @@
       "body": "Keep it short. Make it matter."
     },
     "canvas": {
-      "presenting": "Presentation",
       "previous": "Previous slide",
       "next": "Next slide",
       "enter": "Enter presentation mode",
@@ -489,20 +488,17 @@
         "text": "A loop for the screen in our … that shows … It plays on its own."
       }
     },
+    "for": "For",
     "audience": "Who is it for?",
     "audiences": {
-      "team": "My team",
-      "leadership": "Leadership",
-      "customers": "Customers",
-      "class": "A class",
-      "screen": "A public screen"
+      "team": "my team",
+      "leadership": "leadership",
+      "customers": "customers",
+      "class": "a class",
+      "screen": "a public screen"
     },
     "length": "How long?",
-    "lengths": {
-      "short": "Short ({count})",
-      "standard": "Standard ({count})",
-      "long": "Long ({count})"
-    },
+    "lengths": "{count} slides",
     "make": "Make slides",
     "connect": "Continue with ChatGPT",
     "connecting": "Opening ChatGPT…",

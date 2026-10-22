@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Check, ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, ChevronDown, Files, Pencil, Plus, Trash2 } from 'lucide-react'
 import type { SavedPresentation } from '@/lib/presentations'
 
 type Props = {
@@ -55,14 +55,16 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
         className="presentation-selector"
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label={current.name}
         onClick={event => {
           openedByKeyboard.current = event.detail === 0
           if (open) close()
           else setOpen(true)
         }}
       >
+        <Files className="presentation-icon" size={18} />
         <span>{current.name}</span>
-        <ChevronDown size={14} />
+        <ChevronDown className="presentation-chevron" size={14} />
       </button>
       {open && (
         <div className="presentation-popover" role="dialog" aria-label={t('title')}>
