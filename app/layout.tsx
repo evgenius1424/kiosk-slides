@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { ServiceWorker } from '@/components/service-worker'
+import { AUTHOR } from '@/lib/author'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
@@ -34,8 +35,10 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     applicationName: SITE_NAME,
     keywords: t.raw('keywords') as string[],
-    authors: [{ name: 'Evgenii', url: 'https://github.com/evgenius1424' }],
-    creator: 'Evgenii',
+    authors: [{ name: AUTHOR.name, url: AUTHOR.linkedin }],
+    creator: AUTHOR.name,
+    publisher: AUTHOR.name,
+    category: 'productivity',
     alternates: { canonical: '/' },
     openGraph: {
       type: 'website',

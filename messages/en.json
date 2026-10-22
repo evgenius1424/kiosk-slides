@@ -276,7 +276,8 @@
     "showPrompt": "Show the prompt",
     "skillTitle": "Make slides right inside your AI",
     "skillBody": "Add Kiosk Slides to Claude or another AI once. Then just ask it for a presentation.",
-    "addSkill": "Add to your AI"
+    "addSkill": "Add to your AI",
+    "credit": "Made by <author>{name}</author>. Free and <source>open source</source>."
   },
   "Shortcuts": {
     "title": "Make yourself at home.",
