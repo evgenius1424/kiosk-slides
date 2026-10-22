@@ -26,6 +26,7 @@ export function usePlayer(presentation: Presentation, notice: (message: string) 
   const [safeKey, setSafeKey] = useState<boolean | null>(null)
   const [jumped, setJumped] = useState<number | null>(null)
   if (jumped !== null && jumped !== index) setJumped(null)
+  if (slides.length && index > slides.length - 1) setIndex(slides.length - 1)
   const safe = safeKey ?? presentation.shareSafe
   const at = Math.max(0, Math.min(index, slides.length - 1))
   const slide = slides[at] as Slide | undefined

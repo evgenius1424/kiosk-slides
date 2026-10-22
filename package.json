@@ -19,7 +19,8 @@
     "typecheck": "tsc --noEmit",
     "knip": "knip",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm knip && pnpm test",
-    "build:skills": "node scripts/build-skills.mjs"
+    "build:skills": "node scripts/build-skills.mjs",
+    "check:flows": "node scripts/check-flows.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",

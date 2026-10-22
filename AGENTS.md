@@ -25,6 +25,7 @@ Use pnpm (version pinned in `package.json`) and Node 20.9 or later.
 | `pnpm test`         | Vitest, or `pnpm test lib/presentation` for one area             |
 | `pnpm build`        | Production build                                                 |
 | `pnpm build:skills` | Bundle `skills/render.ts` and copy references and fonts          |
+| `pnpm check:flows`  | Model-check the TLA+ specs in `specs/` (needs Java 11 or later)  |
 
 CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm build` and `pnpm build:skills`, and fails if the built skills differ from what is committed.
 
@@ -44,6 +45,7 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `messages/en.json`      | Every UI string, read through next-intl                                                |
 | `skills/`               | The agent skill; its `scripts/`, `references/` and `assets/` are generated             |
 | `.claude-plugin/`       | Plugin and marketplace manifests that publish the skill                                |
+| `specs/`                | TLA+ models of the risky user flows; `<Name>Before.cfg` replays each bug found         |
 | `.scratch/`             | Working specs and issues as Markdown, may be stale (see Agent skills below)            |
 
 ## Rendering architecture

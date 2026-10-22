@@ -4,9 +4,12 @@ import { formatPresentation, parsePresentation } from '@/lib/presentation'
 import {
   blankPresentation,
   createPresentation,
+  mergeLibrary,
   pastedPresentation,
   presentationName,
   uniqueName,
+  type Library,
+  type SavedPresentation,
 } from '@/lib/presentations'
 import messages from '@/messages/en.json'
 
@@ -60,4 +63,40 @@ describe('presentations', () => {
     )
     expect(pastedPresentation('~~~md\r\n# One\r\n~~~')).toBe('# One\n')
   })
+
+  it('merges a save with what another tab saved meanwhile', () => {
+    const a = saved('a', 'A')
+    const b = saved('b', 'B')
+    const base = library('a', a, b)
+    const theirs = library('a', a, saved('b', 'B edited'), saved('c', 'C'))
+    const ours = library('a', saved('a', 'A edited'), b)
+    expect(mergeLibrary(base, ours, theirs).items.map(p => p.source)).toEqual([
+      'A edited',
+      'B edited',
+      'C',
+    ])
+  })
+
+  it('keeps deletions from either tab and moves off a deleted current one', () => {
+    const a = saved('a', 'A', 1)
+    const b = saved('b', 'B', 2)
+    const c = saved('c', 'C', 3)
+    const base = library('a', a, b, c)
+    const merged = mergeLibrary(base, library('a', a, b), library('a', b, c))
+    expect(merged).toEqual(library('b', b))
+  })
+
+  it('returns the same library when nothing changed elsewhere', () => {
+    const ours = library('a', saved('a', 'A'))
+    expect(mergeLibrary(ours, ours, JSON.parse(JSON.stringify(ours)))).toBe(ours)
+    expect(mergeLibrary(ours, ours, null)).toBe(ours)
+  })
 })
+
+function saved(id: string, source: string, updatedAt = 0): SavedPresentation {
+  return { id, name: id, source, userNamed: false, updatedAt }
+}
+
+function library(current: string, ...items: SavedPresentation[]): Library {
+  return { current, items }
+}

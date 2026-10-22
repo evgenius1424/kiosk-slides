@@ -9,7 +9,7 @@ export function useWakeLock(active: boolean) {
       if (document.visibilityState !== 'visible' || (lock && !lock.released)) return
       navigator.wakeLock.request('screen').then(
         sentinel => {
-          if (done) sentinel.release().catch(() => {})
+          if (done || (lock && !lock.released)) sentinel.release().catch(() => {})
           else lock = sentinel
         },
         () => {},
