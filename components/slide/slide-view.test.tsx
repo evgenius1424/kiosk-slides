@@ -26,6 +26,19 @@ describe('SlideView', () => {
     expect(article.querySelector('.slide-footer')?.textContent).toContain('Footer')
   })
 
+  it('keeps heading punctuation clear of the tight letter spacing', () => {
+    const article = view({
+      ...chrome,
+      kind: 'message',
+      heading: [{ text: 'Works to live—not “50%” — done' }],
+    })
+    const h2 = article.querySelector('h2')!
+    expect(h2.querySelector('.dash')?.textContent).toBe('—')
+    expect([...h2.querySelectorAll('.opening')].map(n => n.textContent)).toEqual(['“', '—'])
+    expect([...h2.querySelectorAll('.closing')].map(n => n.textContent)).toEqual(['%', '”', '—'])
+    expect(h2.textContent).toBe('Works to live\u2060—not “50%”\u00a0— done')
+  })
+
   it('renders italic, code and links in the heading', () => {
     const article = view({
       ...chrome,

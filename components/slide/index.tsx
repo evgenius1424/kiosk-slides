@@ -9,13 +9,14 @@ import {
   type Slide,
 } from '@/lib/presentation'
 import { Inline } from './inline'
+import { Punctuated } from './punctuated'
 import { widgets } from './widgets'
 
 export function HeadingText({ parts }: { parts: HeadingPart[] }) {
   return (
     <>
       {parts.map((part, i) => {
-        let node: ReactNode = part.code ? <code>{part.text}</code> : part.text
+        let node: ReactNode = part.code ? <code>{part.text}</code> : <Punctuated text={part.text} />
         if (part.italic) node = <em>{node}</em>
         if (part.highlight) node = <strong>{node}</strong>
         if (part.url)
