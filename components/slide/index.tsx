@@ -3,6 +3,7 @@ import {
   defaultLook,
   findFont,
   headingSize,
+  tableSize,
   DEFAULT_BRAND,
   type PresentationLook,
   type HeadingPart,
@@ -47,10 +48,12 @@ export function SlideView({
   // `widgets` pairs each kind with its own component, so this lookup always matches `slide`.
   const Widget = widgets[slide.kind] as ComponentType<{ slide: Slide }> | null
   const size = headingSize(slide, look)
+  const table = tableSize(slide, look)
   const style = {
     '--slide-tone': accent,
     '--slide-font': findFont(look.font).stack,
     ...(size && { '--heading-size': `${size}cqw` }),
+    ...(table && { '--table-size': `${table}cqw` }),
   } as React.CSSProperties
   return (
     <article
