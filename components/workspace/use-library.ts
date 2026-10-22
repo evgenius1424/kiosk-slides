@@ -244,7 +244,7 @@ export function useLibrary({
       known ?? createPresentation(presentationName(source) || untitled, source, library.items)
     setLibrary(l => ({
       current: kept.id,
-      items: known ? l.items : [...l.items.filter(p => !isBlank(p.source)), kept],
+      items: known ? l.items : [...l.items.filter(p => p.userNamed || !isBlank(p.source)), kept],
     }))
     setShared(null)
     restartChat()
