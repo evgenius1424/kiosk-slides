@@ -189,10 +189,15 @@ kbd {
 .slide-list {
   overflow: auto;
   flex: 1;
-  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 10px;
+  scroll-padding-block: 6px;
 }
 .slide-nav {
   position: relative;
+  flex-shrink: 0;
   width: 100%;
   display: flex;
   align-items: flex-start;
@@ -202,7 +207,6 @@ kbd {
   background: transparent;
   padding: 10px 6px;
   text-align: left;
-  margin-bottom: 6px;
 }
 .slide-nav.selected {
   border-color: #a1a1aa;
