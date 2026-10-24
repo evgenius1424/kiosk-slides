@@ -49,7 +49,6 @@ footer: Median across 38 teams, July to September.
 # Meetings got **shorter**
 
 <!-- metric -->
-
 **−27%**
 time spent per review meeting
 
@@ -111,7 +110,6 @@ footer: Average minutes per review meeting, by month.
 # The effect **held** after launch
 
 <!-- chart: type=line x=Month -->
-
 | Month | Payments | Growth | Platform |
 | ----- | -------- | ------ | -------- |
 | May   | 58       | 51     | 64       |
@@ -134,7 +132,6 @@ footer: A whole slide is a few lines of Markdown.
 # Meetings got **shorter**
 
 <!-- metric -->
-
 **−27%**
 time spent per review meeting
 ```
@@ -178,7 +175,6 @@ footer: A box named in both chains is marked as shared.
 # Two inputs, **one review**
 
 <!-- flow -->
-
 - Notes -> Draft -> Review
 - Metrics -> Chart -> Review
 

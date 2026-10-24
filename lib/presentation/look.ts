@@ -5,7 +5,13 @@ import { WIDGET_GAP, textLines, widgetHeight } from './widget-height'
 export const scales = ['normal', 'large', 'hero'] as const
 export type Scale = (typeof scales)[number]
 
-export type FontFile = { family: string; file: string; weights: string; script: Script }
+export type FontFile = {
+  family: string
+  file: string
+  weights: string
+  script: Script
+  italic?: boolean
+}
 
 export type Font = {
   id: string
@@ -44,6 +50,19 @@ export const fonts: Font[] = [
     latin('Golos Text', 'golos-text.woff2', '400 900'),
     cyrillic('Golos Text', 'golos-text-cyrillic.woff2', '400 900'),
   ]),
+  font(
+    'literata',
+    'Literata',
+    0.61,
+    0.68,
+    [
+      latin('Literata', 'literata.woff2', '200 900'),
+      cyrillic('Literata', 'literata-cyrillic.woff2', '200 900'),
+      { ...latin('Literata', 'literata-italic.woff2', '200 900'), italic: true },
+      { ...cyrillic('Literata', 'literata-italic-cyrillic.woff2', '200 900'), italic: true },
+    ],
+    'Georgia,serif',
+  ),
 ]
 
 export const DEFAULT_BRAND = 'kiosk'
@@ -69,8 +88,8 @@ export const fontFiles = (fonts: Font[]) => [
   ...new Map(fonts.flatMap(f => f.files).map(file => [file.file, file])).values(),
 ]
 
-export const fontFace = ({ family, weights, script }: FontFile, src: string) =>
-  `@font-face{font-family:'${family}';src:url(${src}) format('woff2');font-weight:${weights};font-display:swap;unicode-range:${RANGES[script]}}`
+export const fontFace = ({ family, weights, script, italic }: FontFile, src: string) =>
+  `@font-face{font-family:'${family}';src:url(${src}) format('woff2');font-weight:${weights};${italic ? 'font-style:italic;' : ''}font-display:swap;unicode-range:${RANGES[script]}}`
 
 export const hasCyrillic = (text: string) => CYRILLIC.test(text)
 
@@ -299,12 +318,13 @@ function font(
   width: number,
   cyrillicWidth: number,
   files: FontFile[],
+  fallback = 'Arial,Helvetica,sans-serif',
 ): Font {
   const families = [...new Set(files.map(f => `'${f.family}'`))]
   return {
     id,
     name,
-    stack: [...families, 'Arial', 'Helvetica', 'sans-serif'].join(','),
+    stack: [...families, fallback].join(','),
     width,
     cyrillicWidth,
     files,

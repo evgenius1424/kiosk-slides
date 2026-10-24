@@ -1,22 +1,45 @@
 import { describe, expect, it } from 'vitest'
 import { slideStyles } from '@/lib/slide-styles'
-import { themes, tones, type Theme } from './theme'
+import { themes, toneInk, tones, type Theme } from './theme'
 
 const LARGE_TEXT = 3
+const TEXT = 4.5
+const PILL: Theme[] = ['poster', 'marker']
 
 describe('tones', () => {
-  it.each(themes)('stand out at 3:1 as heading highlight and accent on the %s theme', theme => {
-    const { mix, surfaces } = themeColors(theme)
-    const ratios = tones.flatMap(({ name, colors }) => {
-      const tone = rgb(colors[theme])
-      const highlight = mixOklab(tone, mix.with, mix.amount)
-      return surfaces.flatMap(surface => {
-        const flat = mixSrgb(surface, tone, 0.95)
-        const corner = mixSrgb(tone, flat, 0.16)
-        return [flat, corner].map(back => ({ name, ratio: contrast(highlight, back) }))
+  it.each(themes.filter(t => !PILL.includes(t)))(
+    'stand out at 3:1 as heading highlight and accent on the %s theme',
+    theme => {
+      const { mix, surfaces } = themeColors(theme)
+      const ratios = tones.flatMap(({ name, colors }) => {
+        const tone = rgb(colors[theme])
+        const highlight = mixOklab(tone, mix.with, mix.amount)
+        return surfaces.flatMap(surface => {
+          const flat = mixSrgb(surface, tone, 0.95)
+          const corner = mixSrgb(tone, flat, 0.16)
+          return [flat, corner].map(back => ({ name, ratio: contrast(highlight, back) }))
+        })
       })
-    })
-    expect(ratios.filter(r => r.ratio < LARGE_TEXT)).toEqual([])
+      expect(ratios.filter(r => r.ratio < LARGE_TEXT)).toEqual([])
+    },
+  )
+
+  it.each(PILL)('carry readable text on every tone on the %s theme', theme => {
+    const ratios = tones.map(({ name, colors }) => ({
+      name,
+      ratio: contrast(rgb(toneInk(colors[theme])), rgb(colors[theme])),
+    }))
+    expect(ratios.filter(r => r.ratio < TEXT)).toEqual([])
+  })
+
+  it('picks black or white text for any color', () => {
+    expect(['#ffd23f', '#ffffff', '#2fd4a7', '#1f4fd8', '#000'].map(toneInk)).toEqual([
+      '#111111',
+      '#111111',
+      '#111111',
+      '#ffffff',
+      '#ffffff',
+    ])
   })
 })
 

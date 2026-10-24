@@ -5,6 +5,7 @@ import {
   headingSize,
   tableSize,
   textFit,
+  toneInk,
   DEFAULT_BRAND,
   type PresentationLook,
   type HeadingPart,
@@ -51,16 +52,18 @@ export function SlideView({
   const size = headingSize(slide, look)
   const table = tableSize(slide, look)
   const fit = textFit(slide, look)
+  const font = findFont(look.font)
   const style = {
     '--slide-tone': accent,
-    '--slide-font': findFont(look.font).stack,
+    '--slide-ink': toneInk(accent),
+    '--slide-font': font.stack,
     ...(size && { '--heading-size': `${size}cqw` }),
     ...(table && { '--table-size': `${table}cqw` }),
     ...(fit && { '--text-fit': fit }),
   } as React.CSSProperties
   return (
     <article
-      className={`slide ${theme} kind-${slide.kind} scale-${look.scale} ${miniature ? 'miniature' : ''}`}
+      className={`slide ${theme} font-${font.id} kind-${slide.kind} scale-${look.scale} ${miniature ? 'miniature' : ''}`}
       style={style}
     >
       <header className="slide-meta">
