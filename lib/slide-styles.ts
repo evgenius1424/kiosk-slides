@@ -95,5 +95,6 @@ function marker() {
 }
 
 function pill(theme: string, background: string, color: string) {
-  return `.slide.${theme} h2 strong{font-weight:800;color:${color};background:radial-gradient(closest-side,${background} 96%,#0000) left/1.06em 1.06em no-repeat,radial-gradient(closest-side,${background} 96%,#0000) right/1.06em 1.06em no-repeat,linear-gradient(${background},${background}) center/calc(100% - .9em) 1.06em no-repeat;padding:0 .2em;margin:0 -.2em;position:relative;z-index:-1;-webkit-box-decoration-break:clone;box-decoration-break:clone}`
+  const cap = `radial-gradient(closest-side,${background} calc(100% - 1px),#0000)`
+  return `.slide.${theme} h2 strong{font-weight:800;color:${color};background:${cap} left/1.1em 1.1em no-repeat,${cap} right/1.1em 1.1em no-repeat,linear-gradient(${background},${background}) center/calc(100% - 1em) 1.1em no-repeat;padding:0 .36em 0 .34em;margin:0 -.36em 0 -.34em;position:relative;z-index:-1;-webkit-box-decoration-break:clone;box-decoration-break:clone}.slide.${theme} h2 .pill-gap{letter-spacing:0;word-spacing:.32em}.slide.${theme}.font-archivo-expanded h2 .pill-gap{word-spacing:.24em}`
 }

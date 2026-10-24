@@ -93,13 +93,10 @@ export const fontFace = ({ family, weights, script, italic }: FontFile, src: str
 
 export const hasCyrillic = (text: string) => CYRILLIC.test(text)
 
-export function headingSize(
-  slide: SizedSlide,
-  { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
-): number | undefined {
+export function headingSize(slide: SizedSlide, { scale, font, pill }: Sizing): number | undefined {
   if (scale === 'normal') return undefined
   const box = boxes[scale]
-  const { text, charWidth, textWidth, body } = measure(slide, box, font)
+  const { text, charWidth, textWidth, body } = measure(slide, box, font, pill)
   if (slide.kind === 'message') {
     const height = box.height - body
     return fit(
@@ -119,7 +116,7 @@ export function headingSize(
       : WIDGET_GAP +
         widgetHeight(
           slide,
-          { ...box.text, table: tableSize(slide, { scale, font }) ?? TABLE_TEXT },
+          { ...box.text, table: tableSize(slide, { scale, font, pill }) ?? TABLE_TEXT },
           textWidth,
         )
   const height = box.room - CLEARANCE - body - below
@@ -133,13 +130,10 @@ export function headingSize(
   )
 }
 
-export function tableSize(
-  slide: SizedSlide,
-  { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
-): number | undefined {
+export function tableSize(slide: SizedSlide, { scale, font, pill }: Sizing): number | undefined {
   if (slide.kind !== 'table') return undefined
   const box = boxes[scale]
-  const { text, charWidth, textWidth, body } = measure(slide, box, font)
+  const { text, charWidth, textWidth, body } = measure(slide, box, font, pill)
   const room = box.room - CLEARANCE - body - headingHeight(text, charWidth, box, MIN_HEADING)
   for (let size = TABLE_TEXT; size > MIN_TABLE_TEXT; size = round(size - 0.05)) {
     const height = WIDGET_GAP + widgetHeight(slide, { ...box.text, table: size }, textWidth)
@@ -148,14 +142,12 @@ export function tableSize(
   return MIN_TABLE_TEXT
 }
 
-export function textFit(
-  slide: SizedSlide,
-  { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
-): number | undefined {
+export function textFit(slide: SizedSlide, { scale, font, pill }: Sizing): number | undefined {
   if (slide.kind === 'code' || slide.kind === 'table') return undefined
   const box = boxes[scale]
-  const { text, charWidth, textWidth } = measure(slide, box, font)
-  const size = headingSize(slide, { scale, font }) ?? NORMAL_HEADING[slide.kind] ?? MIN_HEADING
+  const { text, charWidth, textWidth } = measure(slide, box, font, pill)
+  const size =
+    headingSize(slide, { scale, font, pill }) ?? NORMAL_HEADING[slide.kind] ?? MIN_HEADING
   const room = box.room - CLEARANCE - headingHeight(text, charWidth, box, size)
   const height = (fit: number) =>
     bodyHeight(slide.body, box, textWidth, fit) +
@@ -169,6 +161,8 @@ export function textFit(
 }
 
 type Script = 'latin' | 'cyrillic'
+
+type Sizing = Pick<PresentationLook, 'scale' | 'font'> & { pill?: boolean }
 
 type SizedSlide = Pick<SlideChrome, 'heading' | 'body'> & (MessageWidget | Widget)
 
@@ -190,6 +184,7 @@ const MIN_TABLE_TEXT = 1.3
 const CLEARANCE = 1.5
 const HEADING_CHAR = 0.85
 const MIN_TEXT_FIT = 0.6
+const PILL_GAP = '_'
 
 const NORMAL_HEADING: Partial<Record<SizedSlide['kind'], number>> = {
   message: 6.5,
@@ -233,8 +228,10 @@ const boxes = {
   },
 }
 
-function measure(slide: SizedSlide, box: Box, font: string) {
-  const text = slide.heading.map(p => p.text).join('')
+function measure(slide: SizedSlide, box: Box, font: string, pill?: boolean) {
+  const text = slide.heading
+    .map(p => (pill && p.highlight ? `${PILL_GAP}${p.text}${PILL_GAP}` : p.text))
+    .join('')
   const textWidth = fontWidth(font, slideText(slide))
   return {
     text,

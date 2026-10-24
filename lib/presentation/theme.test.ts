@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { slideStyles } from '@/lib/slide-styles'
-import { themes, toneInk, tones, type Theme } from './theme'
+import { pillThemes, themes, toneInk, tones, type Theme } from './theme'
 
 const LARGE_TEXT = 3
 const TEXT = 4.5
-const PILL: Theme[] = ['poster', 'marker']
 
 describe('tones', () => {
-  it.each(themes.filter(t => !PILL.includes(t)))(
+  it.each(themes.filter(t => !pillThemes.includes(t)))(
     'stand out at 3:1 as heading highlight and accent on the %s theme',
     theme => {
       const { mix, surfaces } = themeColors(theme)
@@ -24,7 +23,7 @@ describe('tones', () => {
     },
   )
 
-  it.each(PILL)('carry readable text on every tone on the %s theme', theme => {
+  it.each(pillThemes)('carry readable text on every tone on the %s theme', theme => {
     const ratios = tones.map(({ name, colors }) => ({
       name,
       ratio: contrast(rgb(toneInk(colors[theme])), rgb(colors[theme])),

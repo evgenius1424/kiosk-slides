@@ -3,6 +3,8 @@ import { setFrontMatter } from './front-matter'
 export const themes = ['room-dark', 'room-light', 'studio', 'paper', 'poster', 'marker'] as const
 export type Theme = (typeof themes)[number]
 
+export const pillThemes: Theme[] = ['poster', 'marker']
+
 export const tones = [
   tone('Mono', '#ffffff', '#000000', '#ffffff', '#1f1b16', '#ffffff', '#111111'),
   tone('Violet', '#a594ff', '#5b45d6', '#b9abff', '#5640c8', '#9d8cff', '#b6a8ff'),

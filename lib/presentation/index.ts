@@ -35,6 +35,7 @@ export {
   defaultFont,
   defaultTone,
   isTheme,
+  pillThemes,
   setPresentationTheme,
   themes,
   toneColor,

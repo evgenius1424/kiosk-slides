@@ -3,6 +3,7 @@ import {
   defaultLook,
   findFont,
   headingSize,
+  pillThemes,
   tableSize,
   textFit,
   toneInk,
@@ -10,6 +11,7 @@ import {
   type PresentationLook,
   type HeadingPart,
   type Slide,
+  type Theme,
 } from '@/lib/presentation'
 import { Inline } from './inline'
 import { Punctuated } from './punctuated'
@@ -19,6 +21,8 @@ export function HeadingText({ parts }: { parts: HeadingPart[] }) {
   return (
     <>
       {parts.map((part, i) => {
+        if (nextToHighlight(part, parts[i - 1], parts[i + 1]))
+          return <Fragment key={i}>{spaced(part, parts[i - 1], parts[i + 1])}</Fragment>
         let node: ReactNode = part.code ? <code>{part.text}</code> : <Punctuated text={part.text} />
         if (part.italic) node = <em>{node}</em>
         if (part.highlight) node = <strong>{node}</strong>
@@ -49,9 +53,10 @@ export function SlideView({
 }) {
   // `widgets` pairs each kind with its own component, so this lookup always matches `slide`.
   const Widget = widgets[slide.kind] as ComponentType<{ slide: Slide }> | null
-  const size = headingSize(slide, look)
-  const table = tableSize(slide, look)
-  const fit = textFit(slide, look)
+  const sizing = { ...look, pill: pillThemes.includes(theme as Theme) }
+  const size = headingSize(slide, sizing)
+  const table = tableSize(slide, sizing)
+  const fit = textFit(slide, sizing)
   const font = findFont(look.font)
   const style = {
     '--slide-tone': accent,
@@ -101,5 +106,22 @@ export function SlideView({
         )}
       </footer>
     </article>
+  )
+}
+
+function nextToHighlight(part: HeadingPart, before?: HeadingPart, after?: HeadingPart) {
+  return !part.highlight && !part.code && !part.url && !!(before?.highlight || after?.highlight)
+}
+
+function spaced(part: HeadingPart, before?: HeadingPart, after?: HeadingPart) {
+  const [, lead, text, trail] = /^(\s?)([\s\S]*?)(\s?)$/.exec(part.text)!
+  const node = <Punctuated text={text} />
+  const italic = part.italic ? <em>{node}</em> : node
+  return (
+    <>
+      {before?.highlight && lead === ' ' ? <span className="pill-gap"> </span> : lead}
+      {italic}
+      {after?.highlight && trail === ' ' ? <span className="pill-gap"> </span> : trail}
+    </>
   )
 }
