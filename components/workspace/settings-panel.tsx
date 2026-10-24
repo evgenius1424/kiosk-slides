@@ -8,6 +8,7 @@ import {
   DEFAULT_TRANSITION,
   transitions,
   type Transition,
+  defaultFont,
   defaultTone,
   fonts,
   scales,
@@ -91,11 +92,17 @@ export function SettingsPanel({
   }
   const setTone = (color: string) =>
     set('tone', color === defaultTone(theme) ? undefined : toneName(color, theme))
+  const setTheme = async (id: Theme) => {
+    const chosenFor = presentationId
+    await loadFonts()
+    if (latest.current.presentationId !== chosenFor) return
+    set('theme', id, latest.current.source)
+  }
   const setFont = async (id: string) => {
     const chosenFor = presentationId
     await loadFonts()
     if (latest.current.presentationId !== chosenFor) return
-    set('font', id === fonts[0].id ? undefined : id, latest.current.source)
+    set('font', id === defaultFont(theme) ? undefined : id, latest.current.source)
   }
   const setShareSafe = (next: boolean) => {
     player.resetSafe()
@@ -120,7 +127,7 @@ export function SettingsPanel({
         </label>
         <div className="select-wrap">
           <span className={`theme-swatch ${theme}`} />
-          <select id="theme" value={theme} onChange={e => set('theme', e.target.value as Theme)}>
+          <select id="theme" value={theme} onChange={e => void setTheme(e.target.value as Theme)}>
             {themes.map(id => (
               <option key={id} value={id}>
                 {t(`themes.${id}`)}

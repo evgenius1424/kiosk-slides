@@ -32,6 +32,7 @@ export {
   type Scale,
 } from './look'
 export {
+  defaultFont,
   defaultTone,
   isTheme,
   setPresentationTheme,
@@ -40,6 +41,7 @@ export {
   toneHint,
   toneName,
   tones,
+  toneInk,
   type Theme,
 } from './theme'
 export type { Presentation, Slide, SlideChrome, SlideKind, SlideOfKind } from './types'

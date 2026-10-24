@@ -78,7 +78,10 @@
     "themes": {
       "room-dark": "Dark",
       "room-light": "Light",
-      "studio": "Studio"
+      "studio": "Studio",
+      "paper": "Paper",
+      "poster": "Poster",
+      "marker": "Marker"
     },
     "toast": {
       "swipe": "Swipe to change slides",

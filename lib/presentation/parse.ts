@@ -8,7 +8,7 @@ import { headingLength, parseHeading } from './heading'
 import { terms } from './language'
 import { defaultLook, fontId, fonts, isScale, scales } from './look'
 import { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'
-import { defaultTone, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
+import { defaultFont, defaultTone, isTheme, themes, toneColor, toneHint, type Theme } from './theme'
 import { messages } from './components/shared'
 import type { Block } from './components/types'
 import type { Presentation, MessageWidget, Slide } from './types'
@@ -99,6 +99,7 @@ function parseFrontMatter(lines: string[]) {
   let loop = true
   let start = 0
   const look = defaultLook()
+  let font: string | undefined
   if (lines[0]?.trim() === '---') {
     const end = lines.findIndex((l, i) => i > 0 && l.trim() === '---')
     if (end < 0) failAt(1, 'close the front matter with ---')
@@ -110,7 +111,7 @@ function parseFrontMatter(lines: string[]) {
     const themeField = field('theme')
     if (isTheme(themeField.value)) theme = themeField.value
     else if (themeField.value)
-      failAt(themeField.line, `Unknown theme “${themeField.value}”. Use ${themes.join(' or ')}.`)
+      failAt(themeField.line, `Unknown theme “${themeField.value}”. Use ${themes.join(', ')}.`)
     const toneField = field('tone')
     if (toneField.value)
       tone =
@@ -134,11 +135,14 @@ function parseFrontMatter(lines: string[]) {
       credit = creditField.value === 'true'
     else if (creditField.value)
       failAt(creditField.line, `Set credit to true or false, not “${creditField.value}”.`)
-    const font = field('font')
-    if (font.value)
-      look.font =
-        fontId(font.value) ??
-        failAt(font.line, `Unknown font “${font.value}”. Use ${fonts.map(f => f.id).join(', ')}.`)
+    const fontField = field('font')
+    if (fontField.value)
+      font =
+        fontId(fontField.value) ??
+        failAt(
+          fontField.line,
+          `Unknown font “${fontField.value}”. Use ${fonts.map(f => f.id).join(', ')}.`,
+        )
     const scale = field('scale')
     if (isScale(scale.value)) look.scale = scale.value
     else if (scale.value)
@@ -159,6 +163,7 @@ function parseFrontMatter(lines: string[]) {
     start = end + 1
   }
   if (!tone) tone = defaultTone(theme)
+  look.font = font ?? defaultFont(theme)
   return { title, theme, tone, transition, shareSafe, credit, duration, loop, start, look }
 }
 

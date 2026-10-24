@@ -72,7 +72,7 @@ Slides today are mostly seen through a video call or on a TV across a table. Kio
 - **Ask AI.** Chat with ChatGPT using your own ChatGPT plan, and watch the slides appear. Sign-in runs on your own computer, so your account never touches a server.
 - **Free AI draft.** On the hosted site, describe your talk and get one AI-written draft a day, while a small shared monthly allowance lasts. Your request is sent to Anthropic to write it, and the site keeps no copy. When the allowance runs out, copy the prompt into any AI instead.
 - **Use any AI.** Copy the ready-made prompt into Gemini, ChatGPT, Claude or anything else, then paste the slides it writes.
-- **Dark, light and studio themes** in black and white, or with a Violet, Coral, Teal or Amber tone tuned to each theme.
+- **Six themes**: dark, light and studio, plus paper (a warm serif page), poster (the tone fills the slide) and marker (key words in a colored pill). Each comes in black and white or with a Violet, Coral, Teal or Amber tone tuned to it.
 - **Fonts** including Inter, Figtree, Bricolage Grotesque, Space Grotesk, Archivo Expanded and Golos Text, each with Cyrillic letters.
 - **Your brand** in the corner of every slide, or nothing at all.
 - **Present anywhere**, including from a phone held sideways, with swipe and tap.
