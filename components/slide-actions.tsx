@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { useTranslations } from 'next-intl'
 import {
+  ArrowDown,
+  ArrowUp,
   Copy,
+  CopyPlus,
   Heading1,
   Minimize2,
   PieChart,
@@ -151,13 +154,19 @@ export function SlideActionBar({
 export function SlideActionMenu({
   at,
   onAction,
+  count,
   onAdd,
+  onDuplicate,
+  onMove,
   onDelete,
   onClose,
 }: {
   at: { x: number; y: number; index: number }
+  count: number
   onAction?: (action: SlideAction, index: number) => void
   onAdd: (index: number) => void
+  onDuplicate: (index: number) => void
+  onMove: (from: number, to: number) => void
   onDelete?: (index: number) => void
   onClose: () => void
 }) {
@@ -226,6 +235,40 @@ export function SlideActionMenu({
         <Plus size={14} />
         {t('add')}
       </button>
+      <button
+        role="menuitem"
+        onClick={() => {
+          onClose()
+          onDuplicate(at.index)
+        }}
+      >
+        <CopyPlus size={14} />
+        {t('duplicate')}
+      </button>
+      {at.index > 0 && (
+        <button
+          role="menuitem"
+          onClick={() => {
+            onClose()
+            onMove(at.index, at.index - 1)
+          }}
+        >
+          <ArrowUp size={14} />
+          {t('moveUp')}
+        </button>
+      )}
+      {at.index < count - 1 && (
+        <button
+          role="menuitem"
+          onClick={() => {
+            onClose()
+            onMove(at.index, at.index + 1)
+          }}
+        >
+          <ArrowDown size={14} />
+          {t('moveDown')}
+        </button>
+      )}
       {onDelete && (
         <button
           role="menuitem"

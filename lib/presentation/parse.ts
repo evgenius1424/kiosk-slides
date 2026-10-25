@@ -88,6 +88,21 @@ export function removeSlide(source: string, index: number) {
   return [...lines.slice(0, from), ...lines.slice(to)].join('\n')
 }
 
+export function moveSlide(source: string, from: number, to: number) {
+  const ranges = slideRanges(source)
+  const missing = [from, to].find(i => !ranges[i])
+  if (missing !== undefined) throw new Error(`There is no slide ${missing + 1}.`)
+  const lines = source.replace(/\r/g, '').split('\n')
+  const texts = ranges.map(r => lines.slice(r.start, r.end))
+  texts.splice(to, 0, ...texts.splice(from, 1))
+  return ranges
+    .reduceRight(
+      (next, range, i) => [...next.slice(0, range.start), ...texts[i], ...next.slice(range.end)],
+      lines,
+    )
+    .join('\n')
+}
+
 function parseFrontMatter(lines: string[]) {
   let title = UNTITLED
   let theme: Theme = 'room-dark'
