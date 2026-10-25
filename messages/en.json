@@ -93,6 +93,8 @@
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
       "slideAdded": "Slide {number} added · change its words in Edit",
       "slideDeleted": "Slide {number} deleted",
+      "slideDuplicated": "Slide {number} duplicated",
+      "slideMoved": "Slide moved to {number}",
       "lastSlide": "A presentation needs at least one slide",
       "tidied": "Text cleaned up",
       "pasted": "Pasted as “{name}”",
@@ -105,7 +107,9 @@
       "kept": "{name} added to your saved presentations",
       "changed": "{count, plural, one {Slide {number} changed} other {Slide {number} is now # slides}}",
       "undone": "Back to the previous version",
-      "nothingToUndo": "Nothing to undo"
+      "nothingToUndo": "Nothing to undo",
+      "redone": "Change redone",
+      "nothingToRedo": "Nothing to redo"
     },
     "shared": {
       "label": "Share link",
@@ -294,8 +298,24 @@
         "keys": "Ctrl / ⌘ S"
       },
       "undo": {
-        "name": "Undo the last AI change or paste",
+        "name": "Undo a slide change, AI change or paste",
         "keys": "Ctrl / ⌘ Z"
+      },
+      "redo": {
+        "name": "Redo what you undid",
+        "keys": "Ctrl / ⌘ ⇧ Z"
+      },
+      "addSlide": {
+        "name": "Add a slide after the selected one",
+        "keys": "Ctrl / ⌘ Enter"
+      },
+      "duplicateSlide": {
+        "name": "Duplicate the selected slide",
+        "keys": "Ctrl / ⌘ D"
+      },
+      "moveSlide": {
+        "name": "Move the selected slide in the slide list, or drag it",
+        "keys": "Ctrl / ⌘ ↑ / ↓"
       },
       "deleteSlide": {
         "name": "Delete the selected slide in the slide list",
@@ -523,6 +543,9 @@
     "label": "Change this slide with AI",
     "menu": "Slide {number} actions",
     "add": "Add a slide after",
+    "duplicate": "Duplicate slide",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
     "delete": "Delete slide",
     "working": "Changing this slide…",
     "copied": "Prompt copied · paste it into any AI chat",

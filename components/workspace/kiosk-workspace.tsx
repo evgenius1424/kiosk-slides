@@ -6,10 +6,12 @@ import { Keyboard } from 'lucide-react'
 import {
   formatPresentation,
   insertSlide,
+  moveSlide,
   parsePresentation,
   presentationLook,
   removeSlide,
   slideLines,
+  slideSource,
 } from '@/lib/presentation'
 import { slideFromHash, type PlayerAction } from '@/lib/player'
 import { blankPresentation } from '@/lib/presentations'
@@ -35,7 +37,7 @@ import { Toast, useToast } from './toast'
 import { useDownload } from './use-download'
 import { useLibrary, usePasteAnywhere } from './use-library'
 import { usePlayer, useSlideHash } from './use-player'
-import { useShortcuts } from './use-shortcuts'
+import { useShortcuts, type SlideKey } from './use-shortcuts'
 import { useVersions } from './use-versions'
 import { EditorToolbar, WorkspaceHeader, type Tab } from './workspace-header'
 
@@ -105,12 +107,20 @@ export function KioskWorkspace({
     notice,
   })
   const closeSlideMenu = useCallback(() => setSlideMenu(null), [])
+  const restore = (text: string, message: string) => {
+    live.replace(text)
+    setIndex(i => Math.min(i, Math.max(0, slideLines(text).length - 1)))
+    notice(message)
+  }
   const undo = () => {
     const previous = versions.undo(current.id, source)
     if (previous === null) return notice(t('toast.nothingToUndo'))
-    live.replace(previous)
-    setIndex(i => Math.min(i, Math.max(0, slideLines(previous).length - 1)))
-    notice(t('toast.undone'))
+    restore(previous, t('toast.undone'))
+  }
+  const redo = () => {
+    const next = versions.redo(current.id, source)
+    if (next === null) return notice(t('toast.nothingToRedo'))
+    restore(next, t('toast.redone'))
   }
   const undoAction = { label: t('toast.undo'), run: () => undoRef.current() }
   const undoRef = useRef(undo)
@@ -144,10 +154,30 @@ export function KioskWorkspace({
     const next = Math.min(i, slides.length - 2)
     go(next)
     notice(t('toast.slideDeleted', { number: i + 1 }), undoAction)
-    if (document.activeElement?.closest('.slide-list'))
-      requestAnimationFrame(() =>
-        document.querySelectorAll<HTMLElement>('.slide-nav')[next]?.focus({ preventScroll: true }),
-      )
+    keepListFocus(next)
+  }
+  const duplicateSlide = (i: number) => {
+    versions.remember(current.id, source)
+    live.replace(insertSlide(source, i, slideSource(source, i)))
+    go(i + 1)
+    notice(t('toast.slideDuplicated', { number: i + 1 }), undoAction)
+    keepListFocus(i + 1)
+  }
+  const moveSlideTo = (from: number, to: number) => {
+    if (to === from || to < 0 || to >= slides.length) return
+    versions.remember(current.id, source)
+    live.replace(moveSlide(source, from, to))
+    go(to)
+    notice(t('toast.slideMoved', { number: to + 1 }), undoAction)
+    keepListFocus(to)
+  }
+  const slideKey = (key: SlideKey) => {
+    if (shared) return
+    if (key === 'add') return addSlide(error ? Infinity : at)
+    if (error) return
+    if (key === 'duplicate') duplicateSlide(at)
+    if (key === 'up') moveSlideTo(at, at - 1)
+    if (key === 'down') moveSlideTo(at, at + 1)
   }
   const select = (i: number) => {
     go(i)
@@ -262,6 +292,10 @@ export function KioskWorkspace({
     onUndo: () => {
       if (!shared) undoRef.current()
     },
+    onRedo: () => {
+      if (!shared) redo()
+    },
+    onSlide: slideKey,
     onPlayer: playerKey,
   })
   function show(value: string, hash = '') {
@@ -307,6 +341,7 @@ export function KioskWorkspace({
           readOnly={!!shared}
           onSelect={select}
           onDelete={deleteSlide}
+          onMove={moveSlideTo}
           onMenu={setSlideMenu}
           onAdd={() => addSlide(error ? Infinity : at)}
           onHide={() => setSidebar(false)}
@@ -416,7 +451,10 @@ export function KioskWorkspace({
                   }
                 : undefined
             }
+            count={slides.length}
             onAdd={addSlide}
+            onDuplicate={duplicateSlide}
+            onMove={moveSlideTo}
             onDelete={slides.length > 1 ? deleteSlide : undefined}
             onClose={closeSlideMenu}
           />
@@ -460,6 +498,13 @@ export function KioskWorkspace({
         />
       )}
     </>
+  )
+}
+
+function keepListFocus(index: number) {
+  if (!document.activeElement?.closest('.slide-list')) return
+  requestAnimationFrame(() =>
+    document.querySelectorAll<HTMLElement>('.slide-nav')[index]?.focus({ preventScroll: true }),
   )
 }
 

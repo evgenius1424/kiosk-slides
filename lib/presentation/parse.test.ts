@@ -6,6 +6,7 @@ import {
   setPresentationTheme,
   setFrontMatter,
   insertSlide,
+  moveSlide,
   removeSlide,
   replaceSlide,
   slideLines,
@@ -1037,6 +1038,33 @@ describe('replaceSlide', () => {
 
   it('refuses a slide that is not there', () => {
     expect(() => replaceSlide(source, 5, '# Five')).toThrow('There is no slide 6.')
+  })
+})
+
+describe('moveSlide', () => {
+  const source =
+    '---\ntitle: T\n---\n\n# One\n\nWordy text.\n\n---\n\n# Two\n\n---\n\n```\n---\n```\n# Three\n'
+  const [one, two, three] = [0, 1, 2].map(i => slideSource(source, i))
+  const order = (text: string) => [0, 1, 2].map(i => slideSource(text, i))
+
+  it('moves a slide down and up and keeps the separators', () => {
+    expect(order(moveSlide(source, 0, 2))).toEqual([two, three, one])
+    expect(order(moveSlide(source, 2, 0))).toEqual([three, one, two])
+    expect(moveSlide(source, 0, 1)).toBe(
+      source.replace(
+        '# One\n\nWordy text.\n\n---\n\n# Two',
+        '# Two\n\n---\n\n# One\n\nWordy text.',
+      ),
+    )
+  })
+
+  it('moves back to the same text', () => {
+    expect(moveSlide(moveSlide(source, 0, 2), 2, 0)).toBe(source)
+    expect(moveSlide(source, 1, 1)).toBe(source)
+  })
+
+  it('refuses a slide that is not there', () => {
+    expect(() => moveSlide(source, 0, 3)).toThrow('There is no slide 4.')
   })
 })
 
