@@ -15,6 +15,7 @@ export { headingText, type HeadingPart } from './heading'
 export { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'
 export {
   DEFAULT_BRAND,
+  PILL_LINE_HEIGHT,
   presentationLook,
   defaultLook,
   findFont,

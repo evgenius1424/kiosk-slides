@@ -66,6 +66,7 @@ export const fonts: Font[] = [
 ]
 
 export const DEFAULT_BRAND = 'kiosk'
+export const PILL_LINE_HEIGHT = 1.2
 export const defaultLook = (): PresentationLook => ({
   font: fonts[0].id,
   scale: 'normal',
@@ -94,9 +95,10 @@ export const fontFace = ({ family, weights, script, italic }: FontFile, src: str
 export const hasCyrillic = (text: string) => CYRILLIC.test(text)
 
 export function headingSize(slide: SizedSlide, { scale, font, pill }: Sizing): number | undefined {
-  if (scale === 'normal') return undefined
-  const box = boxes[scale]
+  if (scale === 'normal' && !pill) return undefined
+  const box = sizedBox(scale, pill)
   const { text, charWidth, textWidth, body } = measure(slide, box, font, pill)
+  if (scale === 'normal') return normalPillHeading(slide, box, text, charWidth, textWidth)
   if (slide.kind === 'message') {
     const height = box.height - body
     return fit(
@@ -125,14 +127,14 @@ export function headingSize(slide: SizedSlide, { scale, font, pill }: Sizing): n
     charWidth,
     width,
     box.widget,
-    MIN_HEADING,
+    pill ? MIN_PILL_HEADING : MIN_HEADING,
     (lines, size) => lines <= most && lines * box.lineHeight * size <= height,
   )
 }
 
 export function tableSize(slide: SizedSlide, { scale, font, pill }: Sizing): number | undefined {
   if (slide.kind !== 'table') return undefined
-  const box = boxes[scale]
+  const box = sizedBox(scale, pill)
   const { text, charWidth, textWidth, body } = measure(slide, box, font, pill)
   const room = box.room - CLEARANCE - body - headingHeight(text, charWidth, box, MIN_HEADING)
   for (let size = TABLE_TEXT; size > MIN_TABLE_TEXT; size = round(size - 0.05)) {
@@ -144,16 +146,12 @@ export function tableSize(slide: SizedSlide, { scale, font, pill }: Sizing): num
 
 export function textFit(slide: SizedSlide, { scale, font, pill }: Sizing): number | undefined {
   if (slide.kind === 'code' || slide.kind === 'table') return undefined
-  const box = boxes[scale]
+  const box = sizedBox(scale, pill)
   const { text, charWidth, textWidth } = measure(slide, box, font, pill)
   const size =
     headingSize(slide, { scale, font, pill }) ?? NORMAL_HEADING[slide.kind] ?? MIN_HEADING
   const room = box.room - CLEARANCE - headingHeight(text, charWidth, box, size)
-  const height = (fit: number) =>
-    bodyHeight(slide.body, box, textWidth, fit) +
-    (slide.kind === 'message'
-      ? 0
-      : WIDGET_GAP + widgetHeight(slide, scaled(box.text, fit), textWidth))
+  const height = (fit: number) => contentHeight(slide, box, textWidth, fit)
   if (height(1) <= room || height(MIN_TEXT_FIT) === height(1)) return undefined
   for (let fit = 0.95; fit > MIN_TEXT_FIT; fit = round(fit - 0.05))
     if (height(fit) <= room) return fit
@@ -185,6 +183,8 @@ const CLEARANCE = 1.5
 const HEADING_CHAR = 0.85
 const MIN_TEXT_FIT = 0.6
 const PILL_GAP = '_'
+const MIN_PILL_HEADING = 4
+const PILL_ROOM = 0.6
 
 const NORMAL_HEADING: Partial<Record<SizedSlide['kind'], number>> = {
   message: 6.5,
@@ -226,6 +226,42 @@ const boxes = {
     body: 2.7,
     text: { width: 92, gap: 1, list: 2.6, quote: 3.6, small: 2.4, caption: 3 },
   },
+}
+
+function normalPillHeading(
+  slide: SizedSlide,
+  box: Box,
+  text: string,
+  charWidth: number,
+  textWidth: number,
+) {
+  if (slide.kind === 'code' || slide.kind === 'table') return undefined
+  const start = NORMAL_HEADING[slide.kind] ?? MIN_HEADING
+  const below = contentHeight(slide, box, textWidth, MIN_TEXT_FIT)
+  for (let size = start; size > MIN_PILL_HEADING; size -= 0.25)
+    if (headingHeight(text, charWidth, box, size) + below <= box.room - CLEARANCE)
+      return size === start ? undefined : size
+  return MIN_PILL_HEADING
+}
+
+function contentHeight(slide: SizedSlide, box: Box, textWidth: number, fit: number) {
+  return (
+    bodyHeight(slide.body, box, textWidth, fit) +
+    (slide.kind === 'message'
+      ? 0
+      : WIDGET_GAP + widgetHeight(slide, scaled(box.text, fit), textWidth))
+  )
+}
+
+function sizedBox(scale: Scale, pill?: boolean): Box {
+  const box = boxes[scale]
+  if (!pill) return box
+  return {
+    ...box,
+    lineHeight: PILL_LINE_HEIGHT,
+    height: box.height - PILL_ROOM,
+    room: box.room - PILL_ROOM,
+  }
 }
 
 function measure(slide: SizedSlide, box: Box, font: string, pill?: boolean) {

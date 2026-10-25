@@ -17,11 +17,12 @@ import { Inline } from './inline'
 import { Punctuated } from './punctuated'
 import { widgets } from './widgets'
 
-export function HeadingText({ parts }: { parts: HeadingPart[] }) {
+export function HeadingText({ parts, pill = false }: { parts: HeadingPart[]; pill?: boolean }) {
+  if (pill) parts = pillParts(parts)
   return (
     <>
       {parts.map((part, i) => {
-        if (nextToHighlight(part, parts[i - 1], parts[i + 1]))
+        if (pill && nextToHighlight(part, parts[i - 1], parts[i + 1]))
           return <Fragment key={i}>{spaced(part, parts[i - 1], parts[i + 1])}</Fragment>
         let node: ReactNode = part.code ? <code>{part.text}</code> : <Punctuated text={part.text} />
         if (part.italic) node = <em>{node}</em>
@@ -53,7 +54,8 @@ export function SlideView({
 }) {
   // `widgets` pairs each kind with its own component, so this lookup always matches `slide`.
   const Widget = widgets[slide.kind] as ComponentType<{ slide: Slide }> | null
-  const sizing = { ...look, pill: pillThemes.includes(theme as Theme) }
+  const pill = pillThemes.includes(theme as Theme)
+  const sizing = { ...look, pill }
   const size = headingSize(slide, sizing)
   const table = tableSize(slide, sizing)
   const fit = textFit(slide, sizing)
@@ -68,7 +70,7 @@ export function SlideView({
   } as React.CSSProperties
   return (
     <article
-      className={`slide ${theme} font-${font.id} kind-${slide.kind} scale-${look.scale} ${miniature ? 'miniature' : ''}`}
+      className={`slide ${theme} font-${font.id} kind-${slide.kind} scale-${look.scale} ${size ? 'heading-fit' : ''} ${miniature ? 'miniature' : ''}`}
       style={style}
     >
       <header className="slide-meta">
@@ -81,7 +83,7 @@ export function SlideView({
       <div className="slide-content">
         <div className="slide-message">
           <h2>
-            <HeadingText parts={slide.heading} />
+            <HeadingText parts={slide.heading} pill={pill} />
           </h2>
           {slide.body && (
             <p className="slide-body">
@@ -109,18 +111,40 @@ export function SlideView({
   )
 }
 
+function pillParts(parts: HeadingPart[]) {
+  const pieces = parts.map(part => ({ ...part }))
+  pieces.forEach((part, i) => {
+    if (!part.highlight) return
+    const before = pieces[i - 1]
+    const after = pieces[i + 1]
+    if (plain(before)) {
+      const [, rest, word] = /^([\s\S]*?)(\S*)$/.exec(before.text)!
+      before.text = rest
+      part.text = word + part.text
+    }
+    if (plain(after)) {
+      const [, word, rest] = /^(\S*)([\s\S]*)$/.exec(after.text)!
+      after.text = rest
+      part.text += word
+    }
+  })
+  return pieces.filter(part => part.text)
+}
+
+function plain(part?: HeadingPart): part is HeadingPart {
+  return !!part && !part.highlight && !part.code && !part.url && !part.italic
+}
+
 function nextToHighlight(part: HeadingPart, before?: HeadingPart, after?: HeadingPart) {
-  return !part.highlight && !part.code && !part.url && !!(before?.highlight || after?.highlight)
+  return plain(part) && !!(before?.highlight || after?.highlight)
 }
 
 function spaced(part: HeadingPart, before?: HeadingPart, after?: HeadingPart) {
   const [, lead, text, trail] = /^(\s?)([\s\S]*?)(\s?)$/.exec(part.text)!
-  const node = <Punctuated text={text} />
-  const italic = part.italic ? <em>{node}</em> : node
   return (
     <>
       {before?.highlight && lead === ' ' ? <span className="pill-gap"> </span> : lead}
-      {italic}
+      <Punctuated text={text} />
       {after?.highlight && trail === ' ' ? <span className="pill-gap"> </span> : trail}
     </>
   )

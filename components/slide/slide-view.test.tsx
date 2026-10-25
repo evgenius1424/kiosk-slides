@@ -26,15 +26,21 @@ describe('SlideView', () => {
     expect(article.querySelector('.slide-footer')?.textContent).toContain('Footer')
   })
 
-  it('marks the spaces around a highlight so pill themes can widen them', () => {
-    const article = view({
-      ...chrome,
-      kind: 'message',
-      heading: [{ text: 'Make ' }, { text: 'it', highlight: true }, { text: ' count' }],
-    })
-    const h2 = article.querySelector('h2')!
-    expect(h2.querySelectorAll('.pill-gap')).toHaveLength(2)
-    expect(h2.textContent).toBe('Make it count')
+  it('keeps punctuation inside a pill and marks the spaces beside it', () => {
+    const heading: SlideChrome['heading'] = [
+      { text: 'Make (' },
+      { text: 'it', highlight: true },
+      { text: '), then count' },
+    ]
+    const pill = render(
+      <SlideView slide={{ ...chrome, kind: 'message', heading }} theme="marker" />,
+    ).container.querySelector('h2')!
+    expect(pill.querySelector('strong')?.textContent).toBe('(it),')
+    expect(pill.querySelectorAll('.pill-gap')).toHaveLength(2)
+    expect(pill.textContent).toBe('Make (it), then count')
+    const plain = view({ ...chrome, kind: 'message', heading }).querySelector('h2')!
+    expect(plain.querySelector('strong')?.textContent).toBe('it')
+    expect(plain.querySelector('.pill-gap')).toBeNull()
   })
 
   it('keeps heading punctuation clear of the tight letter spacing', () => {

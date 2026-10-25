@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { slideStyles } from '@/lib/slide-styles'
+import { fonts } from './look'
 import { pillThemes, themes, toneInk, tones, type Theme } from './theme'
 
 const LARGE_TEXT = 3
@@ -42,6 +43,11 @@ describe('tones', () => {
   })
 })
 
+describe('pill highlights', () => {
+  it.each(fonts.map(f => f.id))('sit on the letters in the %s font', id => {
+    expect(slideStyles).toContain(`.slide.font-${id}{--pill-shift:`)
+  })
+})
 type Rgb = [number, number, number]
 
 function themeColors(theme: Theme) {
