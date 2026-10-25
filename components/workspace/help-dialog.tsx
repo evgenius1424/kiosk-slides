@@ -19,6 +19,10 @@ const SHORTCUTS = [
   'ends',
   'tidy',
   'undo',
+  'redo',
+  'addSlide',
+  'duplicateSlide',
+  'moveSlide',
   'deleteSlide',
 ] as const
 
