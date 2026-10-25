@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import {
   editSource,
   expect,
@@ -102,3 +103,31 @@ test('adds a slide with the keyboard', async ({ page }) => {
     'New slide',
   )
 })
+
+test('keeps the selected slide outline inside the slide list', async ({ page }) => {
+  const many = Array.from({ length: 12 }, (_, i) => `# Slide ${i + 1}`).join('\n\n---\n\n')
+  await page.setViewportSize({ width: 1280, height: 600 })
+  await editSource(page, `${many}\n`)
+  await expect(slideList(page)).toHaveCount(12)
+  await slideList(page).first().focus()
+  for (const key of ['Home', 'ArrowDown', 'End', 'ArrowUp']) {
+    await page.keyboard.press(key)
+    expect(await outlineOverflow(page)).toBe(0)
+  }
+})
+
+async function outlineOverflow(page: Page) {
+  return page.locator('.slide-nav:focus-visible').evaluate(item => {
+    const style = getComputedStyle(item)
+    const ring = parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset)
+    const box = item.getBoundingClientRect()
+    const list = item.parentElement!.getBoundingClientRect()
+    return Math.max(
+      0,
+      list.top - (box.top - ring),
+      box.bottom + ring - list.bottom,
+      list.left - (box.left - ring),
+      box.right + ring - list.right,
+    )
+  })
+}
