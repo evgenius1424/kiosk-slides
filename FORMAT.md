@@ -22,13 +22,13 @@ loop: true
 
 - **Front matter** (optional) goes between `---` lines at the very top of the file:
   - `title:` is the presentation title (default `Untitled presentation`).
-  - `theme:` is `room-dark` (default), `room-light`, or `studio`, a true-black stage lit from above.
-  - `tone:` is the color of the background glow and highlighted heading words: `mono` (default, black and white), `violet`, `coral`, `teal`, `amber`, or a `#hex` color. Each named tone has its own shade for each theme, so it always reads well against that background.
+  - `theme:` is `room-dark` (default), `room-light`, `studio` (a true-black stage lit from above), `paper` (warm paper with a serif and italic highlights), `poster` (the tone fills the whole slide, highlighted words sit in a pill), or `marker` (light slides where highlighted words sit in a pill of the tone). `paper` starts in Literata, `poster` in Archivo Expanded and `marker` in Inter; `font:` still picks any font.
+  - `tone:` is the color of the background glow and highlighted heading words: `mono` (default, black and white), `violet`, `coral`, `teal`, `amber`, or a `#hex` color. Each named tone has its own shade for each theme, so it always reads well against that background. `paper` and `poster` start in `coral` and `marker` in `amber`. Text on a tone, such as a pill or the whole `poster` slide, is black or white, whichever reads better.
   - `transition:` is `gentle` (default), `fade`, `slide`, or `none`.
   - `share-safe: true` swaps every transition for a quick flat fade that stays sharp over screen sharing. It is off by default.
   - `duration: Ns` is the autoplay time per slide in seconds. The default is 12, and it is clamped to 2–120.
   - `loop: false` stops autoplay at the end. Looping is on by default.
-  - `font:` is `classic` (default, Arial), `inter`, `figtree`, `bricolage-grotesque`, `space-grotesk`, `archivo-expanded`, or `golos-text`. The font's name works too, like `Space Grotesk`. Every font also covers Russian and other Cyrillic text.
+  - `font:` is `classic` (default for the first three themes, Arial), `inter`, `figtree`, `bricolage-grotesque`, `space-grotesk`, `archivo-expanded`, `golos-text`, or `literata`, a book serif. The font's name works too, like `Space Grotesk`. Every font also covers Russian and other Cyrillic text.
   - `scale:` is `normal` (default), `large`, or `hero`. `large` and `hero` size every heading to its length, so a one-word slide fills the screen and a long one still fits, and `hero` also enlarges the body and makes every heading, widget slides included, as large as the frame allows.
   - `brand:` is the word in the corner of every slide, at most 24 characters. The default is `kiosk`; `none` hides it.
   - `credit: false` drops the “Made with Kiosk Slides” line from the end of a downloaded presentation and from share links. It never appears on a slide. It is on by default.

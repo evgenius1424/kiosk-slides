@@ -16,6 +16,7 @@ export { headingText, type HeadingPart } from './heading'
 export { DEFAULT_TRANSITION, isTransition, transitions, type Transition } from './transition'
 export {
   DEFAULT_BRAND,
+  PILL_LINE_HEIGHT,
   presentationLook,
   defaultLook,
   findFont,
@@ -33,14 +34,17 @@ export {
   type Scale,
 } from './look'
 export {
+  defaultFont,
   defaultTone,
   isTheme,
+  pillThemes,
   setPresentationTheme,
   themes,
   toneColor,
   toneHint,
   toneName,
   tones,
+  toneInk,
   type Theme,
 } from './theme'
 export type { Presentation, Slide, SlideChrome, SlideKind, SlideOfKind } from './types'

@@ -56,6 +56,21 @@ describe('headingSize', () => {
       headingSize(slide(text), { scale: 'hero', font: 'inter' })!,
     )
   })
+  it('leaves room for the gaps around a pill highlight', () => {
+    const highlighted = {
+      ...slide(''),
+      heading: [
+        { text: 'Make ' },
+        { text: 'Ship', highlight: true },
+        { text: ' count' },
+      ] as HeadingPart[],
+    }
+    const hero = { scale: 'hero', font: 'inter' } as const
+    expect(headingSize(highlighted, { ...hero, pill: true })).toBeLessThan(
+      headingSize(highlighted, hero)!,
+    )
+  })
+
   it('shrinks a widget heading until the widget fits below it', () => {
     const text = 'Not every flour comes from wheat'
     const hero = { scale: 'hero', font: 'inter' } as const

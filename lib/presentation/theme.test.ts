@@ -1,25 +1,53 @@
 import { describe, expect, it } from 'vitest'
 import { slideStyles } from '@/lib/slide-styles'
-import { themes, tones, type Theme } from './theme'
+import { fonts } from './look'
+import { pillThemes, themes, toneInk, tones, type Theme } from './theme'
 
 const LARGE_TEXT = 3
+const TEXT = 4.5
 
 describe('tones', () => {
-  it.each(themes)('stand out at 3:1 as heading highlight and accent on the %s theme', theme => {
-    const { mix, surfaces } = themeColors(theme)
-    const ratios = tones.flatMap(({ name, colors }) => {
-      const tone = rgb(colors[theme])
-      const highlight = mixOklab(tone, mix.with, mix.amount)
-      return surfaces.flatMap(surface => {
-        const flat = mixSrgb(surface, tone, 0.95)
-        const corner = mixSrgb(tone, flat, 0.16)
-        return [flat, corner].map(back => ({ name, ratio: contrast(highlight, back) }))
+  it.each(themes.filter(t => !pillThemes.includes(t)))(
+    'stand out at 3:1 as heading highlight and accent on the %s theme',
+    theme => {
+      const { mix, surfaces } = themeColors(theme)
+      const ratios = tones.flatMap(({ name, colors }) => {
+        const tone = rgb(colors[theme])
+        const highlight = mixOklab(tone, mix.with, mix.amount)
+        return surfaces.flatMap(surface => {
+          const flat = mixSrgb(surface, tone, 0.95)
+          const corner = mixSrgb(tone, flat, 0.16)
+          return [flat, corner].map(back => ({ name, ratio: contrast(highlight, back) }))
+        })
       })
-    })
-    expect(ratios.filter(r => r.ratio < LARGE_TEXT)).toEqual([])
+      expect(ratios.filter(r => r.ratio < LARGE_TEXT)).toEqual([])
+    },
+  )
+
+  it.each(pillThemes)('carry readable text on every tone on the %s theme', theme => {
+    const ratios = tones.map(({ name, colors }) => ({
+      name,
+      ratio: contrast(rgb(toneInk(colors[theme])), rgb(colors[theme])),
+    }))
+    expect(ratios.filter(r => r.ratio < TEXT)).toEqual([])
+  })
+
+  it('picks black or white text for any color', () => {
+    expect(['#ffd23f', '#ffffff', '#2fd4a7', '#1f4fd8', '#000'].map(toneInk)).toEqual([
+      '#111111',
+      '#111111',
+      '#111111',
+      '#ffffff',
+      '#ffffff',
+    ])
   })
 })
 
+describe('pill highlights', () => {
+  it.each(fonts.map(f => f.id))('sit on the letters in the %s font', id => {
+    expect(slideStyles).toContain(`.slide.font-${id}{--pill-shift:`)
+  })
+})
 type Rgb = [number, number, number]
 
 function themeColors(theme: Theme) {

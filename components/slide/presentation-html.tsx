@@ -91,6 +91,9 @@ const PAGE_BACKGROUNDS: Record<Theme, string> = {
   'room-dark': '#121214',
   'room-light': '#fafafa',
   studio: '#000000',
+  paper: '#f3ede1',
+  poster: '#111111',
+  marker: '#f6f6f3',
 }
 
 const pageStyles = (theme: Theme) =>
