@@ -31,6 +31,7 @@ loop: true
   - `font:` is `classic` (default, Arial), `inter`, `figtree`, `bricolage-grotesque`, `space-grotesk`, `archivo-expanded`, or `golos-text`. The font's name works too, like `Space Grotesk`. Every font also covers Russian and other Cyrillic text.
   - `scale:` is `normal` (default), `large`, or `hero`. `large` and `hero` size every heading to its length, so a one-word slide fills the screen and a long one still fits, and `hero` also enlarges the body and makes every heading, widget slides included, as large as the frame allows.
   - `brand:` is the word in the corner of every slide, at most 24 characters. The default is `kiosk`; `none` hides it.
+  - `language:` is `en` (default) or `ru`. It sets the words the slides add themselves, like the before / after labels and the placeholder label, and tells browsers and screen readers which language the slides are in.
   - `credit: false` drops the “Made with Kiosk Slides” line from the end of a downloaded presentation and from share links. It never appears on a slide. It is on by default.
 - **Slides** are separated by a line containing only `---`. A `---` line inside a ```` ``` ```` code fence does not split slides.
 - A presentation has 1–40 slides. Prefer 5–12.
@@ -185,7 +186,7 @@ Cells keep their inline Markdown as written.
 | Dense slides nobody can read | One headline, seen from across the room |
 ````
 
-This is a single comparison. A second body row is an error, so use a plain table for more rows.
+This is a single comparison. A second body row is an error, so use a plain table for more rows. The header can also be in the presentation's language, like `| До | После |`; the labels on the slide follow `language:` either way.
 
 ### Chart
 
@@ -251,7 +252,7 @@ The first line is the bold value (`**…**` or `__…__`). The caption is on the
 
 The parser accepts a slide with no settings comment and no widget, but the result looks unfinished: every such slide shows the same placeholder slide title and label, no footer, and a wall of headings. Treat these rules as strictly as the grammar above.
 
-- **Front matter.** Always set `title:`. Set `brand:` to the organization, product or event in one or two words when you know it. Set `tone:` only when the talk suggests a mood (`teal` calm, `coral` warm, `violet` creative, `amber` classic), and leave `transition:` and `share-safe:` to the person presenting.
+- **Front matter.** Always set `title:`. Set `brand:` to the organization, product or event in one or two words when you know it. Set `language: ru` when the presentation is in Russian, and leave it out for English. Set `tone:` only when the talk suggests a mood (`teal` calm, `coral` warm, `violet` creative, `amber` classic), and leave `transition:` and `share-safe:` to the person presenting.
 - **Every slide starts with a slide settings comment holding `title`, `label` and `footer`.** No exceptions, the first and last slides included.
   - `title`, the slide title, names the part of the talk in one to three words (`Problem`, `Plan`, `Results`), shown top left.
   - `label` says what this slide shows in two to four words (`Three steps`, `Before / after`), shown top right.

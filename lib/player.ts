@@ -1,6 +1,7 @@
 import { headingText } from './presentation/heading'
 import type { Transition } from './presentation/transition'
 import type { Slide } from './presentation/types'
+import { slideWords, type Language } from './presentation/words'
 
 export type ActiveTransition = Transition | 'share'
 export type PlayerAction =
@@ -35,14 +36,6 @@ export const IDLE_MS = 2600
 export const SETTLE_MS = 250
 export const SLIDE_HASH = /^#(\d+)$/
 
-export const PLAYER_WORDS = {
-  autoplay: { on: 'Autoplay on', off: 'Autoplay off' },
-  shareSafe: { on: 'Screen-share safe on', off: 'Screen-share safe off' },
-  end: 'End of presentation',
-  credit: 'Made with Kiosk Slides',
-  slide: 'Slide {number} of {count}: {title}',
-}
-
 export function activeTransition(transition: Transition, shareSafe: boolean): ActiveTransition {
   return shareSafe && transition !== 'none' ? 'share' : transition
 }
@@ -70,8 +63,8 @@ export function slideTitle(slide: Slide) {
   return slide.title || headingText(slide.heading)
 }
 
-export function slideLabel(slide: Slide, index: number, count: number) {
-  return PLAYER_WORDS.slide
+export function slideLabel(slide: Slide, index: number, count: number, language: Language) {
+  return slideWords[language].player.slide
     .replace('{number}', String(index + 1))
     .replace('{count}', String(count))
     .replace('{title}', () => slideTitle(slide))

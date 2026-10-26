@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import type { SlideKind, SlideOfKind } from '@/lib/presentation'
+import type { SlideKind, SlideOfKind, SlideWords } from '@/lib/presentation'
 import { BeforeAfterView } from './before-after'
 import { BulletsView } from './bullets'
 import { ButtonsView } from './buttons'
@@ -14,7 +14,12 @@ import { StepsView } from './steps'
 import { TableView } from './table'
 
 /** The render component for each slide kind. TypeScript fails here until every kind has one. */
-export const widgets: { [K in SlideKind]: ComponentType<{ slide: SlideOfKind<K> }> | null } = {
+export const widgets: {
+  [K in SlideKind]: ComponentType<{
+    slide: SlideOfKind<K>
+    words: SlideWords
+  }> | null
+} = {
   message: null,
   steps: StepsView,
   bullets: BulletsView,

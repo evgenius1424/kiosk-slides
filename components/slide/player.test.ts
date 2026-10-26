@@ -2,10 +2,9 @@ import { readFileSync } from 'node:fs'
 import { JSDOM } from 'jsdom'
 import { createTranslator } from 'next-intl'
 import { describe, expect, it, vi } from 'vitest'
-import { parsePresentation } from '@/lib/presentation'
+import { parsePresentation, slideWords } from '@/lib/presentation'
 import {
   PLAYER_KEYS,
-  PLAYER_WORDS,
   SETTLE_MS,
   SWIPE,
   slideFromHash,
@@ -19,6 +18,7 @@ import { presentationHtml } from './presentation-html'
 
 const presentation = parsePresentation(readFileSync('public/example.md', 'utf8'))
 const last = presentation.slides.length - 1
+const PLAYER_WORDS = slideWords.en.player
 const moves: Partial<Record<PlayerAction, (from: number) => number>> = {
   next: from => Math.min(last, from + 1),
   previous: from => Math.max(0, from - 1),
@@ -101,7 +101,9 @@ describe('exported presentation player', () => {
     const page = await open()
     expect(page.spoken()).toBe('')
     page.press({ key: 'ArrowRight' })
-    expect(page.spoken()).toBe(slideLabel(presentation.slides[1], 1, presentation.slides.length))
+    expect(page.spoken()).toBe(
+      slideLabel(presentation.slides[1], 1, presentation.slides.length, 'en'),
+    )
     expect(page.spoken()).toMatch(/^Slide 2 of \d+: \S/)
     expect(page.hidden()).toEqual(presentation.slides.map((_, i) => i !== 1))
   })

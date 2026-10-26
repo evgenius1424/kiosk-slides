@@ -43,6 +43,7 @@ describe('parsePresentation: presentation and message slides', () => {
       font: 'classic',
       scale: 'normal',
       brand: 'kiosk',
+      language: 'en',
       slides: [
         {
           kind: 'message',
@@ -66,6 +67,11 @@ describe('parsePresentation: presentation and message slides', () => {
       'ZEOS',
     ])
     expect(parsePresentation(md('---', 'brand: none', '---', '# Hi')).brand).toBe('')
+  })
+
+  it('reads the language', () => {
+    expect(parsePresentation(md('---', 'language: ru', '---', '# Привет')).language).toBe('ru')
+    expect(parsePresentation(md('# Hi')).language).toBe('en')
   })
 
   it('reads the tone, transition and screen-share safe flag', () => {
@@ -491,6 +497,9 @@ describe('parsePresentation: errors', () => {
     expect(error(md('---', 'scale: huge', '---', '# Hi'))).toBe(
       'Line 2: Unknown scale “huge”. Use normal, large, hero.',
     )
+    expect(error(md('---', 'language: de', '---', '# Hi'))).toBe(
+      'Line 2: Unknown language “de”. Use en or ru.',
+    )
     expect(error(md('---', `brand: ${'x'.repeat(25)}`, '---', '# Hi'))).toBe(
       'Line 2: Keep the brand to 24 characters.',
     )
@@ -598,6 +607,13 @@ describe('parsePresentation: table and before/after', () => {
       before: 'Dense slides nobody reads',
       after: 'One idea, **big** type',
     })
+  })
+
+  it('turns a До | После table into before/after', () => {
+    const [slide] = parsePresentation(
+      md('# Одна **мысль**', '', '| До | После |', '| --- | --- |', '| Много | Одна |'),
+    ).slides
+    expect(slide).toMatchObject({ kind: 'before-after', before: 'Много', after: 'Одна' })
   })
 
   it('rejects a before/after with more or fewer than one row', () => {
