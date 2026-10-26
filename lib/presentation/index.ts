@@ -1,5 +1,6 @@
 export {
   insertSlide,
+  moveSlide,
   parsePresentation,
   removeSlide,
   replaceSlide,

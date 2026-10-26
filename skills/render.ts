@@ -24,6 +24,8 @@ import { presentationHtml, fetchAsDataUrl } from '@/components/slide/presentatio
 import { shareLink } from '@/lib/share'
 import { SITE_URL } from '@/lib/site'
 
+const SITE_TIMEOUT_MS = 3000
+
 const usage =
   'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light|studio] [--tone mono|violet|coral|teal|amber|#hex] [--font name] [--scale normal|large|hero] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--no-credit] [--no-link] [--no-open] [--check] [--format]'
 
@@ -106,7 +108,14 @@ function withLook(presentation: Presentation): Presentation {
 
 async function shareUrl(source: string) {
   const link = await shareLink(source, SITE_URL).catch(() => undefined)
-  return link && 'url' in link ? link.url : undefined
+  if (!link || !('url' in link)) return
+  return (await siteReachable()) ? link.url : undefined
+}
+
+function siteReachable() {
+  return fetch(SITE_URL, { method: 'HEAD', signal: AbortSignal.timeout(SITE_TIMEOUT_MS) })
+    .then(response => response.ok)
+    .catch(() => false)
 }
 
 function openInBrowser(target: string) {

@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import {
   editSource,
   expect,
@@ -64,3 +65,69 @@ test('moves through slides with the slide list keys', async ({ page }) => {
   await page.keyboard.press('End')
   await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 3 of 3/)
 })
+
+test('duplicates, moves and drags slides, then undoes and redoes', async ({ page }) => {
+  const names = () => slideList(page).locator('.thumbnail h2').allTextContents()
+  await slideList(page).first().click()
+  await page.keyboard.press('ControlOrMeta+d')
+  await expect(slideList(page)).toHaveCount(4)
+  await expect(slideList(page).nth(1)).toBeFocused()
+  await page.keyboard.press('ControlOrMeta+ArrowDown')
+  await expect.poll(names).toEqual(['One', 'Two', 'One', 'Three'])
+  await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 3 of 4/)
+  await page.keyboard.press('ControlOrMeta+z')
+  await expect.poll(names).toEqual(['One', 'One', 'Two', 'Three'])
+  await page.keyboard.press('ControlOrMeta+Shift+z')
+  await expect.poll(names).toEqual(['One', 'Two', 'One', 'Three'])
+  await slideList(page)
+    .nth(3)
+    .dragTo(slideList(page).first(), { targetPosition: { x: 20, y: 4 } })
+  await expect.poll(names).toEqual(['Three', 'One', 'Two', 'One'])
+  await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 1 of 4/)
+  await page.reload()
+  await expect.poll(names).toEqual(['Three', 'One', 'Two', 'One'])
+})
+
+test('moves a slide from the slide menu', async ({ page }) => {
+  await slideList(page).first().click({ button: 'right' })
+  await page.getByRole('menuitem', { name: 'Move down' }).click()
+  await expect(slideList(page).nth(1)).toContainText('One')
+  await expect(page.getByText('Slide moved to 2')).toBeVisible()
+})
+
+test('adds a slide with the keyboard', async ({ page }) => {
+  await slideList(page).first().click()
+  await page.keyboard.press('ControlOrMeta+Enter')
+  await expect(slideList(page)).toHaveCount(4)
+  await expect(page.getByRole('textbox', { name: 'Presentation source' })).toContainText(
+    'New slide',
+  )
+})
+
+test('keeps the selected slide outline inside the slide list', async ({ page }) => {
+  const many = Array.from({ length: 12 }, (_, i) => `# Slide ${i + 1}`).join('\n\n---\n\n')
+  await page.setViewportSize({ width: 1280, height: 600 })
+  await editSource(page, `${many}\n`)
+  await expect(slideList(page)).toHaveCount(12)
+  await slideList(page).first().focus()
+  for (const key of ['Home', 'ArrowDown', 'End', 'ArrowUp']) {
+    await page.keyboard.press(key)
+    expect(await outlineOverflow(page)).toBe(0)
+  }
+})
+
+async function outlineOverflow(page: Page) {
+  return page.locator('.slide-nav:focus-visible').evaluate(item => {
+    const style = getComputedStyle(item)
+    const ring = parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset)
+    const box = item.getBoundingClientRect()
+    const list = item.parentElement!.getBoundingClientRect()
+    return Math.max(
+      0,
+      list.top - (box.top - ring),
+      box.bottom + ring - list.bottom,
+      list.left - (box.left - ring),
+      box.right + ring - list.right,
+    )
+  })
+}

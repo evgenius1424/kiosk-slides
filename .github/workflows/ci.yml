@@ -31,7 +31,7 @@ jobs:
         run: git diff --exit-code -- skills && test -z "$(git status --porcelain -- skills)"
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

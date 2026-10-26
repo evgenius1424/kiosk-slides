@@ -33,6 +33,7 @@ export const PLAYER_KEYS: Record<string, PlayerAction> = {
 export const SWIPE = { distance: 45, ratio: 1.2 }
 export const WHEEL = { distance: 65, settleMs: 240, lineHeight: 16 }
 export const IDLE_MS = 2600
+export const SETTLE_MS = 250
 export const SLIDE_HASH = /^#(\d+)$/
 
 export function activeTransition(transition: Transition, shareSafe: boolean): ActiveTransition {

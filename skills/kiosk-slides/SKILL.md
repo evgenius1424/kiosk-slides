@@ -32,7 +32,7 @@ The full grammar is in `references/FORMAT.md` and a presentation that uses every
 
    It prints one line per slide (number, kind, heading) or a `Line N:` error, then a `Warning:` line for each missing slide setting or for too many message slides. `--format` also tidies the file (aligned tables, consistent spacing) without changing what it shows. Fix every error and every warning and run it again until it is clean. Never hand back a presentation that fails the check.
 
-6. Render the HTML next to it, as in "Render", unless the user asked for Markdown only.
+6. Render the HTML next to it and open it in the browser, as in "Render". Every presentation ends with the Markdown, the HTML and the browser open, unless the user explicitly asked for less.
 7. Reply with one or two sentences about what you made, the slide list from the check, and both files. Say the Markdown is the source: they can edit it and ask for the HTML again.
 
 When the user asks for changes, edit the Markdown in place, validate, and render again. Keep slides they didn't mention as they were.
@@ -55,12 +55,12 @@ Options:
 - `--share-safe` (or `share-safe: true` in the front matter) starts the presentation in screen-share safe mode: every transition becomes a quick flat fade that stays crisp on video calls and meeting-room TVs. Pressing `S` in the rendered presentation toggles it.
 - `--no-motion` is the same as `--transition none`.
 - `--no-credit` (or `credit: false` in the front matter) drops the “Made with Kiosk Slides” link from the end-of-presentation notice. It never appears on a slide.
-- `--no-link` skips the share link described below, so the HTML file opens instead.
-- `--no-open` writes the HTML without opening the browser.
+- `--no-link` opens the HTML file instead of the site. Pass it only when the user explicitly asks for the HTML file alone, without the site.
+- `--no-open` writes the HTML without opening the browser. Pass it only when the user explicitly asks not to open anything.
 - `--check` only validates and prints the slide list and any warnings, without writing HTML.
 - `--format` tidies the Markdown file in place without changing what it shows.
 
-After writing the HTML, the renderer opens the presentation in the person's browser and prints `Opened in your browser`. It opens the share link when the presentation is small enough: the whole presentation lives in that link, so it shows the same slides on a phone, a TV or another computer with nothing uploaded. Otherwise it opens the HTML file. Say in one sentence that it is open in their browser. Never print, paste or shorten the link.
+After writing the HTML, the renderer opens the presentation in the person's browser and prints `Opened in your browser`. By default it opens kiosk-slides.com with the whole presentation inside the link, so the person can edit, restyle and share it there, and the same link shows the slides on a phone, a TV or another computer with nothing uploaded. When the site can't be reached or the presentation is too big for a link, it opens the HTML file instead. Say in one sentence that it is open in their browser. Never print, paste or shorten the link.
 
 When there is no browser to open, such as over SSH or in a cloud session, nothing opens and nothing is printed. Then the HTML file is how the person sees the slides: hand it over and say how to present it.
 

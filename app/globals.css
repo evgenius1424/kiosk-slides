@@ -189,10 +189,15 @@ kbd {
 .slide-list {
   overflow: auto;
   flex: 1;
-  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 10px;
+  scroll-padding-block: 6px;
 }
 .slide-nav {
   position: relative;
+  flex-shrink: 0;
   width: 100%;
   display: flex;
   align-items: flex-start;
@@ -202,7 +207,31 @@ kbd {
   background: transparent;
   padding: 10px 6px;
   text-align: left;
-  margin-bottom: 6px;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.slide-list.is-dragging {
+  cursor: grabbing;
+  touch-action: none;
+}
+.slide-nav.is-dragged {
+  opacity: 0.45;
+}
+.slide-nav.drop-before::before,
+.slide-nav.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--foreground);
+}
+.slide-nav.drop-before::before {
+  top: -5px;
+}
+.slide-nav.drop-after::after {
+  bottom: -5px;
 }
 .slide-nav.selected {
   border-color: #a1a1aa;
@@ -373,6 +402,15 @@ kbd {
 .canvas-shell:has(.slide-working) .canvas-slide {
   opacity: 0.6;
   transition: opacity 0.3s;
+}
+.canvas-shell::before,
+.canvas-slide > * {
+  transition: opacity 0.2s ease-out;
+}
+.canvas-shell[data-settling]::before,
+.canvas-shell[data-settling] .canvas-slide > * {
+  opacity: 0;
+  transition: none;
 }
 .slide-nav.is-changing .thumbnail {
   opacity: 0.5;

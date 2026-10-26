@@ -1,11 +1,15 @@
 import { useEffect, useRef } from 'react'
 import { playerAction, type PlayerAction } from '@/lib/player'
 
+export type SlideKey = 'add' | 'duplicate' | 'up' | 'down'
+
 type Shortcuts = {
   enabled: boolean
   preview: boolean
   onEscape: () => void
   onUndo: () => void
+  onRedo: () => void
+  onSlide: (key: SlideKey) => void
   onPlayer: (action: PlayerAction) => void
 }
 
@@ -16,7 +20,7 @@ export function useShortcuts(shortcuts: Shortcuts) {
   })
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      const { enabled, preview, onEscape, onUndo, onPlayer } = ref.current
+      const { enabled, preview, onEscape, onUndo, onRedo, onSlide, onPlayer } = ref.current
       if (event.isComposing || event.keyCode === 229) return
       if (!enabled) return
       if (event.key === 'Escape') return onEscape()
@@ -27,6 +31,15 @@ export function useShortcuts(shortcuts: Shortcuts) {
       if (isUndo(event)) {
         event.preventDefault()
         return onUndo()
+      }
+      if (isRedo(event)) {
+        event.preventDefault()
+        return onRedo()
+      }
+      const key = slideKey(event, fromList)
+      if (key) {
+        event.preventDefault()
+        return onSlide(key)
       }
       if (fromList) return
       const action = playerAction(event)
@@ -40,10 +53,23 @@ export function useShortcuts(shortcuts: Shortcuts) {
 }
 
 function isUndo(event: KeyboardEvent) {
-  return (
-    (event.metaKey || event.ctrlKey) &&
-    !event.shiftKey &&
-    !event.altKey &&
-    event.key.toLowerCase() === 'z'
-  )
+  return command(event) && !event.shiftKey && event.key.toLowerCase() === 'z'
+}
+
+function isRedo(event: KeyboardEvent) {
+  const key = event.key.toLowerCase()
+  return command(event) && (event.shiftKey ? key === 'z' : event.ctrlKey && key === 'y')
+}
+
+function slideKey(event: KeyboardEvent, fromList: boolean): SlideKey | undefined {
+  if (!command(event) || event.shiftKey) return
+  if (event.key === 'Enter') return 'add'
+  if (event.key.toLowerCase() === 'd') return 'duplicate'
+  if (!fromList) return
+  if (event.key === 'ArrowUp') return 'up'
+  if (event.key === 'ArrowDown') return 'down'
+}
+
+function command(event: KeyboardEvent) {
+  return (event.metaKey || event.ctrlKey) && !event.altKey
 }
