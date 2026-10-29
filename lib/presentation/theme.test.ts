@@ -44,8 +44,9 @@ describe('tones', () => {
 })
 
 describe('pill highlights', () => {
-  it.each(fonts.map(f => f.id))('sit on the letters in the %s font', id => {
-    expect(slideStyles).toContain(`.slide.font-${id}{--pill-shift:`)
+  it.each(fonts.map(f => f.id))('fit the letters of the %s font', id => {
+    expect(slideStyles).toContain(`.slide.font-${id}{--pill-top:`)
+    expect(slideStyles).toContain(`.slide.font-${id}.pill-tall{--pill-top:`)
   })
 })
 type Rgb = [number, number, number]

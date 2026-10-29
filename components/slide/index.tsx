@@ -3,7 +3,10 @@ import {
   defaultLook,
   findFont,
   headingSize,
+  headingText,
+  pillEdges,
   pillThemes,
+  tallPill,
   tableSize,
   textFit,
   toneInk,
@@ -17,16 +20,22 @@ import { Inline } from './inline'
 import { Punctuated } from './punctuated'
 import { widgets } from './widgets'
 
-export function HeadingText({ parts, pill = false }: { parts: HeadingPart[]; pill?: boolean }) {
+export function HeadingText({ parts, pill }: { parts: HeadingPart[]; pill?: string }) {
   if (pill) parts = pillParts(parts)
   return (
     <>
       {parts.map((part, i) => {
         if (pill && nextToHighlight(part, parts[i - 1], parts[i + 1]))
           return <Fragment key={i}>{spaced(part, parts[i - 1], parts[i + 1])}</Fragment>
-        let node: ReactNode = part.code ? <code>{part.text}</code> : <Punctuated text={part.text} />
+        let node: ReactNode = part.code ? (
+          <code>{part.text}</code>
+        ) : pill && part.highlight ? (
+          <PillWords text={part.text} font={pill} italic={part.italic} />
+        ) : (
+          <Punctuated text={part.text} />
+        )
         if (part.italic) node = <em>{node}</em>
-        if (part.highlight) node = <strong>{node}</strong>
+        if (part.highlight) node = <strong>{pill ? <span>{node}</span> : node}</strong>
         if (part.url)
           node = (
             <a href={part.url} target="_blank" rel="noopener noreferrer">
@@ -70,7 +79,7 @@ export function SlideView({
   } as React.CSSProperties
   return (
     <article
-      className={`slide ${theme} font-${font.id} kind-${slide.kind} scale-${look.scale} ${size ? 'heading-fit' : ''} ${miniature ? 'miniature' : ''}`}
+      className={`slide ${theme} font-${font.id} kind-${slide.kind} scale-${look.scale} ${size ? 'heading-fit' : ''} ${pill && tallPill(headingText(slide.heading.filter(part => part.highlight))) ? 'pill-tall' : ''} ${miniature ? 'miniature' : ''}`}
       style={style}
     >
       <header className="slide-meta">
@@ -83,7 +92,7 @@ export function SlideView({
       <div className="slide-content">
         <div className="slide-message">
           <h2>
-            <HeadingText parts={slide.heading} pill={pill} />
+            <HeadingText parts={slide.heading} pill={pill ? look.font : undefined} />
           </h2>
           {slide.body && (
             <p className="slide-body">
@@ -109,6 +118,28 @@ export function SlideView({
       </footer>
     </article>
   )
+}
+
+function PillWords({ text, font, italic }: { text: string; font: string; italic?: boolean }) {
+  const tokens = text.split(/(\s+)/)
+  const edges = tokens.map((token, i) => (i % 2 ? undefined : pillEdges(token, font, italic)))
+  return tokens.map((token, i) => {
+    if (i % 2) {
+      const gap = -(edges[i - 1]?.end ?? 0) - (edges[i + 1]?.start ?? 0)
+      return (
+        <span key={i} style={{ wordSpacing: `${Math.round(gap * 1000) / 1000}em` }}>
+          {token}
+        </span>
+      )
+    }
+    if (!token) return null
+    const { start, end } = edges[i]!
+    return (
+      <span key={i} style={{ marginLeft: `${start}em`, marginRight: `${end}em` }}>
+        <Punctuated text={token} />
+      </span>
+    )
+  })
 }
 
 function pillParts(parts: HeadingPart[]) {

@@ -43,6 +43,19 @@ describe('SlideView', () => {
     expect(plain.querySelector('.pill-gap')).toBeNull()
   })
 
+  it('makes room for accents and emoji above a pill', () => {
+    const slide = (text: string) =>
+      render(
+        <SlideView
+          slide={{ ...chrome, kind: 'message', heading: [{ text, highlight: true }] }}
+          theme="marker"
+        />,
+      ).container.querySelector('article')!
+    expect(slide('Ёлка').className).toContain('pill-tall')
+    expect(slide('launch 🚀').className).toContain('pill-tall')
+    expect(slide('Launch').className).not.toContain('pill-tall')
+  })
+
   it('keeps heading punctuation clear of the tight letter spacing', () => {
     const article = view({
       ...chrome,

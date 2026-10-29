@@ -6,7 +6,6 @@ import { chromium } from '@playwright/test'
 
 const CLEAR = 2.5
 const CLEAR_WHEN_FULL = 1
-const TOUCH = 0.05
 
 const { values } = parseArgs({
   options: {
@@ -74,13 +73,12 @@ for (const theme of ids)
       const problems = slides.filter(
         s =>
           s.wide ||
-          s.touch < TOUCH ||
           s.label < (s.fit === '0.6' ? CLEAR_WHEN_FULL : CLEAR) ||
           s.footer < (s.fit === '0.6' ? CLEAR_WHEN_FULL : CLEAR),
       )
       report.push({ name, theme, scale, width, slides, problems })
       console.log(
-        `${name}: ${problems.length ? problems.map(p => `slide ${p.number} (${p.kind}) label ${p.label.toFixed(2)} footer ${p.footer.toFixed(2)}${p.wide ? ' too wide' : ''}${p.touch < TOUCH ? ` pill gap ${p.touch.toFixed(2)}em` : ''}`).join('; ') : 'ok'}`,
+        `${name}: ${problems.length ? problems.map(p => `slide ${p.number} (${p.kind}) label ${p.label.toFixed(2)} footer ${p.footer.toFixed(2)}${p.wide ? ' too wide' : ''}`).join('; ') : 'ok'}`,
       )
     }
 
@@ -88,66 +86,6 @@ await browser.close()
 await writeFile(path.join(out, `report-${sample}.json`), JSON.stringify(report, null, 2))
 
 function measure() {
-  function pillGap(heading) {
-    const pills = [...heading.querySelectorAll('strong')]
-    const style = getComputedStyle(heading)
-    if (!pills.length || getComputedStyle(pills[0]).backgroundImage === 'none') return Infinity
-    const size = parseFloat(style.fontSize)
-    const shift = parseFloat(getComputedStyle(pills[0]).getPropertyValue('--pill-shift')) * size
-    const boxes = pills.flatMap((pill, owner) =>
-      [...pill.getClientRects()].map(r => {
-        const middle = r.top + r.height / 2 + shift
-        return {
-          owner,
-          left: r.left,
-          right: r.right,
-          top: middle - 0.54 * size,
-          bottom: middle + 0.54 * size,
-        }
-      }),
-    )
-    const context = document.createElement('canvas').getContext('2d')
-    const glyphs = []
-    const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT)
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      if (node.parentElement.closest('strong')) continue
-      const font = getComputedStyle(node.parentElement)
-      context.font = `${font.fontStyle} ${font.fontWeight} ${font.fontSize} ${font.fontFamily}`
-      for (let i = 0; i < node.length; i++) {
-        const char = node.data[i]
-        if (!char.trim()) continue
-        const range = document.createRange()
-        range.setStart(node, i)
-        range.setEnd(node, i + 1)
-        const metrics = context.measureText(char)
-        for (const r of range.getClientRects()) {
-          const baseline = r.top + metrics.fontBoundingBoxAscent
-          glyphs.push({
-            owner: -1,
-            left: r.left,
-            right: r.right,
-            top: baseline - metrics.actualBoundingBoxAscent,
-            bottom: baseline + metrics.actualBoundingBoxDescent,
-          })
-        }
-      }
-    }
-    let least = Infinity
-    for (const [i, pill] of boxes.entries())
-      for (const other of [...boxes.slice(i + 1), ...glyphs]) {
-        if (other.owner === pill.owner && other !== pill && Math.abs(other.top - pill.top) < 1)
-          continue
-        const gap = Math.max(
-          other.left - pill.right,
-          pill.left - other.right,
-          other.top - pill.bottom,
-          pill.top - other.bottom,
-        )
-        least = Math.min(least, gap / size)
-      }
-    return least
-  }
-
   return [...document.querySelectorAll('.frame')].map((frame, i) => {
     const slide = frame.querySelector('.slide')
     const bounds = slide.getBoundingClientRect()
@@ -185,7 +123,6 @@ function measure() {
       wide: right > bounds.right - 2 * cqw,
       fit: slide.style.getPropertyValue('--text-fit'),
       heading: slide.style.getPropertyValue('--heading-size'),
-      touch: pillGap(slide.querySelector('h2')),
     }
   })
 }

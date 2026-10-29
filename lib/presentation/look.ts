@@ -1,5 +1,6 @@
 import type { Widget } from './components'
 import type { MessageWidget, Presentation, SlideChrome } from './types'
+import { PILL_PAD, PILL_TALL_LINE_HEIGHT, PILL_TRACKING } from './pill'
 import { WIDGET_GAP, textLines, widgetHeight } from './widget-height'
 
 export const scales = ['normal', 'large', 'hero'] as const
@@ -66,7 +67,6 @@ export const fonts: Font[] = [
 ]
 
 export const DEFAULT_BRAND = 'kiosk'
-export const PILL_LINE_HEIGHT = 1.2
 export const defaultLook = (): PresentationLook => ({
   font: fonts[0].id,
   scale: 'normal',
@@ -182,8 +182,7 @@ const MIN_TABLE_TEXT = 1.3
 const CLEARANCE = 1.5
 const HEADING_CHAR = 0.85
 const MIN_TEXT_FIT = 0.6
-const PILL_GAP = '_'
-const MIN_PILL_HEADING = 4
+const MIN_PILL_HEADING = 3.3
 const PILL_ROOM = 0.6
 
 const NORMAL_HEADING: Partial<Record<SizedSlide['kind'], number>> = {
@@ -253,12 +252,16 @@ function contentHeight(slide: SizedSlide, box: Box, textWidth: number, fit: numb
   )
 }
 
+function pillPadding(font: string) {
+  return '_'.repeat(Math.ceil((PILL_PAD * 2 - PILL_TRACKING) / findFont(font).width))
+}
+
 function sizedBox(scale: Scale, pill?: boolean): Box {
   const box = boxes[scale]
   if (!pill) return box
   return {
     ...box,
-    lineHeight: PILL_LINE_HEIGHT,
+    lineHeight: PILL_TALL_LINE_HEIGHT,
     height: box.height - PILL_ROOM,
     room: box.room - PILL_ROOM,
   }
@@ -266,7 +269,7 @@ function sizedBox(scale: Scale, pill?: boolean): Box {
 
 function measure(slide: SizedSlide, box: Box, font: string, pill?: boolean) {
   const text = slide.heading
-    .map(p => (pill && p.highlight ? `${PILL_GAP}${p.text}${PILL_GAP}` : p.text))
+    .map(p => (pill && p.highlight ? pillPadding(font) + p.text : p.text))
     .join('')
   const textWidth = fontWidth(font, slideText(slide))
   return {

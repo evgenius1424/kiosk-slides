@@ -5,6 +5,7 @@ import {
   fontFiles,
   fonts,
   parsePresentation,
+  PILL_PAD,
   setPresentationTheme,
   themes,
   toneColor,
@@ -15,8 +16,17 @@ import { slideStyles } from '@/lib/slide-styles'
 import { SlideView } from '@/components/slide'
 
 export const labThemes = themes.map(id => ({ id }))
+export const labFonts = fonts.map(font => font.id)
+export { PILL_PAD }
 
-export type LabPage = { theme: Theme; scale: Scale; width: number; font?: string; tone?: string }
+export type LabPage = {
+  theme: Theme
+  scale: Scale
+  width: number
+  height?: number
+  font?: string
+  tone?: string
+}
 
 export function labPage(source: string, root: string, page: LabPage) {
   const presentation = parsePresentation(setPresentationTheme(source, page.theme))
@@ -29,7 +39,7 @@ export function labPage(source: string, root: string, page: LabPage) {
   const faces = fontFiles(fonts)
     .map(file => fontFace(file, `file://${root}/public/fonts/${file.file}`))
     .join('')
-  const height = Math.round((page.width * 9) / 16)
+  const height = page.height ?? Math.round((page.width * 9) / 16)
   const slides = presentation.slides
     .map(
       (slide, i) =>

@@ -1,18 +1,11 @@
-import { PILL_LINE_HEIGHT } from '@/lib/presentation'
+import {
+  PILL_LINE_HEIGHT,
+  PILL_PAD,
+  PILL_TALL_LINE_HEIGHT,
+  PILL_TRACKING,
+  pillFonts,
+} from '@/lib/presentation'
 import { transitionStyles } from './player'
-
-const PILL_HEIGHT = '1.08em'
-
-const PILL_SHIFT: Record<string, number> = {
-  classic: 0.05,
-  inter: 0.065,
-  figtree: 0.05,
-  'bricolage-grotesque': 0.03,
-  'space-grotesk': 0.045,
-  'archivo-expanded': 0.035,
-  'golos-text': 0.08,
-  literata: 0.135,
-}
 
 export const slideStyles =
   `
@@ -33,7 +26,7 @@ export const slideStyles =
 ${paper()}
 ${poster()}
 ${marker()}
-${pillShifts()}
+${pillFontStyles()}
 
 .slide-backdrop{--slide-tone:#ffffff;--slide-bg:#121214;--slide-wash:color-mix(in srgb,var(--slide-bg) 95%,var(--slide-tone));background:var(--slide-wash)}.slide-backdrop.room-light{--slide-bg:#fafafa;--slide-wash:color-mix(in srgb,var(--slide-bg) 97%,var(--slide-tone))}.slide-backdrop.studio{--slide-bg:#000000;--slide-wash:var(--slide-bg)}.slide-backdrop.paper{--slide-bg:#f3ede1;--slide-wash:var(--slide-bg)}.slide-backdrop.poster{--slide-bg:var(--slide-tone);--slide-wash:var(--slide-bg)}.slide-backdrop.marker{--slide-bg:#f6f6f3;--slide-wash:var(--slide-bg)}.slide-backdrop:is(.poster,.marker)::before{content:none}.slide-backdrop .slide{background:transparent}
 
@@ -79,7 +72,7 @@ function poster() {
   return `.slide.poster{--slide-bg:var(--slide-tone);--slide-text:var(--slide-ink);--slide-muted:color-mix(in srgb,var(--slide-ink) 76%,var(--slide-tone));--slide-surface:color-mix(in srgb,var(--slide-ink) 10%,var(--slide-tone));--slide-line:var(--slide-ink);--slide-accent:var(--slide-ink);--slide-highlight:var(--slide-ink);--slide-wash:var(--slide-bg)}
 .slide.poster::before{content:none}.slide.poster::after{content:'';position:absolute;width:40cqw;height:40cqw;right:-12cqw;top:-14cqw;z-index:-2;border-radius:50%;background:color-mix(in srgb,var(--slide-ink) 8%,var(--slide-tone));pointer-events:none}.slide.poster.kind-message::after{width:64cqw;height:64cqw;right:-16cqw;top:auto;bottom:-30cqw}.slide.poster:is(.kind-table,.kind-code,.kind-chart)::after{width:24cqw;height:24cqw;right:-10cqw;top:-12cqw}
 .poster .slide-meta,.poster .widget-label{color:var(--slide-text);font-weight:700}.poster .slide-body,.poster .slide-footer{color:var(--slide-text)}
-.slide.poster h2{font-weight:800;letter-spacing:-.062em}${pill('poster', 'var(--slide-ink)', 'var(--slide-tone)')}
+.slide.poster h2{font-weight:800;letter-spacing:${PILL_TRACKING}em}${pill('poster', 'var(--slide-ink)', 'var(--slide-tone)')}
 .poster .comparison section,.poster .flow-box{border:0;border-radius:1.2cqw}.poster .comparison .comparison-after,.poster .flow-shared{background:var(--slide-ink);color:var(--slide-tone);box-shadow:none}.poster .comparison-after .widget-label{color:var(--slide-tone)}.poster .flow-arrow{color:var(--slide-ink);font-weight:800}
 .poster .slide-steps li span{display:inline-flex;align-items:center;justify-content:center;height:3cqw;border-radius:50%;background:var(--slide-ink);color:var(--slide-tone);font-weight:800}
 .poster .slide-bullets li::before{width:.9cqw;height:.9cqw;border-radius:50%;background:var(--slide-ink);transform:translateY(-.15cqw)}
@@ -96,7 +89,7 @@ function marker() {
   return `.slide.marker{--slide-bg:#f6f6f3;--slide-text:#111111;--slide-muted:#55565a;--slide-surface:#ebebe6;--slide-line:#d6d6d0;--slide-accent:#111111;--slide-highlight:#111111;--slide-wash:var(--slide-bg)}
 .slide.marker::before{content:none}
 .marker .slide-meta{color:var(--slide-text);font-weight:600}
-.slide.marker h2{font-weight:800;letter-spacing:-.062em}${pill('marker', 'var(--slide-tone)', 'var(--slide-ink)')}
+.slide.marker h2{font-weight:800;letter-spacing:${PILL_TRACKING}em}${pill('marker', 'var(--slide-tone)', 'var(--slide-ink)')}
 .marker .comparison section,.marker .flow-box{border:0;border-radius:1.4cqw}.marker .comparison .comparison-after,.marker .flow-shared{background:var(--slide-tone);color:var(--slide-ink);box-shadow:none}.marker .comparison-after .widget-label{color:var(--slide-ink)}.marker .flow-box{border-radius:999px;padding-left:2.2cqw;padding-right:2.2cqw}
 .marker .slide-steps li span{display:inline-flex;align-items:center;justify-content:center;height:3cqw;border-radius:50%;background:var(--slide-tone);color:var(--slide-ink);font-weight:700}
 .marker .slide-bullets li::before{width:1.2cqw;height:.55cqw;border-radius:999px;background:var(--slide-tone);box-shadow:inset 0 0 0 1px rgb(0 0 0/.12);transform:translateY(-.45cqw)}
@@ -110,13 +103,19 @@ function marker() {
 }
 
 function pill(theme: string, background: string, color: string) {
-  const cap = `radial-gradient(closest-side,${background} calc(100% - 1px),#0000)`
-  const y = 'calc(50% + var(--pill-shift))'
-  return `.slide.${theme}:is(.scale-normal,.scale-large,.scale-hero) h2{line-height:${PILL_LINE_HEIGHT}}.slide.${theme} h2 strong{font-weight:800;color:${color};background:${cap} left ${y}/${PILL_HEIGHT} ${PILL_HEIGHT} no-repeat,${cap} right ${y}/${PILL_HEIGHT} ${PILL_HEIGHT} no-repeat,linear-gradient(${background},${background}) center ${y}/calc(100% - ${PILL_HEIGHT}) ${PILL_HEIGHT} no-repeat;padding:.3em .36em;position:relative;z-index:-1;-webkit-box-decoration-break:clone;box-decoration-break:clone}.slide.${theme} h2 .pill-gap{letter-spacing:0}`
+  const em = (name: string) => `calc(var(--pill-${name})*2em)`
+  return `.slide.${theme}:is(.scale-normal,.scale-large,.scale-hero) h2{line-height:${PILL_LINE_HEIGHT}}.slide.${theme}.pill-tall h2{line-height:${PILL_TALL_LINE_HEIGHT}}.slide.${theme} h2 strong{font-size:.5em;font-weight:800;color:${color};background:${background};border-radius:${em('radius')};padding:${em('top')} ${round((PILL_PAD - PILL_TRACKING) * 2)}em ${em('bottom')} ${round(PILL_PAD * 2)}em;position:relative;z-index:-1;-webkit-box-decoration-break:clone;box-decoration-break:clone}.slide.${theme} h2 strong>span{font-size:2em}.slide.${theme} h2 .pill-gap{letter-spacing:0}`
 }
 
-function pillShifts() {
-  return Object.entries(PILL_SHIFT)
-    .map(([font, shift]) => `.slide.font-${font}{--pill-shift:${shift}em}`)
+function pillFontStyles() {
+  return Object.entries(pillFonts)
+    .map(
+      ([id, f]) =>
+        `.slide.font-${id}{--pill-top:${round(f.top - f.ascent / 2)};--pill-bottom:${round(f.bottom - f.descent / 2)};--pill-radius:${f.radius}}.slide.font-${id}.pill-tall{--pill-top:${round(f.tallTop - f.ascent / 2)};--pill-bottom:${round(f.tallBottom - f.descent / 2)}}`,
+    )
     .join('')
+}
+
+function round(value: number) {
+  return Math.round(value * 1000) / 1000
 }
