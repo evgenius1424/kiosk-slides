@@ -16,11 +16,12 @@ import {
   toneName,
   tones,
   type Presentation,
-  type PresentationLook,
+  type SlideLook,
   type Scale,
   type Theme,
 } from '@/lib/presentation'
 import { isStyleKey, rememberStyle } from '@/lib/last-style'
+import { loadFonts } from './load-fonts'
 import type { Player } from './use-player'
 
 const GRADUAL = ['brand', 'duration']
@@ -31,7 +32,6 @@ export function useSettingsPanel() {
   const buttonRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     if (!open) return
-    void loadFonts()
     panelRef.current?.querySelector<HTMLElement>('select,input,button')?.focus()
     const outside = (event: PointerEvent) => {
       const target = event.target as Element
@@ -67,7 +67,7 @@ export function SettingsPanel({
   source: string
   presentationId: string
   presentation: Presentation
-  look: PresentationLook
+  look: SlideLook
   player: Player
   onChange: (source: string, previous?: string) => void
 }) {
@@ -81,6 +81,10 @@ export function SettingsPanel({
   useEffect(() => {
     latest.current = { source, presentationId }
   })
+  const fontText = JSON.stringify(presentation)
+  useEffect(() => {
+    if (!hidden) void loadFonts(fonts, look.extended, fontText)
+  }, [hidden, look.extended, fontText])
   const set = (key: string, value?: string, from = source) => {
     const next = setFrontMatter(from, key, value)
     const again =
@@ -93,7 +97,7 @@ export function SettingsPanel({
     set('tone', color === defaultTone(theme) ? undefined : toneName(color, theme))
   const setFont = async (id: string) => {
     const chosenFor = presentationId
-    await loadFonts()
+    await loadFonts(fonts, look.extended, fontText)
     if (latest.current.presentationId !== chosenFor) return
     set('font', id === fonts[0].id ? undefined : id, latest.current.source)
   }
@@ -305,11 +309,4 @@ function Toggle({
       <span />
     </button>
   )
-}
-
-let fontsLoaded: Promise<unknown> | undefined
-
-function loadFonts() {
-  fontsLoaded ??= Promise.all([...document.fonts].map(face => face.load().catch(() => {})))
-  return fontsLoaded
 }

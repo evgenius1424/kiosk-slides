@@ -2,12 +2,13 @@ import { Fragment, type ComponentType, type ReactNode } from 'react'
 import {
   defaultLook,
   findFont,
+  fontStack,
   headingSize,
   tableSize,
   textFit,
   slideWords,
   DEFAULT_BRAND,
-  type PresentationLook,
+  type SlideLook,
   type HeadingPart,
   type Slide,
   type SlideWords,
@@ -39,13 +40,13 @@ export function SlideView({
   slide,
   theme = 'room-dark',
   accent = '#ffffff',
-  look = defaultLook(),
+  look = { ...defaultLook(), extended: false },
   miniature = false,
 }: {
   slide: Slide
   theme?: string
   accent?: string
-  look?: PresentationLook
+  look?: SlideLook
   miniature?: boolean
 }) {
   // `widgets` pairs each kind with its own component, so this lookup always matches `slide`.
@@ -59,7 +60,7 @@ export function SlideView({
   const words = slideWords[look.language]
   const style = {
     '--slide-tone': accent,
-    '--slide-font': findFont(look.font).stack,
+    '--slide-font': fontStack(findFont(look.font), look.extended),
     ...(size && { '--heading-size': `${size}cqw` }),
     ...(table && { '--table-size': `${table}cqw` }),
     ...(fit && { '--text-fit': fit }),

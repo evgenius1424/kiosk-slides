@@ -195,7 +195,7 @@ describe('SlideView: table and before/after', () => {
   })
 
   it('writes its built-in words in the presentation language', () => {
-    const look = { ...defaultLook(), language: 'ru' as const }
+    const look = { ...defaultLook(), language: 'ru' as const, extended: false }
     const comparison = render(
       <SlideView
         slide={{ ...chrome, label: '', kind: 'before-after', before: 'А', after: 'Б' }}
@@ -261,7 +261,13 @@ describe('SlideView: flow', () => {
   })
 
   it('hides the brand or shows a custom one', () => {
-    const look = { font: 'inter', scale: 'hero' as const, brand: '', language: 'en' as const }
+    const look = {
+      font: 'inter',
+      scale: 'hero' as const,
+      brand: '',
+      language: 'en' as const,
+      extended: false,
+    }
     const hidden = render(
       <SlideView slide={{ ...chrome, kind: 'message', title: '' }} look={look} />,
     ).container.querySelector('article')!

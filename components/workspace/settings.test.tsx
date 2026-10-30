@@ -15,6 +15,7 @@ const blank = blankPresentation(
 const KEY = 'kiosk-presentations'
 
 let fontsReady: () => void = () => {}
+let fontsLoaded: Promise<void>
 
 beforeAll(() => {
   vi.stubGlobal(
@@ -28,11 +29,11 @@ beforeAll(() => {
   HTMLDialogElement.prototype.close = () => {}
   Element.prototype.scrollTo = () => {}
   Element.prototype.scrollIntoView = () => {}
-  const slowFont = { load: () => new Promise<void>(resolve => (fontsReady = resolve)) }
-  Object.defineProperty(document, 'fonts', { value: [slowFont] })
+  Object.defineProperty(document, 'fonts', { value: { load: () => fontsLoaded } })
   vi.stubGlobal('fetch', async () => new Response(null, { status: 404 }))
 })
 beforeEach(() => {
+  fontsLoaded = new Promise<void>(resolve => (fontsReady = resolve))
   localStorage.clear()
   sessionStorage.clear()
   history.replaceState(null, '', '/')

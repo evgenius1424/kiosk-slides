@@ -22,7 +22,7 @@ beforeAll(() => {
   HTMLDialogElement.prototype.close = () => {}
   Element.prototype.scrollTo = () => {}
   Element.prototype.scrollIntoView = () => {}
-  Object.defineProperty(document, 'fonts', { value: [] })
+  Object.defineProperty(document, 'fonts', { value: { load: async () => [] } })
   vi.stubGlobal('fetch', async () => new Response(null, { status: 404 }))
 })
 beforeEach(() => {

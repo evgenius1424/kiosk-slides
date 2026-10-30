@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { useTranslations } from 'next-intl'
 import { PanelLeftClose, Plus } from 'lucide-react'
-import type { Presentation, PresentationLook } from '@/lib/presentation'
+import type { Presentation, SlideLook } from '@/lib/presentation'
 import { SlideView } from '../slide'
 
 export type SlideMenuAt = { x: number; y: number; index: number }
@@ -34,7 +34,7 @@ export function SlideSidebar({
   onHide,
 }: {
   presentation: Presentation
-  look: PresentationLook
+  look: SlideLook
   index: number
   changing?: number
   editable: boolean

@@ -1,5 +1,7 @@
+import { readdirSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
+  EXTENDED_TEXT,
   fonts,
   headingSize,
   scales,
@@ -76,9 +78,21 @@ describe('headingSize', () => {
     }
   })
 
+  it('ships exactly the font files the fonts use', () => {
+    const used = new Set(fonts.flatMap(f => f.files.map(file => file.file)))
+    const shipped = readdirSync('public/fonts').filter(file => file.endsWith('.woff2'))
+    expect(shipped.sort()).toEqual([...used].sort())
+  })
+
+  it('needs the extended files only for characters outside the core', () => {
+    expect(EXTENDED_TEXT.test('Plain “quotes” — dashes – and… ellipsis\u00a0here')).toBe(false)
+    expect(EXTENDED_TEXT.test('Café')).toBe(true)
+    expect(EXTENDED_TEXT.test('Привет 你好 → ✓')).toBe(false)
+  })
+
   it('gives every bundled font a Cyrillic face', () => {
     for (const font of fonts.filter(f => f.files.length))
-      expect(font.files.some(f => f.script === 'cyrillic')).toBe(true)
+      expect(font.files.some(f => f.role === 'cyrillic')).toBe(true)
   })
 })
 

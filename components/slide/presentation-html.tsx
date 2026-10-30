@@ -3,7 +3,7 @@ import {
   presentationLook,
   findFont,
   fontFace,
-  hasCyrillic,
+  fontFilesFor,
   slideWords,
   type Presentation,
   type Theme,
@@ -47,9 +47,10 @@ export async function presentationHtml(
 ): Promise<string> {
   const look = presentationLook(presentation)
   const words = slideWords[look.language]
-  const cyrillic = hasCyrillic(JSON.stringify(presentation))
-  const files = findFont(presentation.font).files.filter(f => cyrillic || f.script === 'latin')
-  const faces = await Promise.all(files.map(async f => fontFace(f, await embedFont(f.file))))
+  const files = fontFilesFor(findFont(look.font), look.extended, JSON.stringify(presentation))
+  const faces = await Promise.all(
+    files.map(async f => fontFace(f, await embedFont(f.file), look.extended)),
+  )
   const slides = await Promise.all(
     presentation.slides.map(async (slide, i, all) => {
       const embedded =

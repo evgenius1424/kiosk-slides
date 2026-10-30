@@ -4,8 +4,9 @@ import { getTranslations } from 'next-intl/server'
 import { KioskWorkspace } from '@/components/workspace/kiosk-workspace'
 import { AI_DRAFT_ENABLED } from '@/lib/ai-draft/server'
 import { AUTHOR, REPO_URL } from '@/lib/author'
+import { fontPreloadScript } from '@/lib/font-preload'
 import { copyPrompt, slideCopyPrompt } from '@/lib/chat-prompt'
-import { fontFace, fontFiles, fonts } from '@/lib/presentation'
+import { siteFontFaces } from '@/lib/presentation'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 import { slideStyles } from '@/lib/slide-styles'
 
@@ -66,11 +67,8 @@ export default async function Page() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
-      <style>
-        {fontFiles(fonts)
-          .map(f => fontFace(f, `/fonts/${f.file}`))
-          .join('') + slideStyles}
-      </style>
+      <script dangerouslySetInnerHTML={{ __html: fontPreloadScript() }} />
+      <style>{siteFontFaces(file => `/fonts/${file}`) + slideStyles}</style>
       <KioskWorkspace
         example={example}
         prompt={prompt}

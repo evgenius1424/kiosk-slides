@@ -1,51 +1,60 @@
 import type { Widget } from './components'
 import type { MessageWidget, Presentation, SlideChrome } from './types'
+import subsets from './font-files.json'
 import { WIDGET_GAP, textLines, widgetHeight } from './widget-height'
 import type { Language } from './words'
 
 export const scales = ['normal', 'large', 'hero'] as const
 export type Scale = (typeof scales)[number]
 
-export type FontFile = { family: string; file: string; weights: string; script: Script }
+export type FontFile = {
+  family: string
+  file: string
+  weights: string
+  range: string
+  role: 'core' | 'extended' | 'cyrillic'
+}
 
 export type Font = {
   id: string
   name: string
-  stack: string
   width: number
   cyrillicWidth: number
   files: FontFile[]
 }
 
 export type PresentationLook = { font: string; scale: Scale; brand: string; language: Language }
+export type SlideLook = PresentationLook & { extended: boolean }
 
 export const fonts: Font[] = [
   font('classic', 'Classic', 0.56, 0.62, []),
   font('inter', 'Inter', 0.56, 0.63, [
-    latin('Inter', 'inter.woff2', '100 900'),
-    cyrillic('Inter', 'inter-cyrillic.woff2', '100 900'),
+    ...latin('Inter', 'inter'),
+    cyrillic('Inter', 'inter-cyrillic'),
   ]),
   font('figtree', 'Figtree', 0.53, 0.62, [
-    latin('Figtree', 'figtree.woff2', '300 900'),
-    cyrillic('Golos Text', 'golos-text-cyrillic.woff2', '400 900'),
+    ...latin('Figtree', 'figtree'),
+    cyrillic('Golos Text', 'golos-text-cyrillic'),
   ]),
   font('bricolage-grotesque', 'Bricolage Grotesque', 0.56, 0.62, [
-    latin('Bricolage Grotesque', 'bricolage-grotesque.woff2', '200 800'),
-    cyrillic('Onest', 'onest-cyrillic.woff2', '100 900'),
+    ...latin('Bricolage Grotesque', 'bricolage-grotesque'),
+    cyrillic('Onest', 'onest-cyrillic'),
   ]),
   font('space-grotesk', 'Space Grotesk', 0.56, 0.62, [
-    latin('Space Grotesk', 'space-grotesk.woff2', '300 700'),
-    cyrillic('Onest', 'onest-cyrillic.woff2', '100 900'),
+    ...latin('Space Grotesk', 'space-grotesk'),
+    cyrillic('Onest', 'onest-cyrillic'),
   ]),
   font('archivo-expanded', 'Archivo Expanded', 0.68, 0.81, [
-    latin('Archivo Expanded', 'archivo-expanded.woff2', '100 900'),
-    cyrillic('Unbounded', 'unbounded-cyrillic.woff2', '200 900'),
+    ...latin('Archivo Expanded', 'archivo-expanded'),
+    cyrillic('Unbounded', 'unbounded-cyrillic'),
   ]),
   font('golos-text', 'Golos Text', 0.56, 0.62, [
-    latin('Golos Text', 'golos-text.woff2', '400 900'),
-    cyrillic('Golos Text', 'golos-text-cyrillic.woff2', '400 900'),
+    ...latin('Golos Text', 'golos-text'),
+    cyrillic('Golos Text', 'golos-text-cyrillic'),
   ]),
 ]
+
+export const EXTENDED_TEXT = extendedText(fonts.flatMap(f => f.files))
 
 export const DEFAULT_BRAND = 'kiosk'
 export const defaultLook = (): PresentationLook => ({
@@ -55,12 +64,11 @@ export const defaultLook = (): PresentationLook => ({
   language: 'en',
 })
 
-export const presentationLook = ({
-  font,
-  scale,
-  brand,
-  language,
-}: Presentation): PresentationLook => ({ font, scale, brand, language })
+export const presentationLook = (presentation: Presentation): SlideLook => {
+  const { font, scale, brand, language } = presentation
+  const text = JSON.stringify(presentation)
+  return { font, scale, brand, language, extended: EXTENDED_TEXT.test(text + text.toUpperCase()) }
+}
 
 export const isScale = (value: string | undefined): value is Scale =>
   scales.includes(value as Scale)
@@ -68,14 +76,36 @@ export const findFont = (id: string) => fonts.find(f => f.id === id) ?? fonts[0]
 export const fontId = (value: string) =>
   fonts.find(f => f.id === value.trim().toLowerCase().replace(/\s+/g, '-'))?.id
 
-export const fontFiles = (fonts: Font[]) => [
-  ...new Map(fonts.flatMap(f => f.files).map(file => [file.file, file])).values(),
-]
+export const fontFace = (file: FontFile, src: string, extended: boolean) =>
+  `@font-face{font-family:'${fontFamily(file.family, extended)}';src:url(${src}) format('woff2');font-weight:${file.weights};font-display:swap;unicode-range:${file.range}}`
 
-export const fontFace = ({ family, weights, script }: FontFile, src: string) =>
-  `@font-face{font-family:'${family}';src:url(${src}) format('woff2');font-weight:${weights};font-display:swap;unicode-range:${RANGES[script]}}`
+export const siteFontFaces = (src: (file: string) => string) =>
+  fontFiles(fonts)
+    .flatMap(file =>
+      file.role === 'cyrillic'
+        ? [false, true].map(extended => ({ file, extended }))
+        : [{ file, extended: file.role === 'extended' }],
+    )
+    .map(({ file, extended }) => fontFace(file, src(file.file), extended))
+    .join('')
 
-export const hasCyrillic = (text: string) => CYRILLIC.test(text)
+export const fontFamily = (family: string, extended: boolean) =>
+  extended ? `${family} Extended` : family
+
+export const fontStack = (font: Font, extended: boolean) =>
+  [...new Set(font.files.map(f => `'${fontFamily(f.family, extended)}'`))]
+    .concat('Arial', 'Helvetica', 'sans-serif')
+    .join(',')
+
+export const fontFilesFor = (font: Font, extended: boolean, text: string) =>
+  font.files.filter(f =>
+    f.role === 'cyrillic' ? fontChars(f, text).length > 0 : (f.role === 'extended') === extended,
+  )
+
+export const fontChars = (file: FontFile, text: string) => {
+  const chars = codepoints(file.range)
+  return [...new Set(text)].filter(c => chars.has(c.codePointAt(0)!))
+}
 
 export function headingSize(
   slide: SizedSlide,
@@ -152,19 +182,10 @@ export function textFit(
   return MIN_TEXT_FIT
 }
 
-type Script = 'latin' | 'cyrillic'
-
 type SizedSlide = Pick<SlideChrome, 'heading' | 'body'> & (MessageWidget | Widget)
 
 type Box = (typeof boxes)[Scale]
 
-const RANGES: Record<Script, string> = {
-  latin:
-    'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD',
-  cyrillic: 'U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116',
-}
-
-const CYRILLIC = /[\u0400-\u04ff]/
 const CYRILLIC_LETTERS = /[\u0400-\u04ff]/g
 const LATIN_LETTERS = /[a-z]/gi
 
@@ -303,23 +324,51 @@ function font(
   cyrillicWidth: number,
   files: FontFile[],
 ): Font {
-  const families = [...new Set(files.map(f => `'${f.family}'`))]
-  return {
-    id,
-    name,
-    stack: [...families, 'Arial', 'Helvetica', 'sans-serif'].join(','),
-    width,
-    cyrillicWidth,
-    files,
+  return { id, name, width, cyrillicWidth, files }
+}
+
+function latin(family: string, name: string): FontFile[] {
+  return [
+    subset(family, `${name}-core.woff2`, 'core'),
+    subset(family, `${name}-extended.woff2`, 'extended'),
+  ]
+}
+
+function cyrillic(family: string, name: string): FontFile {
+  return subset(family, `${name}.woff2`, 'cyrillic')
+}
+
+function subset(family: string, file: string, role: FontFile['role']): FontFile {
+  const { weights, range } = subsets[file as keyof typeof subsets]
+  return { family, file, weights, range, role }
+}
+
+function codepoints(range: string) {
+  const chars = new Set<number>()
+  for (const part of range.split(',')) {
+    const [start, end = start] = part
+      .slice(2)
+      .split('-')
+      .map(hex => parseInt(hex, 16))
+    for (let c = start; c <= end; c++) chars.add(c)
   }
+  return chars
 }
 
-function latin(family: string, file: string, weights: string): FontFile {
-  return { family, file, weights, script: 'latin' }
+function fontFiles(fonts: Font[]) {
+  return [...new Map(fonts.flatMap(f => f.files).map(file => [file.file, file])).values()]
 }
 
-function cyrillic(family: string, file: string, weights: string): FontFile {
-  return { family, file, weights, script: 'cyrillic' }
+function extendedText(files: FontFile[]) {
+  const chars = (role: FontFile['role']) =>
+    files.filter(f => f.role === role).flatMap(f => [...codepoints(f.range)])
+  const core = new Set(chars('core'))
+  return charClass(chars('extended').filter(c => !core.has(c)))
+}
+
+function charClass(chars: number[]) {
+  const escaped = [...new Set(chars)].map(c => `\\u{${c.toString(16)}}`).join('')
+  return new RegExp(`[${escaped}]`, 'u')
 }
 
 function mostlyCyrillic(text: string) {

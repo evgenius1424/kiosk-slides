@@ -3,7 +3,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react'
-import type { Presentation, PresentationLook } from '@/lib/presentation'
+import type { Presentation, SlideLook } from '@/lib/presentation'
 import { SETTLE_MS, SWIPE, WHEEL, swipeDelta } from '@/lib/player'
 import { SlideView } from '../slide'
 import type { Player } from './use-player'
@@ -59,7 +59,7 @@ export function SlideCanvas({
   canvasRef: RefObject<HTMLDivElement | null>
   player: Player
   presentation: Presentation
-  look: PresentationLook
+  look: SlideLook
   working: boolean
   actions: ReactNode
   onPresent: () => void
