@@ -117,6 +117,58 @@ describe('slide list', () => {
   })
 })
 
+describe('undo and redo', () => {
+  it('takes back a deleted slide, redoes it, and drops redo after another change', async () => {
+    store(item('mine', example))
+    workspace()
+    await screen.findByText('The example')
+    fireEvent.click(slideButton(3))
+    fireEvent.keyDown(slideButton(3), { key: 'Delete' })
+    expect(stored()[0].source).not.toContain('# Three')
+    press('z')
+    expect(stored()[0].source).toBe(example)
+    press('z', true)
+    expect(stored()[0].source).not.toContain('# Three')
+    press('z')
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Violet tone' }))
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    press('z', true)
+    expect(screen.getByText('Nothing to redo')).toBeTruthy()
+    expect(stored()[0].source).toContain('# Three')
+    expect(stored()[0].source).toContain('tone: violet')
+  })
+
+  it('takes back a clean-up without losing the text typed before it', async () => {
+    store(item('mine', example))
+    workspace()
+    await screen.findByText('The example')
+    fireEvent.click(slideButton(3))
+    fireEvent.keyDown(slideButton(3), { key: 'Delete' })
+    const typed = '# Table\n\n| A | Longer |\n|-|-|\n| 1 | 2 |\n\n\n'
+    type(typed)
+    fireEvent.click(screen.getByRole('button', { name: 'Clean up' }))
+    const tidied = stored()[0].source
+    expect(tidied).not.toBe(typed)
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }))
+    press('z')
+    expect(stored()[0].source).toBe(typed)
+    press('z', true)
+    expect(stored()[0].source).toBe(tidied)
+  })
+
+  it('offers Undo on the clean-up notice while editing', async () => {
+    store(item('mine', example))
+    workspace()
+    await screen.findByText('The example')
+    const typed = '# Table\n\n| A | Longer |\n|-|-|\n| 1 | 2 |\n'
+    type(typed)
+    fireEvent.click(screen.getByRole('button', { name: 'Clean up' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(stored()[0].source).toBe(typed)
+  })
+})
+
 function workspace() {
   render(
     <NextIntlClientProvider locale="en" messages={messages}>
@@ -160,6 +212,10 @@ function shownSlide() {
     document.querySelector('.source-slide')?.textContent ??
     ''
   )
+}
+
+function press(key: string, shiftKey = false) {
+  fireEvent.keyDown(document.body, { key, ctrlKey: true, shiftKey })
 }
 
 function paste(text: string) {
