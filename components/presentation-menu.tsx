@@ -53,6 +53,7 @@ export function PresentationMenu({ items, current, onOpen, onCreate, onRename, o
       <button
         ref={buttonRef}
         className="presentation-selector"
+        aria-label={current.name}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={event => {

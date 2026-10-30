@@ -2092,6 +2092,19 @@ html:has(.is-presenting .studio) {
     margin: 10px 0 0;
   }
 }
+@media (max-width: 480px) {
+  .brand-icon {
+    display: grid;
+  }
+  .brand-name {
+    display: none;
+  }
+}
+@media (max-width: 380px) {
+  .presentation-selector > span {
+    display: none;
+  }
+}
 @media (pointer: coarse) {
   input,
   select,
