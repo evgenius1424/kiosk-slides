@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState, type ReactNode, type RefObject } from 'react'
+import { useCallback, useEffect, useReducer, type ReactNode, type RefObject } from 'react'
 import { useTranslations } from 'next-intl'
 import { BookOpen, CornerDownRight, FileText, Wand2 } from 'lucide-react'
 import { parsePresentation, slideLines, type Presentation } from '@/lib/presentation'
@@ -12,26 +12,28 @@ type LiveSource = {
   presentation: Presentation | null
   error: string
 }
+type LiveState = { source: string; parsed: LiveSource }
+type LiveEvent =
+  | { type: 'typed' | 'replaced'; source: string }
+  | { type: 'settled' }
+  | { type: 'loaded'; parsed: LiveSource }
 
 export function useLiveSource(initial: string) {
-  const [source, setSource] = useState(initial)
-  const [parsed, setParsed] = useState(() => parse(initial, null))
+  const [state, dispatch] = useReducer(liveReducer, initial, start)
+  const { source, parsed } = state
   useEffect(() => {
     if (parsed.source === source) return
-    const timer = setTimeout(() => setParsed(p => parse(source, p.presentation)), LIVE_MS)
+    const timer = setTimeout(() => dispatch({ type: 'settled' }), LIVE_MS)
     return () => clearTimeout(timer)
   }, [source, parsed.source])
-  const replace = useCallback((value: string) => {
-    setSource(value)
-    setParsed(p => parse(value, p.presentation))
-  }, [])
+  const type = useCallback((value: string) => dispatch({ type: 'typed', source: value }), [])
+  const replace = useCallback((value: string) => dispatch({ type: 'replaced', source: value }), [])
   const load = useCallback((value: string) => {
     const next = parse(value, null)
-    setSource(value)
-    setParsed(next)
+    dispatch({ type: 'loaded', parsed: next })
     return next
   }, [])
-  return { ...parsed, source, type: setSource, replace, load }
+  return { ...parsed, source, type, replace, load }
 }
 
 export function selectSlide(
@@ -131,6 +133,23 @@ export function PresentationEditor({
       {children && <div className="source-preview">{children}</div>}
     </div>
   )
+}
+
+function liveReducer(state: LiveState, event: LiveEvent): LiveState {
+  switch (event.type) {
+    case 'typed':
+      return { ...state, source: event.source }
+    case 'replaced':
+      return { source: event.source, parsed: parse(event.source, state.parsed.presentation) }
+    case 'settled':
+      return { ...state, parsed: parse(state.source, state.parsed.presentation) }
+    case 'loaded':
+      return { source: event.parsed.source, parsed: event.parsed }
+  }
+}
+
+function start(source: string): LiveState {
+  return { source, parsed: parse(source, null) }
 }
 
 function parse(source: string, previous: Presentation | null): LiveSource {

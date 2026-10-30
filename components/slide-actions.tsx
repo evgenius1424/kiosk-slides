@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type RefObject } from 'react'
+import { type QueryClient, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import {
   ArrowDown,
@@ -16,14 +17,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
-import {
-  MODEL_KEY,
-  RequestError,
-  changeSlide,
-  fetchModels,
-  fetchStatus,
-  type ChatGPTModel,
-} from '@/lib/chat'
+import { RequestError, changeSlide } from '@/lib/chat'
 import {
   formatPresentation,
   parsePresentation,
@@ -37,6 +31,7 @@ import {
   slideCopyRequest,
   type SlideAction,
 } from '@/lib/slide-actions'
+import { modelsQuery, preferredModel, statusQuery } from './use-chatgpt'
 
 export type SlideChange = { source: string; index: number; count: number }
 type Job = { action: SlideAction; index: number; original: string }
@@ -63,7 +58,7 @@ export function useSlideActions({
   const t = useTranslations('SlideActions')
   const [working, setWorking] = useState<Job | null>(null)
   const [pasting, setPasting] = useState<(Job & { prompt: string }) | null>(null)
-  const modelsRef = useRef<ChatGPTModel[] | null>(null)
+  const queries = useQueryClient()
   const apply = (job: Job, markdown: string) => {
     const source = sourceRef.current
     const at = findSlide(source, job.index, job.original)
@@ -81,7 +76,7 @@ export function useSlideActions({
     if (working) return
     const source = sourceRef.current
     const job = { action, index, original: slideSource(source, index) }
-    const model = await aiModel(modelsRef)
+    const model = await aiModel(queries)
     if (!model) {
       const text = slideCopyRequest(prompt, action, source, index)
       setPasting({ ...job, prompt: text })
@@ -370,13 +365,11 @@ export function SlidePasteDialog({
   )
 }
 
-async function aiModel(cache: RefObject<ChatGPTModel[] | null>) {
+async function aiModel(queries: QueryClient) {
   try {
-    const status = await fetchStatus()
+    const status = await queries.fetchQuery(statusQuery)
     if (!status.available || !status.connected || !status.planUsage) return ''
-    cache.current ??= await fetchModels()
-    const saved = localStorage.getItem(MODEL_KEY)
-    return (cache.current.find(m => m.slug === saved) ?? cache.current[0])?.slug ?? ''
+    return preferredModel(await queries.ensureQueryData(modelsQuery))
   } catch {
     return ''
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Keyboard } from 'lucide-react'
 import {
@@ -41,15 +42,16 @@ import { useShortcuts, type SlideKey } from './use-shortcuts'
 import { useVersions } from './use-versions'
 import { EditorToolbar, WorkspaceHeader, type Tab } from './workspace-header'
 
-export function KioskWorkspace({
-  example,
-  prompt,
-  slidePrompt,
-  site,
-  skillInstall = false,
-  slideAi = false,
-  freeDraft = false,
-}: {
+export function KioskWorkspace(props: WorkspaceProps) {
+  const [queries] = useState(() => new QueryClient())
+  return (
+    <QueryClientProvider client={queries}>
+      <Workspace {...props} />
+    </QueryClientProvider>
+  )
+}
+
+type WorkspaceProps = {
   example: string
   prompt: string
   slidePrompt: string
@@ -57,7 +59,17 @@ export function KioskWorkspace({
   skillInstall?: boolean
   slideAi?: boolean
   freeDraft?: boolean
-}) {
+}
+
+function Workspace({
+  example,
+  prompt,
+  slidePrompt,
+  site,
+  skillInstall = false,
+  slideAi = false,
+  freeDraft = false,
+}: WorkspaceProps) {
   const t = useTranslations('Workspace')
   const ta = useTranslations('SlideActions')
   const tp = useTranslations('Presentations')
@@ -109,7 +121,7 @@ export function KioskWorkspace({
   const closeSlideMenu = useCallback(() => setSlideMenu(null), [])
   const restore = (text: string, message: string) => {
     live.replace(text)
-    setIndex(i => Math.min(i, Math.max(0, slideLines(text).length - 1)))
+    setIndex(Math.min(index, Math.max(0, slideLines(text).length - 1)))
     notice(message)
   }
   const undo = () => {

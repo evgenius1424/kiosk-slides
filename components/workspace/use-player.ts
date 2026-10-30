@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useReducer, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Presentation, Slide } from '@/lib/presentation'
 import {
@@ -16,17 +16,39 @@ import { useWakeLock } from '../use-wake-lock'
 
 export type Player = ReturnType<typeof usePlayer>
 
+export type PlayerState = {
+  index: number
+  playing: boolean
+  presenting: boolean
+  idle: boolean
+  safeKey: boolean | null
+  jumped: number | null
+}
+
+export type PlayerEvent =
+  | { type: 'go' | 'jump' | 'show'; index: number }
+  | { type: 'move'; delta: number; count: number }
+  | { type: 'settle'; count: number }
+  | { type: 'tick'; count: number; loop: boolean }
+  | { type: 'autoplay' | 'stop' | 'present' | 'leave' }
+  | { type: 'idle'; idle: boolean }
+  | { type: 'safe'; safe: boolean | null }
+
+export const INITIAL_PLAYER: PlayerState = {
+  index: 0,
+  playing: false,
+  presenting: false,
+  idle: false,
+  safeKey: null,
+  jumped: null,
+}
+
 export function usePlayer(presentation: Presentation, notice: (message: string) => void) {
   const t = useTranslations('Workspace')
   const { slides, transition, duration, loop } = presentation
-  const [index, setIndex] = useState(0)
-  const [playing, setPlaying] = useState(false)
-  const [presenting, setPresenting] = useState(false)
-  const [idle, setIdle] = useState(false)
-  const [safeKey, setSafeKey] = useState<boolean | null>(null)
-  const [jumped, setJumped] = useState<number | null>(null)
-  if (jumped !== null && jumped !== index) setJumped(null)
-  if (slides.length && index > slides.length - 1) setIndex(slides.length - 1)
+  const [state, dispatch] = useReducer(playerReducer, INITIAL_PLAYER)
+  const { index, playing, presenting, idle, safeKey, jumped } = state
+  if (slides.length && index > slides.length - 1) dispatch({ type: 'settle', count: slides.length })
   const safe = safeKey ?? presentation.shareSafe
   const at = Math.max(0, Math.min(index, slides.length - 1))
   const slide = slides[at] as Slide | undefined
@@ -36,42 +58,31 @@ export function usePlayer(presentation: Presentation, notice: (message: string) 
     slide && t('canvas.slide', { number: at + 1, count: slides.length, title: slideTitle(slide) })
   useWakeLock(presenting || playing)
 
-  const go = useCallback((i: number) => {
-    setPlaying(false)
-    setIndex(i)
-  }, [])
-  const jump = useCallback((i: number) => {
-    setPlaying(false)
-    setIndex(i)
-    setJumped(i)
-  }, [])
+  const go = useCallback((i: number) => dispatch({ type: 'go', index: i }), [])
+  const jump = useCallback((i: number) => dispatch({ type: 'jump', index: i }), [])
   const move = useCallback(
-    (delta: number) => {
-      setPlaying(false)
-      setIndex(i => Math.max(0, Math.min(slides.length - 1, i + delta)))
-    },
+    (delta: number) => dispatch({ type: 'move', delta, count: slides.length }),
     [slides.length],
   )
-  const stop = () => setPlaying(false)
+  const setIndex = useCallback((i: number) => dispatch({ type: 'show', index: i }), [])
+  const stop = () => dispatch({ type: 'stop' })
   const toggleAutoplay = () => {
-    setPlaying(!playing)
+    dispatch({ type: 'autoplay' })
     notice(t('toast.autoplay', { on: String(!playing) }))
   }
   const toggleSafe = () => {
     notice(t('toast.shareSafe', { on: String(!safe) }))
-    setSafeKey(!safe)
+    dispatch({ type: 'safe', safe: !safe })
   }
-  const resetSafe = () => setSafeKey(null)
+  const resetSafe = () => dispatch({ type: 'safe', safe: null })
   const present = () => {
-    setPresenting(true)
-    setPlaying(false)
+    dispatch({ type: 'present' })
     ;(document.activeElement as HTMLElement)?.blur()
     enterFullscreen()
     notice(matchMedia('(hover: none)').matches ? t('toast.swipe') : t('toast.keys'))
   }
   const leave = () => {
-    setPresenting(false)
-    setPlaying(false)
+    dispatch({ type: 'leave' })
     if (fullscreenElement()) exitFullscreen()
   }
 
@@ -79,12 +90,8 @@ export function usePlayer(presentation: Presentation, notice: (message: string) 
     if (!playing || !slide) return
     const timer = setTimeout(
       () => {
-        if (index === slides.length - 1 && !loop) {
-          setPlaying(false)
-          notice(t('toast.end'))
-          return
-        }
-        setIndex(i => (i + 1) % slides.length)
+        dispatch({ type: 'tick', count: slides.length, loop })
+        if (index === slides.length - 1 && !loop) notice(t('toast.end'))
       },
       slideSeconds(slide, duration) * 1000,
     )
@@ -92,10 +99,7 @@ export function usePlayer(presentation: Presentation, notice: (message: string) 
   }, [playing, index, slides.length, loop, duration, slide, notice, t])
   useEffect(() => {
     const exited = () => {
-      if (!fullscreenElement()) {
-        setPresenting(false)
-        setPlaying(false)
-      }
+      if (!fullscreenElement()) dispatch({ type: 'leave' })
     }
     document.addEventListener('fullscreenchange', exited)
     document.addEventListener('webkitfullscreenchange', exited)
@@ -108,9 +112,9 @@ export function usePlayer(presentation: Presentation, notice: (message: string) 
     if (!presenting) return
     let timer: ReturnType<typeof setTimeout>
     const wake = () => {
-      setIdle(false)
+      dispatch({ type: 'idle', idle: false })
       clearTimeout(timer)
-      timer = setTimeout(() => setIdle(true), IDLE_MS)
+      timer = setTimeout(() => dispatch({ type: 'idle', idle: true }), IDLE_MS)
     }
     wake()
     window.addEventListener('pointermove', wake)
@@ -119,7 +123,6 @@ export function usePlayer(presentation: Presentation, notice: (message: string) 
       window.removeEventListener('pointermove', wake)
       window.removeEventListener('pointerdown', wake)
       clearTimeout(timer)
-      setIdle(false)
     }
   }, [presenting])
 
@@ -175,6 +178,40 @@ export function useSlideHash({
     window.addEventListener('hashchange', follow)
     return () => window.removeEventListener('hashchange', follow)
   }, [count, shared, go])
+}
+
+export function playerReducer(state: PlayerState, event: PlayerEvent): PlayerState {
+  switch (event.type) {
+    case 'go':
+      return landOn(state, event.index, false)
+    case 'jump':
+      return { ...landOn(state, event.index, false), jumped: event.index }
+    case 'show':
+      return landOn(state, event.index, state.playing)
+    case 'move':
+      return landOn(state, Math.max(0, Math.min(event.count - 1, state.index + event.delta)), false)
+    case 'settle':
+      return landOn(state, event.count - 1, state.playing)
+    case 'tick':
+      if (state.index === event.count - 1 && !event.loop) return { ...state, playing: false }
+      return landOn(state, (state.index + 1) % event.count, true)
+    case 'autoplay':
+      return { ...state, playing: !state.playing }
+    case 'stop':
+      return { ...state, playing: false }
+    case 'present':
+      return { ...state, presenting: true, playing: false }
+    case 'leave':
+      return { ...state, presenting: false, playing: false, idle: false }
+    case 'idle':
+      return { ...state, idle: event.idle }
+    case 'safe':
+      return { ...state, safeKey: event.safe }
+  }
+}
+
+function landOn(state: PlayerState, index: number, playing: boolean): PlayerState {
+  return { ...state, index, playing, jumped: state.jumped === index ? index : null }
 }
 
 function useSlideChange(index: number, slide: Slide | undefined, motion: ActiveTransition) {
