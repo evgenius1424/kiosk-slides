@@ -460,40 +460,17 @@
     "body": "Say what you want to tell people. AI writes the slides, and you can change anything after.",
     "topic": "Your talk",
     "placeholder": "A short talk about why we’re moving to a four-day week, for the whole team",
-    "startersLabel": "Start from",
-    "starters": {
-      "pitch": {
-        "label": "Pitch",
-        "text": "A pitch for … to … The ask is …"
-      },
-      "update": {
-        "label": "Weekly update",
-        "text": "A weekly update for …: what we finished, what comes next, and what is blocking us."
-      },
-      "allHands": {
-        "label": "All-hands",
-        "text": "An all-hands for the whole company about … The big wins are … Next we focus on …"
-      },
-      "lesson": {
-        "label": "Lesson",
-        "text": "A lesson that teaches … to … By the end they can …"
-      },
-      "onboarding": {
-        "label": "Onboarding",
-        "text": "Onboarding for new …: who we are, how we work, and what their first week looks like."
-      },
-      "lobby": {
-        "label": "Lobby loop",
-        "text": "A loop for the screen in our … that shows … It plays on its own."
-      }
+    "goal": "What should it do?",
+    "goals": {
+      "convince": "Convince",
+      "teach": "Teach",
+      "expertise": "Show expertise",
+      "care": "Show you care"
     },
-    "audience": "Who is it for?",
-    "audiences": {
-      "team": "My team",
-      "leadership": "Leadership",
-      "customers": "Customers",
-      "class": "A class",
-      "screen": "A public screen"
+    "language": "Language",
+    "languages": {
+      "en": "English",
+      "ru": "Русский"
     },
     "length": "How long?",
     "lengths": {

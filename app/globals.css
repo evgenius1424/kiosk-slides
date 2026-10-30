@@ -68,11 +68,10 @@ a {
 }
 .btn,
 .icon-btn,
-.start-chips button,
-.chat-suggestions button {
+.start-chips button {
   transition: transform 0.1s ease-out;
 }
-:is(.btn, .icon-btn, .start-chips button, .chat-suggestions button):not(:disabled):active {
+:is(.btn, .icon-btn, .start-chips button):not(:disabled):active {
   transform: scale(0.97);
 }
 button svg {
@@ -1271,24 +1270,6 @@ html:has(.is-presenting .studio) {
   line-height: 1.6;
   margin: 0 0 20px;
 }
-.chat-suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-}
-.chat-suggestions button {
-  border: 1px solid var(--border);
-  background: var(--background);
-  border-radius: 6px;
-  padding: 11px 14px;
-  text-align: left;
-}
-@media (hover: hover) and (pointer: fine) {
-  .chat-suggestions button:hover {
-    background: var(--muted);
-  }
-}
 .chat-bubble {
   max-width: 85%;
   line-height: 1.55;
@@ -2000,7 +1981,7 @@ html:has(.is-presenting .studio) {
     animation: none !important;
     transition: none !important;
   }
-  :is(.btn, .icon-btn, .start-chips button, .chat-suggestions button):active {
+  :is(.btn, .icon-btn, .start-chips button):active {
     transform: none !important;
   }
 }

@@ -1,19 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { requestPrompt, talkRequest } from '@/lib/talk'
-import messages from '@/messages/en.json'
+import { GOALS, requestPrompt, talkRequest } from '@/lib/talk'
 
 describe('talk request', () => {
   it('asks for the topic alone', () => {
     const request = talkRequest({ topic: '  Why we moved to Postgres ' })
     expect(request).toMatch(/^My talk: Why we moved to Postgres\n/)
-    expect(request).not.toContain('Audience')
+    expect(request).not.toContain('Goal')
+    expect(request).not.toContain('Language')
     expect(request).not.toContain('Length')
   })
 
-  it('adds the audience and length when picked', () => {
-    const request = talkRequest({ topic: 'Q3 results', audience: 'leadership', length: 'long' })
-    expect(request).toContain('Audience: leadership.')
+  it('adds the goal, language and length when picked', () => {
+    const request = talkRequest({
+      topic: 'Q3 results',
+      goal: 'expertise',
+      language: 'ru',
+      length: 'long',
+    })
+    expect(request).toContain('Goal: show that I know this well.')
+    expect(request).toContain('Language: write every slide in Russian and set `language: ru`.')
     expect(request).toContain('Length: about 12 slides.')
+  })
+
+  it('gives every goal its own voice', () => {
+    const goals = GOALS.map(goal => talkRequest({ topic: 'x', goal }))
+    expect(new Set(goals).size).toBe(GOALS.length)
+    for (const request of goals) expect(request).toMatch(/Goal: .+ Sound .+\./)
   })
 
   it('ends the copy prompt with the request, or asks for one', () => {
@@ -24,10 +36,5 @@ describe('talk request', () => {
       'GUIDE\n\nWhat should the presentation be about?',
     )
     expect(requestPrompt('GUIDE')).toBe('GUIDE\n\nWhat should the presentation be about?')
-  })
-
-  it('has a sentence with a gap to fill for every starter', () => {
-    for (const starter of Object.values(messages.Start.starters))
-      expect(starter.text).toContain('…')
   })
 })

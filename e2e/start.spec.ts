@@ -22,9 +22,13 @@ test.describe('start screen', () => {
   test('copies a prompt with the topic and takes the pasted answer', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('textbox', { name: 'Your talk' }).fill('Moving to a four-day week')
+    await page.getByRole('button', { name: 'Convince' }).click()
+    await page.getByRole('button', { name: 'Русский' }).click()
     await page.getByRole('button', { name: 'Copy prompt' }).click()
     const prompt = await page.evaluate(() => navigator.clipboard.readText())
     expect(prompt).toContain('Moving to a four-day week')
+    expect(prompt).toContain('Goal: convince them.')
+    expect(prompt).toContain('set `language: ru`')
     await paste(page, three)
     await expect(page.getByRole('dialog', { name: 'What’s your talk about?' })).toBeHidden()
     await expect(slideList(page)).toHaveCount(3)
@@ -34,8 +38,13 @@ test.describe('start screen', () => {
   test('remembers the talk while it is being written', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('textbox', { name: 'Your talk' }).fill('Quarterly results')
+    await page.getByRole('button', { name: 'Teach' }).click()
     await page.reload()
     await expect(page.getByRole('textbox', { name: 'Your talk' })).toHaveValue('Quarterly results')
+    await expect(page.getByRole('button', { name: 'Teach' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 
   test('stays away for a returning visitor and opens again for a new presentation', async ({
