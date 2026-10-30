@@ -118,8 +118,9 @@ export function KioskWorkspace({
     setIndex(Math.min(index, Math.max(0, slideLines(text).length - 1)))
     notice(message)
   }
-  const undo = () => {
-    const previous = versions.undo(current.id, source)
+  const undo = (id = current.id) => {
+    if (id !== current.id) return
+    const previous = versions.undo(id, source)
     if (previous === null) return notice(t('toast.nothingToUndo'))
     restore(previous, t('toast.undone'))
   }
@@ -128,7 +129,7 @@ export function KioskWorkspace({
     if (next === null) return notice(t('toast.nothingToRedo'))
     restore(next, t('toast.redone'))
   }
-  const undoAction = { label: t('toast.undo'), run: () => undoRef.current() }
+  const undoAction = { label: t('toast.undo'), run: () => undoRef.current(current.id) }
   const undoRef = useRef(undo)
   const changeSlide = ({ source: next, index: at, count }: SlideChange) => {
     changeSource(next, sourceRef.current)

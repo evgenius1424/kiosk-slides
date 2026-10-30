@@ -49,7 +49,7 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `skills/`               | The agent skill; its `scripts/`, `references/` and `assets/` are generated             |
 | `.claude-plugin/`       | Plugin and marketplace manifests that publish the skill                                |
 | `e2e/`                  | Playwright specs, one per flow; `layout/` holds a sample per language                  |
-| `specs/`                | TLA+ models of the risky user flows; `<Name>Before.cfg` replays each bug found         |
+| `specs/`                | TLA+ models of the risky user flows; each `<Name>Before*.cfg` replays a bug found      |
 | `.scratch/`             | Working specs and issues as Markdown, may be stale (see Agent skills below)            |
 
 ## Rendering architecture
@@ -98,6 +98,10 @@ Everything else is a thin adapter: `app/` and `components/workspace/` for the si
 `scripts/subset-fonts.py` (needs `pip install fonttools brotli`) cuts each font in `scripts/fonts/` into a preloaded `-core` file and an `-extended` file, keeping only the weights, characters and OpenType features slides use, and writes `lib/presentation/font-files.json`. It is not part of the build: run it by hand, then `pnpm build:skills`, and commit everything it changes. Rerun it when you add or replace a font, when slide CSS starts using a weight outside a font's range or an OpenType feature such as `tnum`, `frac` or `font-variant-numeric`, when a new presentation language needs `locl` forms, or when the core punctuation list should change. Check slides before and after with a pixel diff: a weight range that isn't the font's full range only stays pixel-identical when its lower end is the font's default weight.
 
 ## Agent skills
+
+### Flow checks
+
+`.claude/skills/verify-flows/SKILL.md` lists what each TLA+ model in `specs/` covers and when to rerun `pnpm check:flows`. Read it before changing saved presentations, settings, Undo, the player, the wake lock or the free AI draft, and update the model in the same change.
 
 ### Issue tracker
 

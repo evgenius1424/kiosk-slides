@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path'
 const TLA_VERSION = '1.8.0'
 const JAR_URL = `https://github.com/tlaplus/tlaplus/releases/download/v${TLA_VERSION}/tla2tools.jar`
 const SPECS = 'specs'
+const BEFORE = /Before\w*$/
 const CACHE = join('node_modules', '.cache', 'tla')
 const JAR = resolve(CACHE, `tla2tools-${TLA_VERSION}.jar`)
 
@@ -17,8 +18,8 @@ const configs = readdirSync(SPECS)
 let failed = 0
 for (const config of configs) {
   const name = config.replace(/\.cfg$/, '')
-  const expectBug = name.endsWith('Before')
-  const result = check(name.replace(/Before$/, ''), config)
+  const expectBug = BEFORE.test(name)
+  const result = check(name.replace(BEFORE, ''), config)
   const ok = expectBug ? result.violated : result.passed
   if (!ok) failed++
   const verdict = expectBug
