@@ -1,7 +1,7 @@
 ----------------------------- MODULE Player -----------------------------
 \* The slide you see while editing, stepping and autoplaying
-\* (components/workspace/use-player.ts). The player keeps a slide index;
-\* the screen shows it clamped to the slides that exist.
+\* (playerReducer in components/workspace/use-player.ts). The player keeps a
+\* slide index; the screen shows it clamped to the slides that exist.
 
 EXTENDS Integers
 
@@ -33,12 +33,18 @@ Type ==
        /\ index' = Settle(index, n)
   /\ UNCHANGED <<playing, loop>>
 
-\* Clicking a slide in the list or moving the cursor in Edit.
+\* Clicking a slide in the list stops autoplay.
 Pick ==
   /\ count > 0
   /\ \E i \in 0..count - 1 : index' = i
   /\ playing' = FALSE
   /\ UNCHANGED <<count, loop>>
+
+\* Moving the cursor in Edit, or Undo and Redo, keeps autoplay going.
+Show ==
+  /\ count > 0
+  /\ \E i \in 0..count - 1 : index' = i
+  /\ UNCHANGED <<count, playing, loop>>
 
 Step(delta) ==
   /\ count > 0
@@ -51,7 +57,7 @@ Toggle ==
   /\ playing' = ~playing
   /\ UNCHANGED <<count, index, loop>>
 
-\* The autoplay timer, as written in use-player.ts.
+\* The autoplay timer: playerReducer's tick.
 Tick ==
   /\ playing /\ count > 0
   /\ IF index = count - 1 /\ ~loop
@@ -59,7 +65,7 @@ Tick ==
        ELSE index' = (index + 1) % count /\ playing' = TRUE
   /\ UNCHANGED <<count, loop>>
 
-Next == Type \/ Pick \/ Step(1) \/ Step(-1) \/ Toggle \/ Tick
+Next == Type \/ Pick \/ Show \/ Step(1) \/ Step(-1) \/ Toggle \/ Tick
 
 Spec == Init /\ [][Next]_vars
 
