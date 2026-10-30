@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { sameApartFromStyle, withLastStyle } from '@/lib/last-style'
 import { parsePresentation } from '@/lib/presentation'
@@ -269,10 +269,7 @@ export function useLibrary({
 }
 
 export function usePasteAnywhere(onPaste: (value: string) => void) {
-  const pasteRef = useRef(onPaste)
-  useEffect(() => {
-    pasteRef.current = onPaste
-  })
+  const paste = useEffectEvent(onPaste)
   useEffect(() => {
     const handler = (event: ClipboardEvent) => {
       const target = event.target as HTMLElement
@@ -280,7 +277,7 @@ export function usePasteAnywhere(onPaste: (value: string) => void) {
       const value = pastedPresentation(event.clipboardData?.getData('text/plain') ?? '')
       if (value === null) return
       event.preventDefault()
-      pasteRef.current(value)
+      paste(value)
     }
     document.addEventListener('paste', handler)
     return () => document.removeEventListener('paste', handler)

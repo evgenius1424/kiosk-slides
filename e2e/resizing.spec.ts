@@ -19,6 +19,9 @@ test('hides the slide while presenting takes over the screen', async ({ page }) 
   await page.setViewportSize({ width: 1300, height: 760 })
   await settled(page)
   await record(page)
+  await page.evaluate(() => {
+    document.documentElement.requestFullscreen = () => Promise.resolve()
+  })
   await page.keyboard.press('f')
   for (let step = 1; step <= 8; step++) {
     await page.setViewportSize({ width: 1300 + step * 18, height: 760 + step * 17 })
