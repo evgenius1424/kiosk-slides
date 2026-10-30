@@ -109,6 +109,10 @@ export function KioskWorkspace({
     notice,
   })
   const closeSlideMenu = useCallback(() => setSlideMenu(null), [])
+  const changeSource = (next: string, from = source) => {
+    versions.remember(current.id, from)
+    live.replace(next)
+  }
   const restore = (text: string, message: string) => {
     live.replace(text)
     setIndex(Math.min(index, Math.max(0, slideLines(text).length - 1)))
@@ -127,8 +131,7 @@ export function KioskWorkspace({
   const undoAction = { label: t('toast.undo'), run: () => undoRef.current() }
   const undoRef = useRef(undo)
   const changeSlide = ({ source: next, index: at, count }: SlideChange) => {
-    versions.remember(current.id, sourceRef.current)
-    live.replace(next)
+    changeSource(next, sourceRef.current)
     go(at)
     notice(t('toast.changed', { number: at + 1, count }), undoAction)
   }
@@ -142,8 +145,7 @@ export function KioskWorkspace({
   const addSlide = (after: number) => {
     const added = Math.min(after, slideLines(source).length - 1) + 1
     const next = insertSlide(source, after, newSlide(t))
-    versions.remember(current.id, source)
-    live.replace(next)
+    changeSource(next)
     go(added)
     setTab('markdown')
     focusSlide(next, added)
@@ -151,24 +153,21 @@ export function KioskWorkspace({
   }
   const deleteSlide = (i: number) => {
     if (slides.length < 2) return notice(t('toast.lastSlide'))
-    versions.remember(current.id, source)
-    live.replace(removeSlide(source, i))
+    changeSource(removeSlide(source, i))
     const next = Math.min(i, slides.length - 2)
     go(next)
     notice(t('toast.slideDeleted', { number: i + 1 }), undoAction)
     keepListFocus(next)
   }
   const duplicateSlide = (i: number) => {
-    versions.remember(current.id, source)
-    live.replace(insertSlide(source, i, slideSource(source, i)))
+    changeSource(insertSlide(source, i, slideSource(source, i)))
     go(i + 1)
     notice(t('toast.slideDuplicated', { number: i + 1 }), undoAction)
     keepListFocus(i + 1)
   }
   const moveSlideTo = (from: number, to: number) => {
     if (to === from || to < 0 || to >= slides.length) return
-    versions.remember(current.id, source)
-    live.replace(moveSlide(source, from, to))
+    changeSource(moveSlide(source, from, to))
     go(to)
     notice(t('toast.slideMoved', { number: to + 1 }), undoAction)
     keepListFocus(to)
@@ -196,11 +195,10 @@ export function KioskWorkspace({
   }
   const tidy = () => {
     const formatted = formatPresentation(source)
-    if (formatted !== source) {
-      live.replace(formatted)
-      focusSlide(formatted, index)
-    }
-    notice(t('toast.tidied'))
+    if (formatted === source) return notice(t('toast.tidied'))
+    changeSource(formatted)
+    focusSlide(formatted, index)
+    notice(t('toast.tidied'), undoAction)
   }
   const startBlank = () => {
     setStart(null)
@@ -438,10 +436,9 @@ export function KioskWorkspace({
           presentation={presentation}
           look={look}
           player={player}
-          onChange={(next, previous) => {
-            if (previous !== undefined) versions.remember(current.id, previous)
-            live.replace(next)
-          }}
+          onChange={(next, previous) =>
+            previous === undefined ? live.replace(next) : changeSource(next, previous)
+          }
         />
         <div className="sr-only" aria-live="polite">
           {player.change.count ? player.slideName : ''}
