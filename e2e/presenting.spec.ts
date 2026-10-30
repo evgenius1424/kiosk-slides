@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import { editSource, expect, openSaved, shownSlide, test, three } from './fixtures'
 
 test.beforeEach(async ({ page }) => {
@@ -36,8 +37,7 @@ test('opens at the slide named in the address', async ({ page }) => {
 test('autoplays and stops when P is pressed again', async ({ page }) => {
   await page.clock.install()
   await page.reload()
-  await page.keyboard.press('p')
-  await expect(page.getByText('Autoplay on')).toBeVisible()
+  await startAutoplay(page)
   await page.clock.runFor(13_000)
   await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 2 of 3/)
   await page.keyboard.press('p')
@@ -50,7 +50,7 @@ test('autoplay without a loop stops at the end', async ({ page }) => {
   await editSource(page, '---\nduration: 5s\nloop: false\n---\n\n# One\n\n---\n\n# Two\n')
   await page.clock.install()
   await page.reload()
-  await page.keyboard.press('p')
+  await startAutoplay(page)
   await page.clock.runFor(5_500)
   await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 2 of 2/)
   await page.clock.runFor(5_000)
@@ -73,3 +73,9 @@ test('moves with the on-screen buttons', async ({ page }) => {
   await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 1 of 3/)
   await expect(page.getByRole('button', { name: 'Previous slide' })).toBeDisabled()
 })
+
+async function startAutoplay(page: Page) {
+  await expect(page.locator('main.workspace')).not.toHaveClass(/is-loading/)
+  await page.keyboard.press('p')
+  await expect(page.getByText('Autoplay on')).toBeVisible()
+}
