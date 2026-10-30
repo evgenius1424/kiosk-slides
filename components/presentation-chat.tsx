@@ -27,7 +27,6 @@ import {
   streamChat,
   visibleReply,
 } from '@/lib/chat'
-import { STARTERS, selectGap } from '@/lib/talk'
 import { preferredModel, useChatGPTStatus, useConnect, useModels } from './use-chatgpt'
 import { useOnline } from './use-online'
 
@@ -63,7 +62,6 @@ export function PresentationChat({
   onRequestTaken: () => void
 }) {
   const t = useTranslations('Chat')
-  const tst = useTranslations('Start.starters')
   const [{ entries, input, live }, dispatch] = useReducer(conversationReducer, EMPTY_CONVERSATION)
   const [notice, setNotice] = useState('')
   const [welcome, setWelcome] = useState(false)
@@ -86,7 +84,6 @@ export function PresentationChat({
   const { connect, connecting } = useConnect(err => setNotice(errorText(err, t)))
   const abortRef = useRef<AbortController | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
-  const composerRef = useRef<HTMLTextAreaElement>(null)
   const busy = live !== null
   const refresh = () => statusQ.refetch()
 
@@ -278,21 +275,6 @@ export function PresentationChat({
             <Sparkles size={20} />
             <h2>{t('empty.title')}</h2>
             <p>{t('empty.body')}</p>
-            <div className="chat-suggestions">
-              {STARTERS.map(id => (
-                <button
-                  key={id}
-                  onClick={() => {
-                    dispatch({ type: 'typed', input: tst(`${id}.text`) })
-                    requestAnimationFrame(
-                      () => composerRef.current && selectGap(composerRef.current),
-                    )
-                  }}
-                >
-                  {tst(`${id}.label`)}
-                </button>
-              ))}
-            </div>
           </div>
         )}
         {entries.map((entry, i) =>
@@ -326,7 +308,6 @@ export function PresentationChat({
         }}
       >
         <textarea
-          ref={composerRef}
           aria-label={t('composer.label')}
           placeholder={entries.length ? t('composer.followUp') : t('composer.first')}
           value={input}

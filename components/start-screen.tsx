@@ -17,11 +17,10 @@ import { type DraftOutcome, MAX_BRIEF_LENGTH, requestDraft } from '@/lib/ai-draf
 import { parsePresentation, presentationLook } from '@/lib/presentation'
 import { slideTitle } from '@/lib/player'
 import {
-  AUDIENCES,
+  GOALS,
   LENGTHS,
-  STARTERS,
+  longestRequestFrame,
   requestPrompt,
-  selectGap,
   talkRequest,
   type Length,
   type Talk,
@@ -34,8 +33,7 @@ const DRAFT_KEY = 'kiosk-talk'
 const RESUME_KEY = 'kiosk-talk-resume'
 const SHOWCASE_MS = 5000
 const FEATURES = ['room', 'share', 'saved'] as const
-const MAX_TOPIC_LENGTH =
-  MAX_BRIEF_LENGTH - talkRequest({ topic: '', audience: 'screen', length: 'long' }).length
+const MAX_TOPIC_LENGTH = MAX_BRIEF_LENGTH - longestRequestFrame()
 
 type DraftNote = 'used' | 'paused'
 
@@ -101,10 +99,6 @@ export function StartScreen({
   const update = (next: Talk) => {
     setTalk(next)
     session(DRAFT_KEY, JSON.stringify(next))
-  }
-  const pickStarter = (id: (typeof STARTERS)[number]) => {
-    update({ ...talk, topic: t(`starters.${id}.text`) })
-    requestAnimationFrame(() => topicRef.current && selectGap(topicRef.current))
   }
   const make = () => {
     if (!hasTopic) return topicRef.current?.focus()
@@ -192,13 +186,6 @@ export function StartScreen({
             <p className="start-tagline">{t('tagline')}</p>
             <h1 id="start-title">{t('title')}</h1>
             <p>{t('body')}</p>
-            <div className="start-chips" role="group" aria-label={t('startersLabel')}>
-              {STARTERS.map(id => (
-                <button key={id} type="button" onClick={() => pickStarter(id)}>
-                  {t(`starters.${id}.label`)}
-                </button>
-              ))}
-            </div>
             <textarea
               ref={topicRef}
               className="start-topic"
@@ -214,11 +201,11 @@ export function StartScreen({
               }}
             />
             <ChipRow
-              label={t('audience')}
-              options={AUDIENCES}
-              value={talk.audience}
-              text={id => t(`audiences.${id}`)}
-              onChange={audience => update({ ...talk, audience })}
+              label={t('goal')}
+              options={GOALS}
+              value={talk.goal}
+              text={id => t(`goals.${id}`)}
+              onChange={goal => update({ ...talk, goal })}
             />
             <ChipRow
               label={t('length')}
