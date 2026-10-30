@@ -72,7 +72,7 @@ export function StartScreen({
   const { connect, connecting } = useConnect(() => session(RESUME_KEY, null))
   const online = useOnline()
   const statusQ = useChatGPTStatus()
-  const status = statusQ.isError ? null : statusQ.data
+  const status = statusQ.error ? null : statusQ.data
   const topicRef = useRef<HTMLTextAreaElement>(null)
   const drafting = draftState === 'drafting'
   const draftNote = draftState === 'used' || draftState === 'paused' ? draftState : null

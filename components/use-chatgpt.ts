@@ -1,36 +1,13 @@
-import { useState } from 'react'
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  type ChatGPTModel,
-  MODEL_KEY,
-  connectChatGPT,
-  disconnectChatGPT,
-  fetchModels,
-  fetchStatus,
-} from '@/lib/chat'
+import { useEffect, useState } from 'react'
+import { type ChatGPTModel, MODEL_KEY, connectChatGPT, fetchModels, fetchStatus } from '@/lib/chat'
 import { useOnline } from './use-online'
 
-export const statusQuery = queryOptions({
-  queryKey: ['chatgpt', 'status'],
-  queryFn: fetchStatus,
-  retry: false,
-  staleTime: 60_000,
-})
-
-export const modelsQuery = queryOptions({
-  queryKey: ['chatgpt', 'models'],
-  queryFn: fetchModels,
-  retry: false,
-  staleTime: Infinity,
-})
-
 export function useChatGPTStatus() {
-  const online = useOnline()
-  return useQuery({ ...statusQuery, enabled: online })
+  return useRequest(fetchStatus, useOnline())
 }
 
 export function useModels(enabled: boolean) {
-  return useQuery({ ...modelsQuery, enabled })
+  return useRequest(fetchModels, enabled)
 }
 
 export function useConnect(onError: (err: unknown) => void) {
@@ -47,20 +24,26 @@ export function useConnect(onError: (err: unknown) => void) {
   return { connect, connecting }
 }
 
-export function useDisconnect() {
-  const client = useQueryClient()
-  return useMutation({
-    mutationFn: disconnectChatGPT,
-    onSettled: () => {
-      client.removeQueries({ queryKey: modelsQuery.queryKey })
-      return client.invalidateQueries({ queryKey: statusQuery.queryKey })
-    },
-  })
-}
-
 export function preferredModel(models: ChatGPTModel[], picked?: string | null) {
   const wanted = picked ?? savedModel()
   return models.some(m => m.slug === wanted) ? wanted! : (models[0]?.slug ?? '')
+}
+
+function useRequest<T>(load: () => Promise<T>, enabled: boolean) {
+  const [result, setResult] = useState<{ data?: T; error?: unknown }>({})
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    if (!enabled) return
+    let current = true
+    load().then(
+      data => current && setResult({ data }),
+      error => current && setResult(r => ({ ...r, error })),
+    )
+    return () => {
+      current = false
+    }
+  }, [load, enabled, attempt])
+  return { ...(enabled ? result : {}), refetch: () => setAttempt(a => a + 1) }
 }
 
 function savedModel() {

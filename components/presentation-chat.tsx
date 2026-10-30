@@ -23,17 +23,12 @@ import {
   MANAGE_USAGE_URL,
   MODEL_KEY,
   RequestError,
+  disconnectChatGPT,
   streamChat,
   visibleReply,
 } from '@/lib/chat'
 import { STARTERS, selectGap } from '@/lib/talk'
-import {
-  preferredModel,
-  useChatGPTStatus,
-  useConnect,
-  useDisconnect,
-  useModels,
-} from './use-chatgpt'
+import { preferredModel, useChatGPTStatus, useConnect, useModels } from './use-chatgpt'
 import { useOnline } from './use-online'
 
 type Entry = ChatMessage & { presentation?: string; notes?: string[]; error?: string }
@@ -89,7 +84,6 @@ export function PresentationChat({
       ? t('errors.noModels')
       : ''
   const { connect, connecting } = useConnect(err => setNotice(errorText(err, t)))
-  const signOut = useDisconnect()
   const abortRef = useRef<AbortController | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
@@ -117,14 +111,16 @@ export function PresentationChat({
   }, [entries, live])
   useEffect(() => () => abortRef.current?.abort(), [])
 
-  const disconnect = () => {
+  const disconnect = async () => {
     abortRef.current?.abort()
-    setNotice('')
-    signOut.mutate(undefined, {
-      onSuccess: ({ revoked }) => setNotice(revoked ? '' : t('errors.signOutUnconfirmed')),
-      onError: err => setNotice(errorText(err, t)),
-    })
+    try {
+      const { revoked } = await disconnectChatGPT()
+      setNotice(revoked ? '' : t('errors.signOutUnconfirmed'))
+    } catch (err) {
+      setNotice(errorText(err, t))
+    }
     setPicked(null)
+    refresh()
   }
   const chooseModel = (slug: string) => {
     setPicked(slug)

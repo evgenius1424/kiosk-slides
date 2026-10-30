@@ -86,7 +86,7 @@ Everything else is a thin adapter: `app/` and `components/workspace/` for the si
 - The site download and `skills/render.ts` share one renderer and must never drift. After touching `components/slide/`, `lib/presentation/` or `lib/slide-styles.ts`, run `pnpm build:skills`, commit what it generates (installers copy the skill straight from GitHub), and check a skill-rendered presentation matches the site download.
 - Presentation format changes update `FORMAT.md` and `public/example.md` together; tests read both.
 - State that changes together lives in one `useReducer` with a pure reducer (`playerReducer`, `useLiveSource`, the chat conversation); keep `useEffect` for timers and browser events.
-- Requests to the site's own API go through TanStack Query (`components/use-chatgpt.ts`), so every panel shares one cached ChatGPT status and model list.
+- ChatGPT status, models, sign-in and the chosen model live in `components/use-chatgpt.ts`; panels use its hooks instead of calling `lib/chat` themselves.
 - Keep comments to a minimum and skip doc comments on functions.
 - Public functions and constants go at the top of a file, helpers at the bottom.
 - Prettier owns formatting and Oxlint owns linting; don't hand-format or add disable comments without a reason.

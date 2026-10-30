@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Keyboard } from 'lucide-react'
 import {
@@ -42,26 +41,7 @@ import { useShortcuts, type SlideKey } from './use-shortcuts'
 import { useVersions } from './use-versions'
 import { EditorToolbar, WorkspaceHeader, type Tab } from './workspace-header'
 
-export function KioskWorkspace(props: WorkspaceProps) {
-  const [queries] = useState(() => new QueryClient())
-  return (
-    <QueryClientProvider client={queries}>
-      <Workspace {...props} />
-    </QueryClientProvider>
-  )
-}
-
-type WorkspaceProps = {
-  example: string
-  prompt: string
-  slidePrompt: string
-  site: string
-  skillInstall?: boolean
-  slideAi?: boolean
-  freeDraft?: boolean
-}
-
-function Workspace({
+export function KioskWorkspace({
   example,
   prompt,
   slidePrompt,
@@ -69,7 +49,15 @@ function Workspace({
   skillInstall = false,
   slideAi = false,
   freeDraft = false,
-}: WorkspaceProps) {
+}: {
+  example: string
+  prompt: string
+  slidePrompt: string
+  site: string
+  skillInstall?: boolean
+  slideAi?: boolean
+  freeDraft?: boolean
+}) {
   const t = useTranslations('Workspace')
   const ta = useTranslations('SlideActions')
   const tp = useTranslations('Presentations')
