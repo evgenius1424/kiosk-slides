@@ -80,8 +80,9 @@ describe('presentationHtml', () => {
   it('embeds only the chosen font', async () => {
     const html = await renderFont(presentation, 'figtree')
     expect(html).toContain(
-      "@font-face{font-family:'Figtree';src:url(data:font/woff2;base64,figtree.woff2)",
+      "@font-face{font-family:'Figtree';src:url(data:font/woff2;base64,figtree-core.woff2)",
     )
+    expect(html).not.toContain('figtree-extended.woff2')
     expect(html).not.toContain("font-family:'Inter'")
     expect(html).not.toContain('golos-text-cyrillic.woff2')
     expect(await render()).not.toContain('@font-face')
@@ -90,11 +91,22 @@ describe('presentationHtml', () => {
   it('embeds the Cyrillic face only when the text needs it', async () => {
     const russian = parsePresentation('# Привет, мир')
     const html = await renderFont(russian, 'figtree')
-    expect(html).toContain('figtree.woff2')
+    expect(html).toContain('figtree-core.woff2')
     expect(html).toContain(
       "@font-face{font-family:'Golos Text';src:url(data:font/woff2;base64,golos-text-cyrillic.woff2)",
     )
-    expect(html).not.toContain('golos-text.woff2')
+    expect(html).not.toContain('golos-text-core.woff2')
+  })
+
+  it('embeds the extended file instead of the core one when the text needs it', async () => {
+    const html = await renderFont(parsePresentation('# Déjà vu'), 'figtree')
+    expect(html).toContain(
+      "@font-face{font-family:'Figtree Extended';src:url(data:font/woff2;base64,figtree-extended.woff2)",
+    )
+    expect(html).not.toContain('figtree-core.woff2')
+    expect(html.replaceAll('&#x27;', "'")).toContain(
+      "--slide-font:'Figtree Extended','Golos Text Extended',Arial",
+    )
   })
 
   it('speaks the presentation language in the page and the player', async () => {

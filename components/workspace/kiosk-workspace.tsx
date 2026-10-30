@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { useTranslations } from 'next-intl'
 import { Keyboard } from 'lucide-react'
 import {
+  findFont,
   formatPresentation,
   insertSlide,
   moveSlide,
@@ -30,6 +31,7 @@ import {
 import { SlideView } from '../slide'
 import { StartScreen } from '../start-screen'
 import { HelpDialog, type HelpTopic } from './help-dialog'
+import { loadFonts } from './load-fonts'
 import { SettingsPanel, useSettingsPanel } from './settings-panel'
 import { SlideCanvas, useCanvas } from './slide-canvas'
 import { SlideSidebar, type SlideMenuAt } from './slide-sidebar'
@@ -273,6 +275,12 @@ export function KioskWorkspace({
     undoRef.current = undo
     changeRef.current = changeSlide
   })
+  const fontText = JSON.stringify(presentation)
+  useEffect(() => {
+    if (tab === 'preview') return
+    const font = [findFont(look.font)]
+    void Promise.all([false, true].map(extended => loadFonts(font, extended, fontText)))
+  }, [tab, look.font, fontText])
   useSlideHash({
     at,
     count: slides.length,
