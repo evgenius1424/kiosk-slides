@@ -460,17 +460,12 @@
     "body": "Say what you want to tell people. AI writes the slides, and you can change anything after.",
     "topic": "Your talk",
     "placeholder": "A short talk about why we’re moving to a four-day week, for the whole team",
-    "goal": "What should it do?",
+    "goal": "Goal",
     "goals": {
       "convince": "Convince",
       "teach": "Teach",
-      "expertise": "Show expertise",
-      "care": "Show you care"
-    },
-    "language": "Language",
-    "languages": {
-      "en": "English",
-      "ru": "Русский"
+      "inform": "Inform",
+      "inspire": "Inspire"
     },
     "length": "How long?",
     "lengths": {

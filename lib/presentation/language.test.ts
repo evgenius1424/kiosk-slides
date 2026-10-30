@@ -17,7 +17,7 @@ import {
   slideWords,
   terms,
 } from '@/lib/presentation'
-import { GOALS, LANGUAGES, talkRequest } from '@/lib/talk'
+import { GOALS, talkRequest } from '@/lib/talk'
 import messages from '@/messages/en.json'
 
 const surfaces: Record<string, () => string | Promise<string>> = {
@@ -33,7 +33,6 @@ const surfaces: Record<string, () => string | Promise<string>> = {
         slideSystemPrompt(),
         slideCopyPrompt(),
         ...GOALS.map(goal => talkRequest({ topic: '', goal })),
-        ...LANGUAGES.map(language => talkRequest({ topic: '', language })),
       ])
     ).join('\n'),
   'README.md': () => read('README.md'),

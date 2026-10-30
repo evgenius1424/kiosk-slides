@@ -18,7 +18,6 @@ import { parsePresentation, presentationLook } from '@/lib/presentation'
 import { slideTitle } from '@/lib/player'
 import {
   GOALS,
-  LANGUAGES,
   LENGTHS,
   longestRequestFrame,
   requestPrompt,
@@ -207,13 +206,6 @@ export function StartScreen({
               value={talk.goal}
               text={id => t(`goals.${id}`)}
               onChange={goal => update({ ...talk, goal })}
-            />
-            <ChipRow
-              label={t('language')}
-              options={LANGUAGES}
-              value={talk.language}
-              text={id => t(`languages.${id}`)}
-              onChange={language => update({ ...talk, language })}
             />
             <ChipRow
               label={t('length')}

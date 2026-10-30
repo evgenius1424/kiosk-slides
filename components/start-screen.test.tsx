@@ -48,13 +48,12 @@ describe('start screen', () => {
   it('copies a prompt ending in the topic on the hosted site, then takes the pasted answer', async () => {
     workspace()
     fireEvent.click(screen.getByRole('button', { name: 'Convince' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Русский' }))
     fireEvent.click(screen.getByRole('button', { name: 'Short (5)' }))
     fireEvent.change(topic(), { target: { value: 'Moving to a four-day week' } })
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy prompt' })))
     expect(clipboard).toMatch(/^GUIDE\n\nHere is my request:\n/)
     expect(clipboard).toMatch(
-      /My talk: Moving to a four-day week\nGoal: convince them\. .+\nLanguage: write every slide in Russian.+\nLength: about 5 slides\.\n.*$/,
+      /My talk: Moving to a four-day week\nGoal: convince them\. .+\nLength: about 5 slides\.\n.*$/,
     )
     expect(screen.getByRole('heading', { name: 'Now paste the answer here' })).toBeTruthy()
 
@@ -74,15 +73,14 @@ describe('start screen', () => {
     expect(showcase.textContent).toContain('1 / 2')
   })
 
-  it('asks for a goal and a language instead of presets', () => {
+  it('asks for a goal instead of presets', () => {
     workspace()
     expect(screen.queryByRole('button', { name: 'Pitch' })).toBeNull()
-    expect(screen.getByRole('group', { name: 'What should it do?' })).toBeTruthy()
-    const language = screen.getByRole('group', { name: 'Language' })
-    fireEvent.click(within(language).getByRole('button', { name: 'English' }))
-    expect(within(language).getByRole('button', { name: 'English' }).ariaPressed).toBe('true')
-    fireEvent.click(within(language).getByRole('button', { name: 'English' }))
-    expect(within(language).getByRole('button', { name: 'English' }).ariaPressed).toBe('false')
+    const goal = within(screen.getByRole('group', { name: 'Goal' }))
+    fireEvent.click(goal.getByRole('button', { name: 'Teach' }))
+    expect(goal.getByRole('button', { name: 'Teach' }).ariaPressed).toBe('true')
+    fireEvent.click(goal.getByRole('button', { name: 'Teach' }))
+    expect(goal.getByRole('button', { name: 'Teach' }).ariaPressed).toBe('false')
   })
 
   it('opens the example or a blank presentation, and New presentation comes back here', () => {
@@ -125,13 +123,13 @@ describe('start screen', () => {
     })
     workspace({ freeDraft: true })
     fireEvent.change(topic(), { target: { value: 'Moving to a four-day week' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Show you care' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Inspire' }))
     fireEvent.click(screen.getByRole('button', { name: 'Short (5)' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
     expect(screen.getByText(/Your request goes to Anthropic/)).toBeTruthy()
     await vi.waitFor(() => expect(menuName()).toBe('Four days'))
     expect(briefs[0]).toMatch(
-      /^My talk: Moving to a four-day week\nGoal: show that I care .+\nLength: about 5 slides\./,
+      /^My talk: Moving to a four-day week\nGoal: inspire them\. .+\nLength: about 5 slides\./,
     )
     expect(screen.queryByRole('heading', { name: 'What’s your talk about?' })).toBeNull()
     await vi.waitFor(() => expect(library().map(p => p.name)).toEqual(['Four days']))

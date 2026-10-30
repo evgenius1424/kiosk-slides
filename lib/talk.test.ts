@@ -6,19 +6,12 @@ describe('talk request', () => {
     const request = talkRequest({ topic: '  Why we moved to Postgres ' })
     expect(request).toMatch(/^My talk: Why we moved to Postgres\n/)
     expect(request).not.toContain('Goal')
-    expect(request).not.toContain('Language')
     expect(request).not.toContain('Length')
   })
 
-  it('adds the goal, language and length when picked', () => {
-    const request = talkRequest({
-      topic: 'Q3 results',
-      goal: 'expertise',
-      language: 'ru',
-      length: 'long',
-    })
-    expect(request).toContain('Goal: show that I know this well.')
-    expect(request).toContain('Language: write every slide in Russian and set `language: ru`.')
+  it('adds the goal and length when picked', () => {
+    const request = talkRequest({ topic: 'Q3 results', goal: 'inform', length: 'long' })
+    expect(request).toContain('Goal: inform them.')
     expect(request).toContain('Length: about 12 slides.')
   })
 
