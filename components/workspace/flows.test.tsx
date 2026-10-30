@@ -167,6 +167,23 @@ describe('undo and redo', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
     expect(stored()[0].source).toBe(typed)
   })
+
+  it('leaves another presentation alone when a notice Undo is pressed after switching', async () => {
+    const other = '# Four\n\n---\n\n# Five\n'
+    store(item('mine', example), item('other', other))
+    workspace()
+    await screen.findByText('The example')
+    openPresentation('other')
+    fireEvent.click(slideButton(2))
+    fireEvent.keyDown(slideButton(2), { key: 'Delete' })
+    openPresentation('The example')
+    fireEvent.click(slideButton(3))
+    fireEvent.keyDown(slideButton(3), { key: 'Delete' })
+    openPresentation('other')
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(stored().find(p => p.id === 'other')!.source).toBe('# Four\n')
+    expect(stored().find(p => p.id === 'mine')!.source).not.toContain('# Three')
+  })
 })
 
 function workspace() {
@@ -204,6 +221,11 @@ function type(value: string) {
   fireEvent.change(screen.getByRole('textbox', { name: 'Presentation source' }), {
     target: { value },
   })
+}
+
+function openPresentation(name: string) {
+  fireEvent.click(document.querySelector('.presentation-selector')!)
+  fireEvent.click(screen.getByRole('button', { name }))
 }
 
 function shownSlide() {
