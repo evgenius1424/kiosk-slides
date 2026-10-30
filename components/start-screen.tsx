@@ -13,8 +13,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
-import { MAX_BRIEF_LENGTH, requestDraft } from '@/lib/ai-draft'
-import { type ChatGPTStatus, connectChatGPT, fetchStatus } from '@/lib/chat'
+import { type DraftOutcome, MAX_BRIEF_LENGTH, requestDraft } from '@/lib/ai-draft'
 import { parsePresentation, presentationLook } from '@/lib/presentation'
 import { slideTitle } from '@/lib/player'
 import {
@@ -28,6 +27,7 @@ import {
   type Talk,
 } from '@/lib/talk'
 import { SlideView } from './slide'
+import { useChatGPTStatus, useConnect } from './use-chatgpt'
 import { useOnline } from './use-online'
 
 const DRAFT_KEY = 'kiosk-talk'
@@ -36,6 +36,8 @@ const SHOWCASE_MS = 5000
 const FEATURES = ['room', 'share', 'saved'] as const
 const MAX_TOPIC_LENGTH =
   MAX_BRIEF_LENGTH - talkRequest({ topic: '', audience: 'screen', length: 'long' }).length
+
+type DraftNote = 'used' | 'paused'
 
 export function resumingStart() {
   const resume = session(RESUME_KEY)
@@ -63,30 +65,24 @@ export function StartScreen({
   onClose?: () => void
 }) {
   const t = useTranslations('Start')
-  const [talk, setTalk] = useState<Talk>({ topic: '' })
-  const [status, setStatus] = useState<ChatGPTStatus | null>(null)
-  const [copied, setCopied] = useState<string | null>(null)
-  const [failed, setFailed] = useState(false)
-  const [connecting, setConnecting] = useState(false)
-  const [drafting, setDrafting] = useState(false)
-  const [draftNote, setDraftNote] = useState<'used' | 'paused' | null>(null)
+  const [talk, setTalk] = useState<Talk>(() => draft() ?? { topic: '' })
+  const [copied, setCopied] = useState<{ text: string; failed: boolean } | null>(null)
   const draftRef = useRef<AbortController | null>(null)
+  const [draftState, setDraftState] = useState<'idle' | 'drafting' | DraftNote>('idle')
+  const { connect, connecting } = useConnect(() => session(RESUME_KEY, null))
   const online = useOnline()
+  const statusQ = useChatGPTStatus()
+  const status = statusQ.error ? null : statusQ.data
   const topicRef = useRef<HTMLTextAreaElement>(null)
+  const drafting = draftState === 'drafting'
+  const draftNote = draftState === 'used' || draftState === 'paused' ? draftState : null
   const ready = status?.available && status.connected && status.planUsage
   const local = online && status?.available
   const hasTopic = !!talk.topic.trim()
   const offerDraft = freeDraft && online && !status?.available && !draftNote
 
-  useEffect(() => {
-    const saved = draft()
-    if (saved) setTalk(saved)
-    topicRef.current?.focus()
-  }, [])
+  useEffect(() => topicRef.current?.focus(), [])
   useEffect(() => () => draftRef.current?.abort(), [])
-  useEffect(() => {
-    if (online) fetchStatus().then(setStatus, () => setStatus(null))
-  }, [online])
   useEffect(() => {
     if (!onClose || drafting) return
     const escape = (event: KeyboardEvent) => {
@@ -117,35 +113,27 @@ export function StartScreen({
   }
   const makeDraft = async () => {
     if (!hasTopic) return topicRef.current?.focus()
-    setDrafting(true)
+    setDraftState('drafting')
     draftRef.current = new AbortController()
     const outcome = await requestDraft(talkRequest(talk), draftRef.current.signal).catch(() => null)
     if (!outcome) return
-    setDrafting(false)
     if (outcome.kind === 'presentation') {
+      setDraftState('idle')
       session(DRAFT_KEY, null)
       onDraft(outcome.source)
-    } else if (outcome.kind === 'limit' && outcome.reason !== 'already-used') setDraftNote('paused')
-    else setDraftNote('used')
+    } else setDraftState(noteFor(outcome))
   }
-  const connect = async () => {
-    setConnecting(true)
+  const startConnect = () => {
     session(RESUME_KEY, '1')
-    try {
-      await connectChatGPT()
-    } catch {
-      session(RESUME_KEY, null)
-      setConnecting(false)
-    }
+    connect()
   }
   const copy = async () => {
     const text = requestPrompt(prompt, talk)
-    setCopied(text)
+    setCopied({ text, failed: false })
     try {
       await navigator.clipboard.writeText(text)
-      setFailed(false)
     } catch {
-      setFailed(true)
+      setCopied({ text, failed: true })
     }
   }
 
@@ -177,8 +165,8 @@ export function StartScreen({
           <div className="start-body">
             <ClipboardPaste size={22} />
             <h1 id="start-title">{t('paste.title')}</h1>
-            <p>{failed ? t('paste.copyFailed') : t('paste.copied')}</p>
-            {failed && <pre className="start-prompt">{copied}</pre>}
+            <p>{copied.failed ? t('paste.copyFailed') : t('paste.copied')}</p>
+            {copied.failed && <pre className="start-prompt">{copied.text}</pre>}
             <p className="start-steps">{t('paste.steps')}</p>
             <div className="start-actions">
               <button className="btn" onClick={copy}>
@@ -196,7 +184,7 @@ export function StartScreen({
             onSubmit={e => {
               e.preventDefault()
               if (ready) make()
-              else if (local) connect()
+              else if (local) startConnect()
               else if (offerDraft) makeDraft()
               else copy()
             }}
@@ -401,6 +389,10 @@ function ChipRow<T extends string>({
       </div>
     </div>
   )
+}
+
+function noteFor(outcome: DraftOutcome): DraftNote {
+  return outcome.kind === 'limit' && outcome.reason !== 'already-used' ? 'paused' : 'used'
 }
 
 function draft(): Talk | null {

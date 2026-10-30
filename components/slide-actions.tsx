@@ -16,14 +16,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
-import {
-  MODEL_KEY,
-  RequestError,
-  changeSlide,
-  fetchModels,
-  fetchStatus,
-  type ChatGPTModel,
-} from '@/lib/chat'
+import { RequestError, changeSlide, fetchModels, fetchStatus, type ChatGPTModel } from '@/lib/chat'
 import {
   formatPresentation,
   parsePresentation,
@@ -37,6 +30,7 @@ import {
   slideCopyRequest,
   type SlideAction,
 } from '@/lib/slide-actions'
+import { preferredModel } from './use-chatgpt'
 
 export type SlideChange = { source: string; index: number; count: number }
 type Job = { action: SlideAction; index: number; original: string }
@@ -375,8 +369,7 @@ async function aiModel(cache: RefObject<ChatGPTModel[] | null>) {
     const status = await fetchStatus()
     if (!status.available || !status.connected || !status.planUsage) return ''
     cache.current ??= await fetchModels()
-    const saved = localStorage.getItem(MODEL_KEY)
-    return (cache.current.find(m => m.slug === saved) ?? cache.current[0])?.slug ?? ''
+    return preferredModel(cache.current)
   } catch {
     return ''
   }

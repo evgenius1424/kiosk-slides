@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   ArrowUp,
@@ -18,26 +18,32 @@ import {
 } from 'lucide-react'
 import { REPO_URL } from '@/lib/author'
 import {
-  type ChatGPTModel,
   type ChatGPTStatus,
   type ChatMessage,
   MANAGE_USAGE_URL,
   MODEL_KEY,
   RequestError,
-  connectChatGPT,
   disconnectChatGPT,
-  fetchModels,
-  fetchStatus,
   streamChat,
   visibleReply,
 } from '@/lib/chat'
 import { STARTERS, selectGap } from '@/lib/talk'
+import { preferredModel, useChatGPTStatus, useConnect, useModels } from './use-chatgpt'
 import { useOnline } from './use-online'
 
 type Entry = ChatMessage & { presentation?: string; notes?: string[]; error?: string }
+type Conversation = { entries: Entry[]; input: string; live: Live | null }
+type Live = { text: string; notes: string[] }
+type ConversationEvent =
+  | { type: 'typed'; input: string }
+  | { type: 'sent'; content: string }
+  | ({ type: 'progress' } & Live)
+  | { type: 'replied'; entry: Entry }
+  | { type: 'cleared' }
 
 const WELCOME_KEY = 'kiosk-chatgpt-welcomed'
 const LOCAL_URL = 'http://127.0.0.1:3000'
+const EMPTY_CONVERSATION: Conversation = { entries: [], input: '', live: null }
 
 export function PresentationChat({
   source,
@@ -58,32 +64,32 @@ export function PresentationChat({
 }) {
   const t = useTranslations('Chat')
   const tst = useTranslations('Start.starters')
-  const [status, setStatus] = useState<ChatGPTStatus | null>(null)
-  const [models, setModels] = useState<ChatGPTModel[]>([])
-  const [model, setModel] = useState('')
+  const [{ entries, input, live }, dispatch] = useReducer(conversationReducer, EMPTY_CONVERSATION)
   const [notice, setNotice] = useState('')
   const [welcome, setWelcome] = useState(false)
-  const [connecting, setConnecting] = useState(false)
-  const [entries, setEntries] = useState<Entry[]>([])
-  const [input, setInput] = useState('')
-  const [live, setLive] = useState<{ text: string; notes: string[] } | null>(null)
-  const [unreachable, setUnreachable] = useState(false)
+  const [picked, setPicked] = useState<string | null>(null)
   const online = useOnline()
+  const statusQ = useChatGPTStatus()
+  const unreachable = statusQ.error instanceof TypeError
+  const status: ChatGPTStatus | null = statusQ.error
+    ? { available: false, reason: errorText(statusQ.error, t) }
+    : (statusQ.data ?? null)
+  const ready = !!(status?.available && status.connected && status.planUsage)
+  const modelsQ = useModels(ready)
+  const models = modelsQ.data ?? []
+  const model = preferredModel(models, picked)
+  const modelNotice = modelsQ.error
+    ? errorText(modelsQ.error, t)
+    : modelsQ.data && !models.length
+      ? t('errors.noModels')
+      : ''
+  const { connect, connecting } = useConnect(err => setNotice(errorText(err, t)))
   const abortRef = useRef<AbortController | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
   const busy = live !== null
-  const ready = status?.available && status.connected && status.planUsage
+  const refresh = () => statusQ.refetch()
 
-  const refresh = useCallback(async () => {
-    try {
-      setStatus(await fetchStatus())
-      setUnreachable(false)
-    } catch (err) {
-      if (err instanceof TypeError) setUnreachable(true)
-      else setStatus({ available: false, reason: errorText(err, t) })
-    }
-  }, [t])
   const openFromSignIn = useEffectEvent(onOpen)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -101,34 +107,10 @@ export function PresentationChat({
     }
   }, [])
   useEffect(() => {
-    if (online) refresh()
-  }, [online, refresh])
-  useEffect(() => {
-    if (!ready) return
-    fetchModels()
-      .then(list => {
-        setModels(list)
-        const saved = storage(MODEL_KEY)
-        setModel(list.some(m => m.slug === saved) ? saved! : list[0]?.slug || '')
-        if (!list.length) setNotice(t('errors.noModels'))
-      })
-      .catch(err => setNotice(errorText(err, t)))
-  }, [ready, t])
-  useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight })
   }, [entries, live])
   useEffect(() => () => abortRef.current?.abort(), [])
 
-  const connect = async () => {
-    setConnecting(true)
-    setNotice('')
-    try {
-      await connectChatGPT()
-    } catch (err) {
-      setNotice(errorText(err, t))
-      setConnecting(false)
-    }
-  }
   const disconnect = async () => {
     abortRef.current?.abort()
     try {
@@ -137,12 +119,11 @@ export function PresentationChat({
     } catch (err) {
       setNotice(errorText(err, t))
     }
-    setModels([])
-    setModel('')
+    setPicked(null)
     refresh()
   }
   const chooseModel = (slug: string) => {
-    setModel(slug)
+    setPicked(slug)
     storage(MODEL_KEY, slug)
   }
   const dismissWelcome = () => {
@@ -154,8 +135,7 @@ export function PresentationChat({
     const content = text.trim()
     if (!content || busy || !ready || !model) return
     const history = [...entries, { role: 'user' as const, content }]
-    setEntries(history)
-    setInput('')
+    dispatch({ type: 'sent', content })
     const controller = new AbortController()
     abortRef.current = controller
     let attempt = ''
@@ -164,7 +144,6 @@ export function PresentationChat({
     const fresh = !entries.some(e => e.presentation)
     let reply = ''
     let error = ''
-    setLive({ text: '', notes: [] })
     try {
       await streamChat(
         history.filter(e => e.content).map(({ role, content }) => ({ role, content })),
@@ -180,18 +159,17 @@ export function PresentationChat({
             presentation = onPresentation(event.source, fresh && !presentation)
           if (event.type === 'done') reply = event.reply
           if (event.type === 'error') error = event.message
-          setLive({ text: attempt, notes: [...notes] })
+          dispatch({ type: 'progress', text: attempt, notes: [...notes] })
         },
         controller.signal,
       )
     } catch (err) {
       error = controller.signal.aborted ? t('errors.stopped') : errorText(err, t)
     }
-    setEntries(current => [
-      ...current,
-      { role: 'assistant', content: reply || '', presentation, notes, error },
-    ])
-    setLive(null)
+    dispatch({
+      type: 'replied',
+      entry: { role: 'assistant', content: reply || '', presentation, notes, error },
+    })
     abortRef.current = null
     if (/sign-in|session|connect again/i.test(error)) refresh()
   }
@@ -209,7 +187,7 @@ export function PresentationChat({
           <h2>{t('offline.title')}</h2>
           <p>{t('offline.body')}</p>
           {online && (
-            <button className="btn" onClick={refresh}>
+            <button className="btn" onClick={() => refresh()}>
               <RotateCcw size={14} />
               {t('offline.retry')}
             </button>
@@ -243,7 +221,14 @@ export function PresentationChat({
                 ? t('connect.noPlanUsage', { email: status.email })
                 : t('connect.intro')}
             </p>
-            <button className="btn primary chatgpt-button" onClick={connect} disabled={connecting}>
+            <button
+              className="btn primary chatgpt-button"
+              onClick={() => {
+                setNotice('')
+                connect()
+              }}
+              disabled={connecting}
+            >
               {connecting ? t('connect.opening') : t('connect.button')}
             </button>
             <p className="chat-fineprint">{t('connect.fineprint')}</p>
@@ -298,7 +283,7 @@ export function PresentationChat({
                 <button
                   key={id}
                   onClick={() => {
-                    setInput(tst(`${id}.text`))
+                    dispatch({ type: 'typed', input: tst(`${id}.text`) })
                     requestAnimationFrame(
                       () => composerRef.current && selectGap(composerRef.current),
                     )
@@ -326,10 +311,10 @@ export function PresentationChat({
           ),
         )}
         {live && <AssistantBubble text={live.text} notes={live.notes} pending />}
-        {notice && (
+        {(notice || modelNotice) && (
           <span className="chat-note error">
             <TriangleAlert size={12} />
-            {notice}
+            {notice || modelNotice}
           </span>
         )}
       </div>
@@ -346,7 +331,7 @@ export function PresentationChat({
           placeholder={entries.length ? t('composer.followUp') : t('composer.first')}
           value={input}
           rows={2}
-          onChange={e => setInput(e.target.value)}
+          onChange={e => dispatch({ type: 'typed', input: e.target.value })}
           onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault()
@@ -388,7 +373,7 @@ export function PresentationChat({
             </button>
           </div>
           {entries.length > 0 && !busy && (
-            <button type="button" className="btn" onClick={() => setEntries([])}>
+            <button type="button" className="btn" onClick={() => dispatch({ type: 'cleared' })}>
               <RotateCcw size={14} />
               {t('composer.newChat')}
             </button>
@@ -496,6 +481,25 @@ function AssistantBubble({
       )}
     </div>
   )
+}
+
+function conversationReducer(state: Conversation, event: ConversationEvent): Conversation {
+  switch (event.type) {
+    case 'typed':
+      return { ...state, input: event.input }
+    case 'sent':
+      return {
+        entries: [...state.entries, { role: 'user', content: event.content }],
+        input: '',
+        live: { text: '', notes: [] },
+      }
+    case 'progress':
+      return { ...state, live: { text: event.text, notes: event.notes } }
+    case 'replied':
+      return { ...state, entries: [...state.entries, event.entry], live: null }
+    case 'cleared':
+      return { ...state, entries: [] }
+  }
 }
 
 function errorText(err: unknown, t: ReturnType<typeof useTranslations<'Chat'>>) {

@@ -109,7 +109,7 @@ export function KioskWorkspace({
   const closeSlideMenu = useCallback(() => setSlideMenu(null), [])
   const restore = (text: string, message: string) => {
     live.replace(text)
-    setIndex(i => Math.min(i, Math.max(0, slideLines(text).length - 1)))
+    setIndex(Math.min(index, Math.max(0, slideLines(text).length - 1)))
     notice(message)
   }
   const undo = () => {
