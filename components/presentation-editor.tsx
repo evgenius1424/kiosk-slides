@@ -84,7 +84,7 @@ export function PresentationEditor({
         <div className="source-header">
           <span>
             <FileText size={14} />
-            {name}
+            <span>{name}</span>
           </span>
           <div>
             <button className="btn" onClick={onHelp}>

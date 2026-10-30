@@ -718,6 +718,7 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   flex-shrink: 0;
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
@@ -726,6 +727,15 @@ kbd {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+.source-header > span > svg {
+  flex-shrink: 0;
+}
+.source-header > span > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .source-editor textarea {
   display: block;
@@ -1657,6 +1667,7 @@ html:has(.is-presenting .studio) {
 }
 .source-header .btn {
   padding: 8px 12px;
+  white-space: nowrap;
 }
 .workspace-dialog.wide {
   width: min(680px, 92vw);
@@ -1755,8 +1766,26 @@ html:has(.is-presenting .studio) {
     grid-template-columns: 1fr;
     gap: 4px;
   }
+  .source-header {
+    padding: 8px;
+  }
+  .source-header > span {
+    display: none;
+  }
+  .source-header > div {
+    flex: 1;
+  }
   .source-header .btn {
+    flex: 1;
     padding: 8px 10px;
+  }
+  .source-editor textarea {
+    padding: 12px 12px max(12px, 100cqh - 160px);
+    line-height: 1.45;
+  }
+  .source-status {
+    min-height: 0;
+    font-size: 12px;
   }
 }
 @media (max-width: 1000px) {
