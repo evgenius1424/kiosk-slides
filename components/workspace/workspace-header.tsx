@@ -42,7 +42,7 @@ export function WorkspaceHeader({
         <span className="brand-icon">
           <Layers2 size={19} strokeWidth={2.2} />
         </span>
-        <span aria-hidden="true">
+        <span className="brand-name" aria-hidden="true">
           Kiosk<span className="brand-light">Slides</span>
         </span>
         <span className="sr-only">{t('home')}</span>
