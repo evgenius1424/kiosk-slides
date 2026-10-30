@@ -26,6 +26,9 @@
 * {
   box-sizing: border-box;
 }
+html {
+  -webkit-text-size-adjust: 100%;
+}
 html,
 body {
   height: 100%;
@@ -51,6 +54,9 @@ textarea {
 }
 button {
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 button:disabled {
   cursor: default;
@@ -59,6 +65,15 @@ button:disabled {
 button,
 a {
   touch-action: manipulation;
+}
+.btn,
+.icon-btn,
+.start-chips button,
+.chat-suggestions button {
+  transition: transform 0.1s ease-out;
+}
+:is(.btn, .icon-btn, .start-chips button, .chat-suggestions button):not(:disabled):active {
+  transform: scale(0.97);
 }
 button svg {
   flex-shrink: 0;
@@ -164,8 +179,10 @@ kbd {
   background: transparent;
   border-radius: 5px;
 }
-.icon-btn:hover {
-  background: var(--muted);
+@media (hover: hover) and (pointer: fine) {
+  .icon-btn:hover {
+    background: var(--muted);
+  }
 }
 .slides-sidebar {
   display: flex;
@@ -375,9 +392,11 @@ kbd {
   font-size: 13px;
   color: var(--muted-foreground);
 }
-.slide-actions .btn:not(:disabled):hover {
-  color: var(--foreground);
-  background: var(--muted);
+@media (hover: hover) and (pointer: fine) {
+  .slide-actions .btn:not(:disabled):hover {
+    color: var(--foreground);
+    background: var(--muted);
+  }
 }
 .slide-actions .btn:disabled {
   opacity: 0.55;
@@ -449,9 +468,13 @@ kbd {
   border: 0;
   border-top: 1px solid var(--border);
 }
-.slide-menu button:hover,
 .slide-menu button:focus-visible {
   background: var(--muted);
+}
+@media (hover: hover) and (pointer: fine) {
+  .slide-menu button:hover {
+    background: var(--muted);
+  }
 }
 .slide-paste textarea {
   width: 100%;
@@ -787,8 +810,10 @@ kbd {
   color: inherit;
   font-weight: 600;
 }
-.toast-action:hover {
-  background: #ffffff33;
+@media (hover: hover) and (pointer: fine) {
+  .toast-action:hover {
+    background: #ffffff33;
+  }
 }
 .workspace-dialog {
   position: fixed;
@@ -941,8 +966,10 @@ kbd {
   border-radius: 999px;
   padding: 7px 13px;
 }
-.start-chips button:hover {
-  background: var(--muted);
+@media (hover: hover) and (pointer: fine) {
+  .start-chips button:hover {
+    background: var(--muted);
+  }
 }
 .start-chips button[aria-pressed='true'] {
   background: var(--primary);
@@ -1130,8 +1157,10 @@ kbd {
   -webkit-backdrop-filter: blur(8px);
   transition: opacity 0.25s;
 }
-.present-exit:hover {
-  background: #18181b;
+@media (hover: hover) and (pointer: fine) {
+  .present-exit:hover {
+    background: #18181b;
+  }
 }
 .is-idle .present-exit {
   opacity: 0;
@@ -1245,8 +1274,10 @@ html:has(.is-presenting .studio) {
   padding: 11px 14px;
   text-align: left;
 }
-.chat-suggestions button:hover {
-  background: var(--muted);
+@media (hover: hover) and (pointer: fine) {
+  .chat-suggestions button:hover {
+    background: var(--muted);
+  }
 }
 .chat-bubble {
   max-width: 85%;
@@ -1441,10 +1472,15 @@ html:has(.is-presenting .studio) {
   border-radius: 6px;
   color: var(--muted-foreground);
 }
-.presentation-selector:hover,
 .presentation-selector[aria-expanded='true'] {
   background: var(--muted);
   color: var(--foreground);
+}
+@media (hover: hover) and (pointer: fine) {
+  .presentation-selector:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
 }
 .presentation-selector > span {
   overflow: hidden;
@@ -1491,9 +1527,13 @@ html:has(.is-presenting .studio) {
   border-radius: 6px;
   padding-right: 4px;
 }
-.presentation-popover li:hover,
 .presentation-popover li.selected {
   background: var(--muted);
+}
+@media (hover: hover) and (pointer: fine) {
+  .presentation-popover li:hover {
+    background: var(--muted);
+  }
 }
 .presentation-popover li button:focus-visible {
   outline-offset: -2px;
@@ -1503,9 +1543,11 @@ html:has(.is-presenting .studio) {
   height: 30px;
   opacity: 0.55;
 }
-.presentation-popover li .icon-btn:hover {
-  opacity: 1;
-  background: #0000000d;
+@media (hover: hover) and (pointer: fine) {
+  .presentation-popover li .icon-btn:hover {
+    opacity: 1;
+    background: #0000000d;
+  }
 }
 .download-menu {
   position: relative;
@@ -1540,9 +1582,13 @@ html:has(.is-presenting .studio) {
   color: var(--foreground);
   text-align: left;
 }
-.download-popover button:hover,
 .download-popover button:focus-visible {
   background: var(--muted);
+}
+@media (hover: hover) and (pointer: fine) {
+  .download-popover button:hover {
+    background: var(--muted);
+  }
 }
 .download-popover svg {
   flex-shrink: 0;
@@ -1600,8 +1646,10 @@ html:has(.is-presenting .studio) {
   background: none;
   font-weight: 500;
 }
-.presentation-new:hover {
-  background: var(--muted);
+@media (hover: hover) and (pointer: fine) {
+  .presentation-new:hover {
+    background: var(--muted);
+  }
 }
 .source-header > div {
   display: flex;
@@ -1923,6 +1971,9 @@ html:has(.is-presenting .studio) {
     animation: none !important;
     transition: none !important;
   }
+  :is(.btn, .icon-btn, .start-chips button, .chat-suggestions button):active {
+    transform: none !important;
+  }
 }
 .chat-empty > svg {
   margin: 0 auto;
@@ -2010,5 +2061,12 @@ html:has(.is-presenting .studio) {
 @media (max-width: 650px) {
   .chat-skill {
     margin: 10px 0 0;
+  }
+}
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
   }
 }
