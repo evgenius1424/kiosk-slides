@@ -27,9 +27,9 @@ Use pnpm (version pinned in `package.json`) and Node 20.9 or later.
 | `pnpm build:skills`               | Bundle `skills/render.ts` and copy references and fonts                     |
 | `python3 scripts/subset-fonts.py` | Cut the fonts in `scripts/fonts/` down to `public/fonts/` (see Fonts below) |
 | `pnpm check:flows`                | Model-check the TLA+ specs in `specs/` (needs Java 11 or later)             |
-| `pnpm e2e`                        | Playwright: main flows and slide layout per language in Chromium            |
+| `pnpm e2e`                        | Playwright: main flows, slide layout per language, PDF pages match slides   |
 
-CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm build` and `pnpm build:skills`, and fails if the built skills differ from what is committed. A second job runs `pnpm e2e` against the production build.
+CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm build` and `pnpm build:skills`, and fails if the built skills differ from what is committed. A second job runs `pnpm e2e` against the production build, in Chromium and, for the PDF match, WebKit.
 
 ## Layout
 

@@ -21,6 +21,11 @@ export default defineConfig({
         permissions: ['clipboard-read', 'clipboard-write'],
       },
     },
+    {
+      name: 'webkit',
+      testMatch: 'pdf-match.spec.ts',
+      use: { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } },
+    },
   ],
   webServer: {
     command: process.env.CI ? `pnpm start -p ${PORT}` : `pnpm dev -p ${PORT}`,
