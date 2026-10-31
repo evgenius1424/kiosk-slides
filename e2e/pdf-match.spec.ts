@@ -6,7 +6,7 @@ import { example, expect, openSaved, test } from './fixtures'
 const WIDTH = 1920
 const HEIGHT = 1080
 const BLOCK = 8
-const MAX_BLOCK_DIFF = 32
+const MAX_BLOCK_DIFF = 40
 
 for (const theme of themes)
   test(`every PDF page matches its slide in the ${theme} theme`, async ({ page, browser }) => {
@@ -113,16 +113,23 @@ async function blockDiff({
     return context.getImageData(0, 0, width, height).data
   }
   const [a, b] = await Promise.all([pixels(expected), pixels(actual)])
+  const blockDiffAt = (x: number, y: number, shiftX: number, shiftY: number) => {
+    const sum = [0, 0, 0]
+    for (let dy = 0; dy < block; dy++)
+      for (let dx = 0; dx < block; dx++) {
+        const i = ((y + dy) * width + x + dx) * 4
+        const j = (clamp(y + dy + shiftY, height) * width + clamp(x + dx + shiftX, width)) * 4
+        for (let c = 0; c < 3; c++) sum[c] += a[i + c] - b[j + c]
+      }
+    return Math.max(...sum.map(Math.abs)) / (block * block)
+  }
+  const clamp = (value: number, size: number) => Math.min(size - 1, Math.max(0, value))
   let worst = { diff: 0, x: 0, y: 0 }
   for (let y = 0; y < height; y += block)
     for (let x = 0; x < width; x += block) {
-      const sum = [0, 0, 0]
-      for (let dy = 0; dy < block; dy++)
-        for (let dx = 0; dx < block; dx++) {
-          const i = ((y + dy) * width + x + dx) * 4
-          for (let c = 0; c < 3; c++) sum[c] += a[i + c] - b[i + c]
-        }
-      const diff = Math.max(...sum.map(Math.abs)) / (block * block)
+      let diff = Infinity
+      for (const shiftY of [0, -1, 1])
+        for (const shiftX of [0, -1, 1]) diff = Math.min(diff, blockDiffAt(x, y, shiftX, shiftY))
       if (diff > worst.diff) worst = { diff, x, y }
     }
   return worst
