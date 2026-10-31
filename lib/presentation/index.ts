@@ -8,7 +8,7 @@ export {
   slideSource,
   UNTITLED,
 } from './parse'
-export { formatPresentation } from './format'
+export { formatPresentation, formattedPosition } from './format'
 export { reviewPresentation } from './review'
 export { avoided, avoidedWording, terms } from './language'
 export { setFrontMatter } from './front-matter'

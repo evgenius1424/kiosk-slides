@@ -57,6 +57,35 @@ test('cleans up tables and spacing', async ({ page }) => {
   )
 })
 
+test('keeps the cursor on the same word after cleaning up', async ({ page }) => {
+  const filler = Array.from({ length: 30 }, (_, i) => `# Slide ${i}\n\n\n\n`).join('---\n')
+  await editSource(page, `${filler}---\n# Table\n|Name|Owner|\n|-|-|\n|Ana|Me|\n`)
+  const editor = page.getByRole('textbox', { name: 'Presentation source' })
+  const caret = () =>
+    editor.evaluate((el: HTMLTextAreaElement) => {
+      const top = el.value.slice(0, el.selectionStart).split('\n').length
+      const height = parseFloat(getComputedStyle(el).lineHeight)
+      return {
+        before: el.value.slice(el.selectionStart - 2, el.selectionStart),
+        selected: el.value.slice(el.selectionStart, el.selectionEnd),
+        shown: Math.round((top * height - el.scrollTop) / height),
+      }
+    })
+  await editor.evaluate((el: HTMLTextAreaElement) => {
+    const at = el.value.indexOf('Owner')
+    el.setSelectionRange(at + 2, at + 4)
+    el.scrollTop = el.scrollHeight
+  })
+  const was = await caret()
+  expect(was).toMatchObject({ before: 'Ow', selected: 'ne' })
+  await page.getByRole('button', { name: 'Clean up' }).click()
+  await expect(editor).toHaveValue(/\| Name \| Owner \|/)
+  await expect(editor).toBeFocused()
+  await expect.poll(caret).toEqual({ ...was, shown: expect.any(Number) })
+  expect(Math.abs((await caret()).shown - was.shown)).toBeLessThanOrEqual(1)
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible()
+})
+
 test('moves through slides with the slide list keys', async ({ page }) => {
   await slideList(page).first().click()
   await page.keyboard.press('ArrowDown')

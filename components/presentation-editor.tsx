@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useReducer, type ReactNode, type RefObject } from 'react'
 import { useTranslations } from 'next-intl'
 import { BookOpen, CornerDownRight, FileText, Wand2 } from 'lucide-react'
-import { parsePresentation, slideLines, type Presentation } from '@/lib/presentation'
+import {
+  formattedPosition,
+  parsePresentation,
+  slideLines,
+  type Presentation,
+} from '@/lib/presentation'
 
 export const LIVE_MS = 300
 
@@ -47,7 +52,22 @@ export function selectSlide(
   selectLine(textarea, source, line, false, focus)
   const lines = source.split('\n')
   const separator = lines.slice(0, line - 1).findLastIndex(l => l.trim() === '---') + 1
-  textarea.scrollTop = index && separator ? lineTop(textarea, lines, separator) : 0
+  const above = lines.slice(0, separator - 1).map(l => `${l}\n`)
+  textarea.scrollTop = index && separator ? textTop(textarea, above.join('')) : 0
+}
+
+export function keepSelection(textarea: HTMLTextAreaElement, before: string, after: string) {
+  const start = formattedPosition(before, after, textarea.selectionStart)
+  const end = formattedPosition(before, after, textarea.selectionEnd)
+  const shift =
+    textTop(textarea, after.slice(0, start)) -
+    textTop(textarea, before.slice(0, textarea.selectionStart))
+  const scroll = textarea.scrollTop + shift
+  return () => {
+    textarea.focus({ preventScroll: true })
+    textarea.setSelectionRange(start, end)
+    textarea.scrollTop = scroll
+  }
 }
 
 export function PresentationEditor({
@@ -180,7 +200,7 @@ function selectLine(
   textarea.scrollTop = Math.max(0, (line - 1) * height - textarea.clientHeight / 3)
 }
 
-function lineTop(textarea: HTMLTextAreaElement, lines: string[], line: number) {
+function textTop(textarea: HTMLTextAreaElement, text: string) {
   const style = getComputedStyle(textarea)
   const mirror = document.createElement('div')
   Object.assign(mirror.style, {
@@ -199,7 +219,7 @@ function lineTop(textarea: HTMLTextAreaElement, lines: string[], line: number) {
   })
   const marker = document.createElement('span')
   marker.textContent = '-'
-  mirror.append(lines.slice(0, line - 1).join('\n') + (line > 1 ? '\n' : ''), marker)
+  mirror.append(text, marker)
   document.body.append(mirror)
   const top = marker.offsetTop
   mirror.remove()

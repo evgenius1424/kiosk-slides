@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { formatPresentation, parsePresentation } from '@/lib/presentation'
+import { formatPresentation, formattedPosition, parsePresentation } from '@/lib/presentation'
 
 const md = (...lines: string[]) => lines.join('\n')
 const example = readFileSync(path.join(process.cwd(), 'public/example.md'), 'utf8')
@@ -97,5 +97,54 @@ describe('formatPresentation', () => {
     const formatted = formatPresentation(example)
     expect(parsePresentation(formatted)).toEqual(parsePresentation(example))
     expect(formatPresentation(formatted)).toBe(formatted)
+  })
+})
+
+describe('formattedPosition', () => {
+  const before = md(
+    '# Plan  ',
+    '',
+    '',
+    '',
+    '* First point',
+    '* Next',
+    '---',
+    '# Owners',
+    '|Name|Owner|',
+    '|-|-|',
+    '|Ana|Me|',
+  )
+  const after = formatPresentation(before)
+  const moved = (at: number) => {
+    const next = formattedPosition(before, after, at)
+    return `${after.slice(0, next)}^${after.slice(next)}`
+  }
+
+  it('keeps the same letter after the cursor everywhere', () => {
+    const letters = [...before.matchAll(/[^\s|*+-]/g)]
+    expect(letters.map(m => after[formattedPosition(before, after, m.index)])).toEqual(
+      letters.map(m => m[0]),
+    )
+  })
+
+  it('keeps the cursor next to the same word when lines move', () => {
+    expect(after).not.toBe(before)
+    expect(moved(before.indexOf('point'))).toContain('- First ^point')
+    expect(moved(before.indexOf('Owner|') + 2)).toContain('| Ow^ner |')
+    expect(moved(before.indexOf('Ana') + 3)).toContain('| Ana^  |')
+  })
+
+  it('keeps the cursor at the start of a line or after a bullet', () => {
+    expect(moved(before.indexOf('* First'))).toContain('\n^- First')
+    expect(moved(before.indexOf('First'))).toContain('\n- ^First')
+    expect(moved(before.indexOf('|Ana'))).toContain('\n^| Ana')
+    expect(moved(before.indexOf('# Owners'))).toContain('---\n\n^# Owners')
+  })
+
+  it('keeps the cursor on a blank line and drops trailing spaces', () => {
+    expect(moved(before.indexOf('* First') - 1)).toContain('# Plan\n^\n- First')
+    expect(moved(before.indexOf('\n'))).toContain('# Plan^\n')
+    expect(formattedPosition(before, after, before.length)).toBe(after.length - 1)
+    expect(formattedPosition(before, after, 0)).toBe(0)
   })
 })

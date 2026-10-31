@@ -16,6 +16,25 @@ export function formatPresentation(source: string) {
   }
 }
 
+export function formattedPosition(before: string, after: string, position: number) {
+  const kept = before.slice(0, position).split('').filter(isText).length
+  let from = 0
+  for (let seen = 0; seen < kept && from < after.length; from++) if (isText(after[from])) seen++
+  if (isText(before[position])) return nextText(after, from)
+  const start = position - gapBefore(before, position)
+  const was = before.slice(start, nextText(before, position)).split('\n')
+  const now = after.slice(from, nextText(after, from)).split('\n')
+  const typed = before.slice(start, position).split('\n')
+  const line = typed.length - 1
+  const target = !line
+    ? 0
+    : line === was.length - 1
+      ? now.length - 1
+      : Math.min(line, Math.max(now.length - 2, 0))
+  const offset = now.slice(0, target).reduce((sum, l) => sum + l.length + 1, 0)
+  return from + offset + column(typed[line], now[target])
+}
+
 const fenceStart = /^\s{0,3}(```|~~~)/
 const delimiterRow = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/
 const thematicBreak = /^\s*([*_-])(\s*\1){2,}\s*$/
@@ -134,4 +153,34 @@ function width(text: string) {
       sum + (/[ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹏＀-｠￠-￦]|\p{Extended_Pictographic}/u.test(char) ? 2 : 1),
     0,
   )
+}
+
+function isText(char: string | undefined) {
+  return char !== undefined && /[^\s|*+-]/.test(char)
+}
+
+function gapBefore(text: string, position: number) {
+  let size = 0
+  while (size < position && !isText(text[position - 1 - size])) size++
+  return size
+}
+
+function nextText(text: string, from: number) {
+  let at = from
+  while (at < text.length && !isText(text[at])) at++
+  return at
+}
+
+function column(typed: string, line: string) {
+  let at = 0
+  for (let i = 0; i < typed.length && at < line.length;) {
+    const wasSpace = /\s/.test(typed[i])
+    const nowSpace = /\s/.test(line[at])
+    if (typed[i] === line[at] || (!wasSpace && !nowSpace)) {
+      i++
+      at++
+    } else if (nowSpace && !wasSpace) at++
+    else i++
+  }
+  return at
 }
