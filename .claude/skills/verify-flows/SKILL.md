@@ -21,7 +21,7 @@ Look up every file you changed in the coverage table. If a function you changed 
 
 **WakeLock**: the hook holds at most one lock (`OneLock`), and none once presenting and autoplay stop (`NoLeftoverLock`). Harm: the screen stays awake after presenting. Code: `components/use-wake-lock.ts`. Bounds: 4 requests.
 
-**AiDraft**: the daily limit, the monthly budget, one draft per visitor per day and the off switch hold (`DailyCap`, `BudgetCap`, `OnePerVisitorPerDay`, `OnlyWhenOn`), and nobody spends their draft without seeing it (`NoSilentlyUsedDraft`). Harm: over-spending, or a visitor loses the day's draft. Code: the Lua script in `lib/ai-draft/gate.ts`, `lib/ai-draft/server.ts`, and `makeDraft` with the Escape, paste and button holds in `start-screen.tsx`. Bounds: 3 visitors, 2.5 days, a daily limit of 2.
+**AiDraft**: the daily limit, the monthly budget, one presentation per visitor per day (a failed draft gives the visitor's try back) and the off switch hold (`DailyCap`, `BudgetCap`, `OnePerVisitorPerDay`, `OnlyWhenOn`), and nobody spends their draft without seeing it (`NoSilentlyUsedDraft`). Harm: over-spending, or a visitor loses the day's draft. Code: the Lua script in `lib/ai-draft/gate.ts`, `lib/ai-draft/server.ts`, and `makeDraft` with the Escape, paste and button holds in `start-screen.tsx`. Bounds: 3 visitors, 2.5 days, a daily limit of 2.
 
 Last confirmed against the code at commit `4e7023f` (Let Undo take back Clean up), together with the notice Undo fix that added the `Undo` model. Move this commit forward only after you have read every change to the covered code since it and confirmed each model still describes it.
 

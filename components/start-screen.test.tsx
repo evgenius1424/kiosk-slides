@@ -144,8 +144,6 @@ describe('start screen', () => {
 
   it.each([
     [{ kind: 'limit', reason: 'already-used' }, 'You’ve used today’s free AI draft'],
-    [{ kind: 'invalid-output' }, 'You’ve used today’s free AI draft'],
-    [{ kind: 'provider-failure' }, 'You’ve used today’s free AI draft'],
     [{ kind: 'limit', reason: 'disabled' }, 'Free AI drafts are paused'],
     [{ kind: 'limit', reason: 'capacity' }, 'Free AI drafts are paused'],
     [{ kind: 'limit', reason: 'budget' }, 'Free AI drafts are paused'],
@@ -161,6 +159,19 @@ describe('start screen', () => {
     expect(clipboard).toMatch(/My talk: Our onboarding/)
     expect(screen.getByRole('heading', { name: 'Now paste the answer here' })).toBeTruthy()
   })
+
+  it.each([{ kind: 'invalid-output' }, { kind: 'provider-failure' }])(
+    'offers another try after %o',
+    async outcome => {
+      hostedDraft(outcome)
+      workspace({ freeDraft: true })
+      fireEvent.change(topic(), { target: { value: 'Our onboarding' } })
+      fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
+      expect((await screen.findByRole('status')).textContent).toContain('didn’t work this time')
+      expect(screen.getByRole('button', { name: 'Make a free AI draft' })).toBeTruthy()
+      expect(topic().value).toBe('Our onboarding')
+    },
+  )
 
   it('stays open while the free AI draft is being written', async () => {
     let answer: (outcome: object) => void = () => {}

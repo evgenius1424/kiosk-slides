@@ -2,13 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const redis = vi.hoisted(() => ({
   eval: vi.fn<(script: string, keys: string[], args: string[]) => Promise<string>>(),
+  del: vi.fn<(key: string) => Promise<number>>(),
 }))
 vi.mock('@upstash/redis', () => ({ Redis: { fromEnv: () => redis } }))
 
-import { DAILY_GLOBAL_LIMIT, ENABLED_KEY, MONTHLY_BUDGET_CENTS, admit } from './gate'
+import { DAILY_GLOBAL_LIMIT, ENABLED_KEY, MONTHLY_BUDGET_CENTS, admit, release } from './gate'
 
 beforeEach(() => {
   redis.eval.mockReset()
+  redis.del.mockReset()
+  vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.stubEnv('IP_HASH_SALT', 'salt')
 })
 
@@ -62,5 +65,19 @@ describe('admission gate', () => {
     expect(await admit('203.0.113.7', 1)).toBe('disabled')
     redis.eval.mockResolvedValueOnce('surprise')
     expect(await admit('203.0.113.7', 1)).toBe('disabled')
+  })
+
+  it('gives the visitor their draft back by deleting the same key admit set', async () => {
+    redis.eval.mockResolvedValue('ok')
+    await admit('203.0.113.7', 1)
+    await release('203.0.113.7')
+    expect(redis.del).toHaveBeenCalledWith(redis.eval.mock.calls[0][1][1])
+  })
+
+  it('releases nothing without an address or a salt', async () => {
+    await release(null)
+    vi.stubEnv('IP_HASH_SALT', '')
+    await release('203.0.113.7')
+    expect(redis.del).not.toHaveBeenCalled()
   })
 })

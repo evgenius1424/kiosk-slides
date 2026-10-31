@@ -1,7 +1,7 @@
 import { draftSystemPrompt } from '@/lib/chat-prompt'
 import { parsePresentation } from '@/lib/presentation'
 import { type DraftOutcome, MAX_SLIDES } from '.'
-import { type DraftEvent, admit, record } from './gate'
+import { type DraftEvent, admit, record, release } from './gate'
 import { RESERVE_CENTS_PER_DRAFT, type Reply, type Turn, complete } from './provider'
 
 export const AI_DRAFT_ENABLED = process.env.AI_DRAFT_ENABLED === 'true'
@@ -20,28 +20,38 @@ export async function generateFreeDraft(
     await record('blocked')
     return { kind: 'limit', reason: limit }
   }
+  const replies: Reply[] = []
+  const { event, source } = await write(brief, replies, signal).catch(err => {
+    console.error('ai-draft: draft failed', err)
+    return { event: 'provider-failure' as const, source: '' }
+  })
+  const sum = (key: 'inputTokens' | 'outputTokens') => replies.reduce((n, r) => n + r[key], 0)
+  await record(event, sum('inputTokens'), sum('outputTokens'))
+  if (event === 'success') return { kind: 'presentation', source }
+  await release(clientIp)
+  return { kind: event === 'invalid-output' ? 'invalid-output' : 'provider-failure' }
+}
+
+async function write(
+  brief: string,
+  replies: Reply[],
+  signal: AbortSignal,
+): Promise<{ event: DraftEvent; source: string }> {
   const system = await draftSystemPrompt()
   const turns: Turn[] = [{ role: 'user', content: brief }]
-  const replies: Reply[] = []
   for (let attempt = 0; attempt < 2; attempt++) {
     const reply = await complete(system, turns, signal)
     replies.push(reply)
-    if (reply.text === null) return finish('provider-failure', replies)
+    if (reply.text === null) return { event: 'provider-failure', source: '' }
     const checked = check(reply.text)
-    if ('source' in checked) return finish('success', replies, checked.source)
+    if ('source' in checked) return { event: 'success', source: checked.source }
+    console.error(`ai-draft: attempt ${attempt + 1} rejected: ${checked.error}`)
     turns.push(
       { role: 'assistant', content: reply.text },
       { role: 'user', content: repairRequest(checked.error) },
     )
   }
-  return finish('invalid-output', replies)
-}
-
-async function finish(event: DraftEvent, replies: Reply[], source = ''): Promise<DraftOutcome> {
-  const sum = (key: 'inputTokens' | 'outputTokens') => replies.reduce((n, r) => n + r[key], 0)
-  await record(event, sum('inputTokens'), sum('outputTokens'))
-  if (event === 'success') return { kind: 'presentation', source }
-  return { kind: event === 'invalid-output' ? 'invalid-output' : 'provider-failure' }
+  return { event: 'invalid-output', source: '' }
 }
 
 function check(text: string): { source: string } | { error: string } {

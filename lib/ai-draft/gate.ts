@@ -28,18 +28,16 @@ export async function admit(
   clientIp: string | null,
   reserveCents: number,
 ): Promise<DraftLimit | null> {
-  const salt = process.env.IP_HASH_SALT
-  if (!clientIp || !isIP(clientIp) || !salt) return 'disabled'
+  const visitor = visitorKey(clientIp)
+  if (!visitor) {
+    console.error('ai-draft: no valid client address or IP_HASH_SALT')
+    return 'disabled'
+  }
   const { day, month } = periods()
   try {
     const result = await Redis.fromEnv().eval<string[], string>(
       ADMIT,
-      [
-        ENABLED_KEY,
-        `ai-draft:visitor:${visitorHash(clientIp, salt)}`,
-        `ai-draft:day:${day}`,
-        `ai-draft:reserved:${month}`,
-      ],
+      [ENABLED_KEY, visitor, `ai-draft:day:${day}`, `ai-draft:reserved:${month}`],
       [
         String(DAILY_GLOBAL_LIMIT),
         String(reserveCents),
@@ -50,8 +48,19 @@ export async function admit(
       ],
     )
     return result === 'ok' ? null : isLimit(result) ? result : 'disabled'
-  } catch {
+  } catch (err) {
+    console.error('ai-draft: admission failed', err)
     return 'disabled'
+  }
+}
+
+export async function release(clientIp: string | null) {
+  const visitor = visitorKey(clientIp)
+  if (!visitor) return
+  try {
+    await Redis.fromEnv().del(visitor)
+  } catch (err) {
+    console.error('ai-draft: release failed', err)
   }
 }
 
@@ -65,7 +74,9 @@ export async function record(event: DraftEvent, inputTokens = 0, outputTokens = 
       .hincrby(key, 'output-tokens', outputTokens)
       .expire(key, 400 * DAY)
       .exec()
-  } catch {}
+  } catch (err) {
+    console.error('ai-draft: stats failed', err)
+  }
 }
 
 function periods() {
@@ -73,8 +84,10 @@ function periods() {
   return { day: now.slice(0, 10), month: now.slice(0, 7) }
 }
 
-function visitorHash(ip: string, salt: string) {
-  return createHash('sha256').update(`${salt}:${ip}`).digest('hex').slice(0, 32)
+function visitorKey(ip: string | null) {
+  const salt = process.env.IP_HASH_SALT
+  if (!ip || !isIP(ip) || !salt) return null
+  return `ai-draft:visitor:${createHash('sha256').update(`${salt}:${ip}`).digest('hex').slice(0, 32)}`
 }
 
 function isLimit(value: string): value is DraftLimit {
