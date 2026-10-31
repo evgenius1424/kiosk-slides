@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { type ChatGPTModel, MODEL_KEY, connectChatGPT, fetchModels, fetchStatus } from '@/lib/chat'
 import { useOnline } from './use-online'
 
+const lastData = new Map<() => Promise<unknown>, unknown>()
+
 export function useChatGPTStatus() {
   return useRequest(fetchStatus, useOnline())
 }
@@ -30,13 +32,18 @@ export function preferredModel(models: ChatGPTModel[], picked?: string | null) {
 }
 
 function useRequest<T>(load: () => Promise<T>, enabled: boolean) {
-  const [result, setResult] = useState<{ data?: T; error?: unknown }>({})
+  const [result, setResult] = useState<{ data?: T; error?: unknown }>(() =>
+    lastData.has(load) ? { data: lastData.get(load) as T } : {},
+  )
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     if (!enabled) return
     let current = true
     load().then(
-      data => current && setResult({ data }),
+      data => {
+        lastData.set(load, data)
+        if (current) setResult({ data })
+      },
       error => current && setResult(r => ({ ...r, error })),
     )
     return () => {
