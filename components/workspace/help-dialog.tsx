@@ -124,9 +124,7 @@ export function HelpDialog({
             {SHORTCUTS.map(id => (
               <div key={id}>
                 <dt>{tk(`items.${id}.name`)}</dt>
-                <dd>
-                  <kbd>{tk(`items.${id}.keys`)}</kbd>
-                </dd>
+                <dd>{tk.rich(`items.${id}.keys`, { kbd: key => <kbd>{key}</kbd> })}</dd>
               </div>
             ))}
           </dl>

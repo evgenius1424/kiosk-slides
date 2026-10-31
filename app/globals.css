@@ -858,13 +858,20 @@ kbd {
 }
 .shortcut-list > div {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
   gap: 10px;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
 }
 .shortcut-list dd {
+  flex: none;
   margin: 0;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+.shortcut-list kbd {
+  color: var(--foreground);
 }
 .dialog-note {
   font-size: 14px;
