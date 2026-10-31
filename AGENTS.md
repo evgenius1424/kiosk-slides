@@ -43,6 +43,7 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `lib/slide-styles.ts`   | Slide CSS shared by the site, the download and the skills                              |
 | `lib/player.ts`         | Transitions, keys, swipe and wheel rules shared by every player                        |
 | `lib/chat*.ts`          | AI prompt and the local ChatGPT plan-usage client                                      |
+| `lib/editor-keys.ts`    | Edit tab keys: lists on Enter, bold, indent, move and duplicate lines                  |
 | `lib/last-style.ts`     | Remembers the last chosen theme, color, font and text size for new presentations       |
 | `lib/ai-draft/`         | Free AI draft: browser contract in `index.ts`, server flow, Redis gate, Anthropic call |
 | `messages/en.json`      | Every UI string, read through next-intl                                                |
