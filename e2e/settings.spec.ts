@@ -15,6 +15,13 @@ test.beforeEach(async ({ page }) => {
   await page.getByRole('button', { name: 'Settings' }).click()
 })
 
+test('opening settings focuses the panel, not a picker', async ({ page }) => {
+  const settings = page.getByRole('complementary', { name: 'Presentation settings' })
+  await expect(settings).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(settings.getByRole('combobox', { name: 'Theme' })).toBeFocused()
+})
+
 test('writes each setting to the front matter and the slides follow', async ({ page }) => {
   const settings = page.getByRole('complementary', { name: 'Presentation settings' })
   await settings.getByRole('combobox', { name: 'Theme' }).selectOption({ label: 'Light' })

@@ -32,7 +32,7 @@ export function useSettingsPanel() {
   const buttonRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     if (!open) return
-    panelRef.current?.querySelector<HTMLElement>('select,input,button')?.focus()
+    panelRef.current?.focus({ preventScroll: true })
     const outside = (event: PointerEvent) => {
       const target = event.target as Element
       if (
@@ -111,6 +111,7 @@ export function SettingsPanel({
       id="presentation-settings"
       className="inspector"
       aria-label={ts('title')}
+      tabIndex={-1}
       hidden={hidden}
     >
       <div className="inspector-heading">
