@@ -264,59 +264,59 @@
     "items": {
       "next": {
         "name": "Next slide",
-        "keys": "↓ / → / Page Down"
+        "keys": "<kbd>↓</kbd> / <kbd>→</kbd> / <kbd>Page Down</kbd>"
       },
       "previous": {
         "name": "Previous slide",
-        "keys": "↑ / ← / Page Up"
+        "keys": "<kbd>↑</kbd> / <kbd>←</kbd> / <kbd>Page Up</kbd>"
       },
       "autoplay": {
         "name": "Toggle autoplay",
-        "keys": "P"
+        "keys": "<kbd>P</kbd>"
       },
       "present": {
         "name": "Present",
-        "keys": "F"
+        "keys": "<kbd>F</kbd>"
       },
       "shareSafe": {
         "name": "Screen-share safe",
-        "keys": "S"
+        "keys": "<kbd>S</kbd>"
       },
       "leave": {
         "name": "Leave presentation",
-        "keys": "Esc"
+        "keys": "<kbd>Esc</kbd>"
       },
       "ends": {
         "name": "First / last slide",
-        "keys": "Home / End"
+        "keys": "<kbd>Home</kbd> / <kbd>End</kbd>"
       },
       "tidy": {
         "name": "Clean up the text while editing",
-        "keys": "Ctrl / ⌘ S"
+        "keys": "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> <kbd>S</kbd>"
       },
       "undo": {
         "name": "Undo a slide change, AI change or paste",
-        "keys": "Ctrl / ⌘ Z"
+        "keys": "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> <kbd>Z</kbd>"
       },
       "redo": {
         "name": "Redo what you undid",
-        "keys": "Ctrl / ⌘ ⇧ Z"
+        "keys": "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>Z</kbd>"
       },
       "addSlide": {
         "name": "Add a slide after the selected one",
-        "keys": "Ctrl / ⌘ Enter"
+        "keys": "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> <kbd>Enter</kbd>"
       },
       "duplicateSlide": {
         "name": "Duplicate the selected slide",
-        "keys": "Ctrl / ⌘ D"
+        "keys": "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> <kbd>D</kbd>"
       },
       "moveSlide": {
         "name": "Move the selected slide in the slide list, or drag it",
-        "keys": "Ctrl / ⌘ ↑ / ↓"
+        "keys": "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> <kbd>↑</kbd> / <kbd>↓</kbd>"
       },
       "deleteSlide": {
         "name": "Delete the selected slide in the slide list",
-        "keys": "Delete / ⌫"
+        "keys": "<kbd>Delete</kbd> / <kbd>⌫</kbd>"
       }
     },
     "note": "Scroll over the canvas to move one slide at a time. Click the presentation or navigate to pause autoplay. Presentations are saved in this browser; switch or create them from the menu at the top.",
