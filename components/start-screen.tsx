@@ -35,7 +35,7 @@ const SHOWCASE_MS = 5000
 const FEATURES = ['room', 'share', 'saved'] as const
 const MAX_TOPIC_LENGTH = MAX_BRIEF_LENGTH - longestRequestFrame()
 
-type DraftNote = 'used' | 'paused'
+type DraftNote = 'used' | 'paused' | 'failed'
 
 export function resumingStart() {
   const resume = session(RESUME_KEY)
@@ -73,11 +73,12 @@ export function StartScreen({
   const status = statusQ.error ? null : statusQ.data
   const topicRef = useRef<HTMLTextAreaElement>(null)
   const drafting = draftState === 'drafting'
-  const draftNote = draftState === 'used' || draftState === 'paused' ? draftState : null
+  const draftNote = draftState === 'idle' || draftState === 'drafting' ? null : draftState
   const ready = status?.available && status.connected && status.planUsage
   const local = online && status?.available
   const hasTopic = !!talk.topic.trim()
-  const offerDraft = freeDraft && online && !status?.available && !draftNote
+  const offerDraft =
+    freeDraft && online && !status?.available && (!draftNote || draftNote === 'failed')
 
   useEffect(() => topicRef.current?.focus(), [])
   useEffect(() => () => draftRef.current?.abort(), [])
@@ -379,7 +380,8 @@ function ChipRow<T extends string>({
 }
 
 function noteFor(outcome: DraftOutcome): DraftNote {
-  return outcome.kind === 'limit' && outcome.reason !== 'already-used' ? 'paused' : 'used'
+  if (outcome.kind !== 'limit') return 'failed'
+  return outcome.reason === 'already-used' ? 'used' : 'paused'
 }
 
 function draft(): Talk | null {

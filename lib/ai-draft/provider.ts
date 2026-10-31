@@ -21,13 +21,16 @@ export async function complete(system: string, turns: Turn[], signal: AbortSigna
       },
       { signal },
     )
+    if (response.stop_reason !== 'end_turn')
+      console.error('ai-draft: model stopped early', response.stop_reason, response.usage)
     const text = response.content.map(block => (block.type === 'text' ? block.text : '')).join('')
     return {
       text: response.stop_reason === 'end_turn' ? text : null,
       inputTokens: response.usage.input_tokens,
       outputTokens: response.usage.output_tokens,
     }
-  } catch {
+  } catch (err) {
+    if (!signal.aborted) console.error('ai-draft: model request failed', err)
     return { text: null, inputTokens: 0, outputTokens: 0 }
   }
 }

@@ -7,6 +7,7 @@ import { parsePresentation } from '@/lib/presentation'
 const gate = vi.hoisted(() => ({
   admit: vi.fn<(ip: string | null, reserve: number) => Promise<DraftLimit | null>>(),
   record: vi.fn<(event: string, input?: number, output?: number) => Promise<void>>(),
+  release: vi.fn<(ip: string | null) => Promise<void>>(),
 }))
 const provider = vi.hoisted(() => ({
   complete: vi.fn<(system: string, turns: Turn[], signal: AbortSignal) => Promise<Reply>>(),
@@ -29,6 +30,8 @@ beforeEach(() => {
   provider.complete.mockReset()
   gate.admit.mockResolvedValue(null)
   gate.record.mockResolvedValue()
+  gate.release.mockResolvedValue()
+  vi.spyOn(console, 'error').mockImplementation(() => {})
   for (const [key, value] of Object.entries(SECRETS)) vi.stubEnv(key, value)
 })
 
@@ -40,6 +43,7 @@ describe('POST /api/ai-draft', () => {
     expect(parsePresentation(outcome.source).slides).toHaveLength(2)
     expect(provider.complete).toHaveBeenCalledOnce()
     expect(gate.record).toHaveBeenCalledWith('success', 100, 50)
+    expect(gate.release).not.toHaveBeenCalled()
   })
 
   it('repairs one invalid result, telling the model what the parser said', async () => {
@@ -57,6 +61,7 @@ describe('POST /api/ai-draft', () => {
     expect(await draft()).toEqual({ kind: 'invalid-output' })
     expect(provider.complete).toHaveBeenCalledTimes(2)
     expect(gate.record).toHaveBeenCalledWith('invalid-output', 200, 100)
+    expect(gate.release).toHaveBeenCalledWith('203.0.113.7')
   })
 
   it.each([
@@ -78,6 +83,14 @@ describe('POST /api/ai-draft', () => {
     expect(await draft()).toEqual({ kind: 'provider-failure' })
     expect(provider.complete).toHaveBeenCalledOnce()
     expect(gate.record).toHaveBeenCalledWith('provider-failure', 0, 0)
+    expect(gate.release).toHaveBeenCalledWith('203.0.113.7')
+  })
+
+  it('gives the draft back and answers when writing the draft throws', async () => {
+    provider.complete.mockRejectedValue(new Error('boom'))
+    expect(await draft()).toEqual({ kind: 'provider-failure' })
+    expect(gate.record).toHaveBeenCalledWith('provider-failure', 0, 0)
+    expect(gate.release).toHaveBeenCalledWith('203.0.113.7')
   })
 
   it.each<DraftLimit>(['disabled', 'already-used', 'capacity', 'budget'])(
@@ -87,6 +100,7 @@ describe('POST /api/ai-draft', () => {
       expect(await draft()).toEqual({ kind: 'limit', reason })
       expect(provider.complete).not.toHaveBeenCalled()
       expect(gate.record).toHaveBeenCalledWith('blocked')
+      expect(gate.release).not.toHaveBeenCalled()
     },
   )
 
