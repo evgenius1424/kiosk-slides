@@ -1,6 +1,14 @@
 'use client'
 
-import { useCallback, useEffect, useReducer, type ReactNode, type RefObject } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { useTranslations } from 'next-intl'
 import { BookOpen, CornerDownRight, FileText, Wand2 } from 'lucide-react'
 import {
@@ -9,6 +17,7 @@ import {
   slideLines,
   type Presentation,
 } from '@/lib/presentation'
+import { editFor, editorKey, type TextEdit } from '@/lib/editor-keys'
 
 export const LIVE_MS = 300
 
@@ -93,6 +102,27 @@ export function PresentationEditor({
 }) {
   const t = useTranslations('Workspace.editor')
   const line = errorLine(error)
+  const released = useRef(false)
+  const onKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    const wasReleased = released.current
+    released.current = event.key === 'Escape'
+    const key = editorKey(event.nativeEvent)
+    if (!key || (wasReleased && event.key === 'Tab')) return
+    const textarea = event.currentTarget
+    if (key === 'tidy') {
+      event.preventDefault()
+      if (!error) onTidy()
+      return
+    }
+    const { value, selectionStart: start, selectionEnd: end } = textarea
+    const edit = editFor(key, { value, start, end })
+    if (!edit) {
+      if (key !== 'newLine') event.preventDefault()
+      return
+    }
+    event.preventDefault()
+    applyEdit(textarea, edit)
+  }
   const follow = (target: HTMLTextAreaElement) => {
     const caret = target.value.slice(0, target.selectionStart).split('\n').length
     const index = slideLines(target.value).findLastIndex(start => start <= caret)
@@ -129,12 +159,7 @@ export function PresentationEditor({
           value={source}
           onChange={e => onChange(e.target.value)}
           onSelect={e => follow(e.currentTarget)}
-          onKeyDown={e => {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
-              e.preventDefault()
-              if (!error) onTidy()
-            }
-          }}
+          onKeyDown={onKey}
           spellCheck={false}
         />
         <div className={`source-status ${error ? 'error' : ''}`} role="status">
@@ -178,6 +203,17 @@ function parse(source: string, previous: Presentation | null): LiveSource {
   } catch (err) {
     return { source, presentation: previous, error: (err as Error).message }
   }
+}
+
+function applyEdit(textarea: HTMLTextAreaElement, edit: TextEdit) {
+  textarea.setSelectionRange(edit.from, edit.to)
+  const command = edit.text ? 'insertText' : 'delete'
+  if (edit.from === edit.to && !edit.text) return
+  if (!document.execCommand?.(command, false, edit.text)) {
+    textarea.setRangeText(edit.text, edit.from, edit.to)
+    textarea.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+  textarea.setSelectionRange(edit.start, edit.end)
 }
 
 function errorLine(error: string) {

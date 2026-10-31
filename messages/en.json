@@ -292,7 +292,31 @@
       },
       "tidy": {
         "name": "Clean up the text while editing",
-        "keys": "Ctrl / ⌘ S"
+        "keys": "Ctrl / ⌘ S or ⇧ Alt F"
+      },
+      "continueList": {
+        "name": "Continue a list; press again on an empty item to end it",
+        "keys": "Enter"
+      },
+      "boldItalic": {
+        "name": "Make the selected words bold or italic",
+        "keys": "Ctrl / ⌘ B / I"
+      },
+      "indent": {
+        "name": "Indent or outdent lines",
+        "keys": "Tab / ⇧ Tab"
+      },
+      "moveLines": {
+        "name": "Move lines up or down",
+        "keys": "Alt ↑ / ↓"
+      },
+      "duplicateLines": {
+        "name": "Duplicate lines",
+        "keys": "Ctrl / ⌘ ⇧ D"
+      },
+      "leaveEditor": {
+        "name": "Leave the text box with the keyboard",
+        "keys": "Esc, then Tab"
       },
       "undo": {
         "name": "Undo a slide change, AI change or paste",
