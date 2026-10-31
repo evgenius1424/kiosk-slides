@@ -18,7 +18,12 @@ import { slideFromHash, type PlayerAction } from '@/lib/player'
 import { blankPresentation } from '@/lib/presentations'
 import { requestPrompt } from '@/lib/talk'
 import { PresentationChat } from '../presentation-chat'
-import { PresentationEditor, selectSlide, useLiveSource } from '../presentation-editor'
+import {
+  keepSelection,
+  PresentationEditor,
+  selectSlide,
+  useLiveSource,
+} from '../presentation-editor'
 import { SharePanel } from '../share-panel'
 import { SkillPanel } from '../skill-panel'
 import {
@@ -197,8 +202,9 @@ export function KioskWorkspace({
   const tidy = () => {
     const formatted = formatPresentation(source)
     if (formatted === source) return notice(t('toast.tidied'))
+    const restore = textareaRef.current && keepSelection(textareaRef.current, source, formatted)
     changeSource(formatted)
-    focusSlide(formatted, index)
+    if (restore) requestAnimationFrame(restore)
     notice(t('toast.tidied'), undoAction)
   }
   const startBlank = () => {
