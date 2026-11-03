@@ -1960,6 +1960,7 @@ html:has(.is-presenting .studio) {
       .editor-main,
       .inspector,
       .presentation-selector,
+      .shared-bar .btn,
       .header-actions .btn:not(.primary),
       .header-actions kbd
     ) {

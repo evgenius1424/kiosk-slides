@@ -1,4 +1,4 @@
-import type { Browser, Page } from '@playwright/test'
+import type { Browser, BrowserContextOptions, Page } from '@playwright/test'
 import {
   editSource,
   expect,
@@ -33,6 +33,19 @@ test('a share link opens the same slides read-only, and Keep a copy saves them',
   await expect(friend.getByText('Share link', { exact: true })).toBeHidden()
   await expect(friend.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
   expect((await stored(friend)).map(p => p.source)).toContain(three)
+})
+
+test('a share link on a landscape phone hides Keep a copy', async ({ page, browser }) => {
+  const link = await shareLink(page)
+  const friend = await visit(browser, page, link, {
+    viewport: { width: 844, height: 390 },
+    hasTouch: true,
+    isMobile: true,
+  })
+  await expect(friend.getByRole('button', { name: 'Present' })).toBeVisible()
+  await expect(friend.getByRole('button', { name: 'Keep a copy' })).toBeHidden()
+  await friend.setViewportSize({ width: 390, height: 844 })
+  await expect(friend.getByRole('button', { name: 'Keep a copy' })).toBeVisible()
 })
 
 test('a share link follows the slide number', async ({ page, browser }) => {
@@ -89,8 +102,8 @@ async function shareLink(page: Page) {
   return link
 }
 
-async function visit(browser: Browser, page: Page, link: string) {
-  const context = await browser.newContext()
+async function visit(browser: Browser, page: Page, link: string, options?: BrowserContextOptions) {
+  const context = await browser.newContext(options)
   const friend = await context.newPage()
   await friend.goto(new URL(new URL(link).hash, page.url()).href)
   return friend
