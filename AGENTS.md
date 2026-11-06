@@ -42,7 +42,8 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `lib/presentation/`     | Markdown presentation parser, widgets, themes, fonts, front matter and glossary terms  |
 | `lib/slide-styles.ts`   | Slide CSS shared by the site, the download and the skills                              |
 | `lib/player.ts`         | Transitions, keys, swipe and wheel rules shared by every player                        |
-| `lib/chat*.ts`          | AI prompt and the local ChatGPT plan-usage client                                      |
+| `lib/chat*.ts`          | AI prompts and the local ChatGPT plan-usage client                                     |
+| `lib/ai-guide.md`       | The format as taught to AI: FORMAT.md's rules without the presenter's settings         |
 | `lib/last-style.ts`     | Remembers the last chosen theme, color, font and text size for new presentations       |
 | `lib/ai-draft/`         | Free AI draft: browser contract in `index.ts`, server flow, Redis gate, Anthropic call |
 | `messages/en.json`      | Every UI string, read through next-intl                                                |
@@ -85,7 +86,7 @@ Everything else is a thin adapter: `app/` and `components/workspace/` for the si
 - UI text goes in `messages/en.json` and is read with `useTranslations`. Parser errors, the AI prompt and the shared renderer stay English in code.
 - Site copy is plain and non-technical, with no product or brand names.
 - The site download and `skills/render.ts` share one renderer and must never drift. After touching `components/slide/`, `lib/presentation/` or `lib/slide-styles.ts`, run `pnpm build:skills`, commit what it generates (installers copy the skill straight from GitHub), and check a skill-rendered presentation matches the site download.
-- Presentation format changes update `FORMAT.md` and `public/example.md` together; tests read both.
+- Presentation format changes update `FORMAT.md`, `lib/ai-guide.md` and `public/example.md` together; tests read all three. FORMAT.md is the full reference for people and the skill. Every AI prompt reads the shorter `lib/ai-guide.md` instead, which leaves out settings the person presenting picks (theme, font, text size, transitions, timing).
 - State that changes together lives in one `useReducer` with a pure reducer (`playerReducer`, `useLiveSource`, the chat conversation); keep `useEffect` for timers and browser events.
 - ChatGPT status, models, sign-in and the chosen model live in `components/use-chatgpt.ts`; panels use its hooks instead of calling `lib/chat` themselves.
 - Keep comments to a minimum and skip doc comments on functions.

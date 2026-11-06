@@ -4,6 +4,10 @@ import { MAX_SLIDES } from './ai-draft'
 import { terms } from './presentation'
 import { SLIDES_CLOSE, SLIDES_OPEN } from './slide-actions'
 
+const SLIDE_BREAK = '\n---\n'
+const LINKED = /!\[|<!-- buttons -->/
+const LINKED_WIDGET = /^(\| (image|buttons) \||  - .*: (image|buttons)$)/
+
 const QUALITY = `Follow "Writing a good presentation" just as strictly. Every slide needs its ${terms.slideSettings} comment with a ${terms.slideTitle}, a ${terms.label} and a ${terms.footer}, and most slides need a ${terms.widget} such as steps, before/after, a metric, a chart, a table or a flow. A presentation that is only one heading per slide, or that skips the ${terms.slideSettings} comments, is wrong even when it parses. Run the checklist at the end of the format before you reply.`
 
 const SLIDE_RULES = `The presentation format is specified below. A parser enforces every grammar rule and rejects the slide otherwise. Keep the slide's ${terms.slideSettings} comment with a ${terms.slideTitle}, a ${terms.label} and a ${terms.footer}, and follow "Writing a good presentation".`
@@ -51,7 +55,7 @@ export function systemPrompt(): Promise<string> {
 }
 
 export async function draftSystemPrompt() {
-  return `${DRAFT_GUIDE}\n\n${await reference()}`
+  return `${DRAFT_GUIDE}\n\n${await reference(false)}`
 }
 
 export async function slideSystemPrompt() {
@@ -66,10 +70,33 @@ export async function slideCopyPrompt() {
   return `${SLIDE_COPY_GUIDE}\n\n${await reference()}`
 }
 
-async function reference() {
-  const [format, example] = await Promise.all([
-    readFile(path.join(process.cwd(), 'FORMAT.md'), 'utf8'),
+async function reference(links = true) {
+  const keep = (slide: string) => links || !LINKED.test(slide)
+  const [guide, example] = await Promise.all([
+    readFile(path.join(process.cwd(), 'lib/ai-guide.md'), 'utf8'),
     readFile(path.join(process.cwd(), 'public/example.md'), 'utf8'),
   ])
-  return `<format>\n${format.trim()}\n</format>\n\nHere is an example presentation that follows every rule:\n<example>\n${example.trim()}\n</example>`
+  const slides = example.trim().split(SLIDE_BREAK)
+  const shown = [slides[0], ...slides.slice(1).filter(keep)].join(SLIDE_BREAK)
+  const rules = links
+    ? guide
+    : guide
+        .split('\n')
+        .filter(line => !LINKED_WIDGET.test(line))
+        .join('\n')
+  return `<format>\n${rules.trim()}\n</format>\n\nHere is an example presentation that follows every rule:\n<example>\n${compactTables(shown)}\n</example>`
+}
+
+function compactTables(source: string) {
+  return source
+    .split('\n')
+    .map(line => {
+      if (!line.startsWith('|')) return line
+      const cells = line
+        .slice(1, -1)
+        .split('|')
+        .map(cell => cell.trim())
+      return `| ${cells.map(cell => (/^-+$/.test(cell) ? '---' : cell)).join(' | ')} |`
+    })
+    .join('\n')
 }

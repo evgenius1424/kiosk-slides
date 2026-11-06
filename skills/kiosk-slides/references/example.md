@@ -1,8 +1,5 @@
 ---
 title: Kiosk Slides — example presentation
-theme: room-dark
-duration: 12s
-loop: true
 ---
 
 <!--
