@@ -23,7 +23,7 @@ const nextConfig = {
     ]
   },
   outputFileTracingIncludes: {
-    '/api/ai-draft': ['./FORMAT.md', './public/example.md'],
+    '/api/ai-draft': ['./lib/ai-guide.md', './public/example.md'],
   },
   images: {
     unoptimized: true,

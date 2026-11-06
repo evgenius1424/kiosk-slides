@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import type { Page } from '@playwright/test'
-import { themes } from '@/lib/presentation'
+import { setFrontMatter, themes } from '@/lib/presentation'
 import { example, expect, openSaved, test } from './fixtures'
 
 const WIDTH = 1920
@@ -11,7 +11,7 @@ const MAX_BLOCK_DIFF = 40
 for (const theme of themes)
   test(`every PDF page matches its slide in the ${theme} theme`, async ({ page, browser }) => {
     test.slow()
-    const source = example.replace(/^theme: .*$/m, `theme: ${theme}`)
+    const source = setFrontMatter(example, 'theme', theme)
     await openSaved(page, { id: 'mine', name: 'Example talk', source })
     const html = await download(page, 'Web page')
     const pages = jpegPages(await readFile(await download(page, 'PDF'), 'latin1'))

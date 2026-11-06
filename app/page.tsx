@@ -57,7 +57,7 @@ export default async function Page() {
   const [example, prompt, slidePrompt, t] = await Promise.all([
     readFile(path.join(process.cwd(), 'public/example.md'), 'utf8'),
     copyPrompt(),
-    slideCopyPrompt(),
+    SLIDE_AI ? slideCopyPrompt() : '',
     getTranslations('Metadata'),
   ])
   const structuredData = JSON.stringify({
