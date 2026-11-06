@@ -3,14 +3,6 @@
 import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  SlideOutline,
-  finishedSource,
-  labVariant,
-  slideHeadings,
-  useFinishedSlides,
-  writingLabel,
-} from './draft-lab'
-import {
   ArrowUp,
   Blocks,
   Check,
@@ -30,7 +22,6 @@ import {
   type ChatMessage,
   MANAGE_USAGE_URL,
   MODEL_KEY,
-  OPEN_TAG,
   RequestError,
   disconnectChatGPT,
   streamChat,
@@ -147,7 +138,6 @@ export function PresentationChat({
     let attempt = ''
     const notes: string[] = []
     let presentation = ''
-    let liveSource = ''
     const fresh = !entries.some(e => e.presentation)
     let reply = ''
     let error = ''
@@ -158,15 +148,6 @@ export function PresentationChat({
         model,
         event => {
           if (event.type === 'text') attempt += event.text
-          if (event.type === 'text' && labVariant() === 'live' && attempt.includes(OPEN_TAG)) {
-            const partial = finishedSource(
-              attempt.slice(attempt.indexOf(OPEN_TAG) + OPEN_TAG.length).replace(/^\n+/, ''),
-            )
-            if (partial && partial !== liveSource) {
-              liveSource = partial
-              presentation = onPresentation(partial, fresh && !presentation)
-            }
-          }
           if (event.type === 'retry') {
             notes.push(event.polish ? t('progress.polishing') : t('progress.fixing'))
             attempt = ''
@@ -452,12 +433,6 @@ function AssistantBubble({
 }) {
   const t = useTranslations('Chat.progress')
   const reply = visibleReply(text)
-  const [lab] = useState(labVariant)
-  const partial = text.includes(OPEN_TAG)
-    ? text.slice(text.indexOf(OPEN_TAG) + OPEN_TAG.length)
-    : ''
-  const live = useFinishedSlides(partial.replace(/^\n+/, ''), false)
-  const labNote = writingLabel(live?.slides.length ?? 0, undefined, false)
   return (
     <div className="chat-bubble assistant">
       {notes.map((note, i) => (
@@ -467,21 +442,11 @@ function AssistantBubble({
         </span>
       ))}
       {reply.text && <p>{reply.text}</p>}
-      {pending && lab === 'outline' && reply.writing ? (
-        <div className="chat-note lab-chat-outline">
-          <SlideOutline titles={slideHeadings(live)} writing={labNote} limit={40} />
-        </div>
-      ) : (
-        pending && (
-          <span className="chat-note">
-            <span className="chat-spinner" />
-            {reply.writing
-              ? lab === 'count' || lab === 'live'
-                ? labNote
-                : t('writing')
-              : t('thinking')}
-          </span>
-        )
+      {pending && (
+        <span className="chat-note">
+          <span className="chat-spinner" />
+          {reply.writing ? t('writing') : t('thinking')}
+        </span>
       )}
       {presentation && (
         <span className="chat-note success">
