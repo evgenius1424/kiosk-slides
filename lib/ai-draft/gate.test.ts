@@ -2,15 +2,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const redis = vi.hoisted(() => ({
   eval: vi.fn<(script: string, keys: string[], args: string[]) => Promise<string>>(),
-  del: vi.fn<(key: string) => Promise<number>>(),
 }))
 vi.mock('@upstash/redis', () => ({ Redis: { fromEnv: () => redis } }))
 
-import { DAILY_GLOBAL_LIMIT, ENABLED_KEY, MONTHLY_BUDGET_CENTS, admit, release } from './gate'
+import {
+  DAILY_GLOBAL_LIMIT,
+  DAILY_VISITOR_LIMIT,
+  ENABLED_KEY,
+  MONTHLY_BUDGET_CENTS,
+  admit,
+  release,
+} from './gate'
 
 beforeEach(() => {
   redis.eval.mockReset()
-  redis.del.mockReset()
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.stubEnv('IP_HASH_SALT', 'salt')
 })
@@ -20,7 +25,7 @@ describe('admission gate', () => {
     redis.eval.mockResolvedValue('ok')
     expect(await admit('203.0.113.7', 1)).toBeNull()
     const [script, keys, args] = redis.eval.mock.calls[0]
-    expect(script).toContain('EXISTS')
+    expect(script).toContain('INCR')
     expect(keys[0]).toBe(ENABLED_KEY)
     expect(keys[1]).toMatch(/^ai-draft:visitor:[0-9a-f]{32}$/)
     expect(keys.join()).not.toContain('203.0.113.7')
@@ -29,6 +34,7 @@ describe('admission gate', () => {
       '1',
       String(MONTHLY_BUDGET_CENTS),
     ])
+    expect(args[6]).toBe(String(DAILY_VISITOR_LIMIT))
   })
 
   it('checks every limit before it writes anything', async () => {
@@ -36,7 +42,7 @@ describe('admission gate', () => {
     await admit('203.0.113.7', 1)
     const script: string = redis.eval.mock.calls[0][0]
     const lastCheck = script.lastIndexOf("return 'budget'")
-    const firstWrite = script.indexOf("redis.call('SET'")
+    const firstWrite = script.indexOf("redis.call('INCR'")
     expect(lastCheck).toBeGreaterThan(0)
     expect(firstWrite).toBeGreaterThan(lastCheck)
   })
@@ -67,17 +73,19 @@ describe('admission gate', () => {
     expect(await admit('203.0.113.7', 1)).toBe('disabled')
   })
 
-  it('gives the visitor their draft back by deleting the same key admit set', async () => {
+  it('gives the visitor one draft back on the same key admit counted', async () => {
     redis.eval.mockResolvedValue('ok')
     await admit('203.0.113.7', 1)
     await release('203.0.113.7')
-    expect(redis.del).toHaveBeenCalledWith(redis.eval.mock.calls[0][1][1])
+    const [script, keys] = redis.eval.mock.calls[1]
+    expect(script).toContain('DECR')
+    expect(keys).toEqual([redis.eval.mock.calls[0][1][1]])
   })
 
   it('releases nothing without an address or a salt', async () => {
     await release(null)
     vi.stubEnv('IP_HASH_SALT', '')
     await release('203.0.113.7')
-    expect(redis.del).not.toHaveBeenCalled()
+    expect(redis.eval).not.toHaveBeenCalled()
   })
 })

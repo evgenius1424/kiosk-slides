@@ -142,7 +142,7 @@ The **Add to your AI** panel, which walks people through installing the skill, s
 
 The AI buttons under each slide (Shorter, Make it visual and the rest) are hidden for now. Set `SLIDE_AI=on` to show them.
 
-The free AI draft is off unless `AI_DRAFT_ENABLED=true`. It also needs `ANTHROPIC_API_KEY`, an Upstash Redis database (`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`, or the `KV_REST_API_*` pair Vercel adds), and a random `IP_HASH_SALT`. Redis holds only hashed visitor keys and counters: one draft per visitor a day, 20 a day in all, and a monthly budget, with `SET ai-draft:enabled 1` as the switch that turns drafts on and `DEL ai-draft:enabled` as the one that stops them.
+The free AI draft is off unless `AI_DRAFT_ENABLED=true`. It also needs `ANTHROPIC_API_KEY`, an Upstash Redis database (`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`, or the `KV_REST_API_*` pair Vercel adds), and a random `IP_HASH_SALT`. Redis holds only hashed visitor keys and counters: three drafts per visitor a day, 100 a day in all, and a monthly budget, with `SET ai-draft:enabled 1` as the switch that turns drafts on and `DEL ai-draft:enabled` as the one that stops them.
 
 The presentation format is described in [FORMAT.md](FORMAT.md), with a full example in [public/example.md](public/example.md).
 

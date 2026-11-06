@@ -3,7 +3,8 @@ import { isIP } from 'node:net'
 import { Redis } from '@upstash/redis'
 import type { DraftLimit } from '.'
 
-export const DAILY_GLOBAL_LIMIT = 20
+export const DAILY_GLOBAL_LIMIT = 100
+export const DAILY_VISITOR_LIMIT = 3
 export const MONTHLY_BUDGET_CENTS = 800
 export const ENABLED_KEY = 'ai-draft:enabled'
 
@@ -13,15 +14,20 @@ const DAY = 24 * 60 * 60
 
 const ADMIT = `
 if redis.call('GET', KEYS[1]) ~= '1' then return 'disabled' end
-if redis.call('EXISTS', KEYS[2]) == 1 then return 'already-used' end
+if tonumber(redis.call('GET', KEYS[2]) or '0') >= tonumber(ARGV[7]) then return 'already-used' end
 if tonumber(redis.call('GET', KEYS[3]) or '0') >= tonumber(ARGV[1]) then return 'capacity' end
 if tonumber(redis.call('GET', KEYS[4]) or '0') + tonumber(ARGV[2]) > tonumber(ARGV[3]) then return 'budget' end
-redis.call('SET', KEYS[2], '1', 'EX', ARGV[4])
+if redis.call('INCR', KEYS[2]) == 1 then redis.call('EXPIRE', KEYS[2], ARGV[4]) end
 redis.call('INCR', KEYS[3])
 redis.call('EXPIRE', KEYS[3], ARGV[5])
 redis.call('INCRBY', KEYS[4], ARGV[2])
 redis.call('EXPIRE', KEYS[4], ARGV[6])
 return 'ok'
+`
+
+const RELEASE = `
+if tonumber(redis.call('GET', KEYS[1]) or '0') > 1 then return redis.call('DECR', KEYS[1]) end
+return redis.call('DEL', KEYS[1])
 `
 
 export async function admit(
@@ -45,6 +51,7 @@ export async function admit(
         String(DAY),
         String(2 * DAY),
         String(40 * DAY),
+        String(DAILY_VISITOR_LIMIT),
       ],
     )
     return result === 'ok' ? null : isLimit(result) ? result : 'disabled'
@@ -58,7 +65,7 @@ export async function release(clientIp: string | null) {
   const visitor = visitorKey(clientIp)
   if (!visitor) return
   try {
-    await Redis.fromEnv().del(visitor)
+    await Redis.fromEnv().eval<string[], number>(RELEASE, [visitor], [])
   } catch (err) {
     console.error('ai-draft: release failed', err)
   }
