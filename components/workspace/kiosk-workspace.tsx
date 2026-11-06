@@ -13,10 +13,12 @@ import {
   removeSlide,
   slideLines,
   slideSource,
+  type Slide,
 } from '@/lib/presentation'
 import { slideFromHash, type PlayerAction } from '@/lib/player'
 import { blankPresentation } from '@/lib/presentations'
 import { requestPrompt } from '@/lib/talk'
+import { parseWritten, slideMarks, writingSlides, type SlideMark } from '@/lib/written-slides'
 import { PresentationChat } from '../presentation-chat'
 import {
   keepSelection,
@@ -85,6 +87,8 @@ export function KioskWorkspace({
   const [request, setRequest] = useState<string>()
   const [chatKey, setChatKey] = useState(0)
   const [slideMenu, setSlideMenu] = useState<SlideMenuAt | null>(null)
+  const [writing, setWriting] = useState<Writing | null>(null)
+  const [replied, setReplied] = useState<Replied | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const sourceRef = useRef(source)
   const { toast, notice, dismiss } = useToast()
@@ -237,12 +241,19 @@ export function KioskWorkspace({
     library.paste(value)
   }
   const loadGenerated = (generated: string, fresh: boolean) => {
+    const before = parseWritten(sourceRef.current)?.slides ?? []
     const { name, reuse, value } = library.generated(
       formatPresentation(generated),
       fresh,
       sourceRef.current,
     )
     const next = live.load(value)
+    setWriting(null)
+    setReplied(
+      fresh || !next.presentation
+        ? null
+        : { source: value, marks: slideMarks(before, next.presentation.slides) },
+    )
     setIndex(0)
     notice(
       t('toast.loaded', { name, count: next.presentation?.slides.length ?? 0 }),
@@ -250,6 +261,12 @@ export function KioskWorkspace({
     )
     return name
   }
+  const showWriting = (written: string | null, fresh: boolean) => {
+    const slides = written === null ? null : parseWritten(written)?.slides
+    if (slides === null) return setWriting(null)
+    if (slides) setWriting({ slides, fresh })
+  }
+  const listed = listedSlides(slides, writing, replied?.source === source ? replied.marks : [])
   const copyPrompt = async () => {
     try {
       await navigator.clipboard.writeText(requestPrompt(prompt))
@@ -346,11 +363,12 @@ export function KioskWorkspace({
           onPresent={present}
         />
         <SlideSidebar
-          presentation={presentation}
+          presentation={{ ...presentation, slides: listed.slides }}
           look={look}
           index={index}
           changing={slideActions.working?.index}
-          editable={!shared && !error}
+          marks={listed.marks}
+          editable={!shared && !error && !writing}
           readOnly={!!shared}
           onSelect={select}
           onDelete={deleteSlide}
@@ -373,6 +391,7 @@ export function KioskWorkspace({
                 key={chatKey}
                 source={source}
                 onPresentation={loadGenerated}
+                onWriting={showWriting}
                 onOpen={() => setTab('chat')}
                 onCopyPrompt={copyPrompt}
                 onAddSkill={skillInstall ? addSkill : undefined}
@@ -511,6 +530,19 @@ export function KioskWorkspace({
       )}
     </>
   )
+}
+
+type Writing = { slides: Slide[]; fresh: boolean }
+type Replied = { source: string; marks: (SlideMark | undefined)[] }
+
+function listedSlides(
+  slides: Slide[],
+  writing: Writing | null,
+  marks: (SlideMark | undefined)[],
+): { slides: Slide[]; marks: (SlideMark | undefined)[] } {
+  if (!writing) return { slides, marks }
+  if (writing.fresh) return { slides: writing.slides, marks: [] }
+  return writingSlides(slides, writing.slides)
 }
 
 function keepListFocus(index: number) {

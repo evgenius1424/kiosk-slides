@@ -174,11 +174,7 @@ describe('start screen', () => {
   )
 
   it('stays open while the free AI draft is being written', async () => {
-    let answer: (outcome: object) => void = () => {}
-    vi.stubGlobal('fetch', async (url: string) => {
-      if (url.includes('status')) return Response.json({ available: false, reason: 'Hosted.' })
-      return new Promise<Response>(resolve => (answer = outcome => resolve(Response.json(outcome))))
-    })
+    const reply = streamedDraft()
     workspace({ freeDraft: true })
     fireEvent.change(topic(), { target: { value: 'Our onboarding' } })
     fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
@@ -188,8 +184,56 @@ describe('start screen', () => {
     )
     paste('# Pasted while waiting\n')
     expect(screen.getByRole('heading', { name: 'What’s your talk about?' })).toBeTruthy()
-    await act(async () => answer({ kind: 'presentation', source: '# Four days\n' }))
+    await act(async () => reply.send({ type: 'outcome', outcome: WRITTEN_OUTCOME }))
     await vi.waitFor(() => expect(menuName()).toBe('Four days'))
+  })
+
+  it('shows each slide in the preview once it is written', async () => {
+    const reply = streamedDraft()
+    workspace({ freeDraft: true })
+    fireEvent.change(topic(), { target: { value: 'Our onboarding' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Short (5)' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
+    await act(async () =>
+      reply.text('Here you go.\n<presentation>\n---\ntitle: Four days\n---\n\n# Less'),
+    )
+    expect(screen.queryByRole('region', { name: 'Your slides so far' })).toBeNull()
+    await act(async () => reply.text(' is **more**\n\n---\n\n# Same'))
+    const written = await screen.findByRole('region', { name: 'Your slides so far' })
+    expect(within(written).getByRole('status').textContent).toBe('Writing slide 2 of 5…')
+    expect(within(written).getByLabelText('Less is more')).toBeTruthy()
+    await act(async () => reply.text(' pay\n</presentation>'))
+    expect(within(written).getByRole('status').textContent).toBe('Checking your slides…')
+    await act(async () => reply.send({ type: 'outcome', outcome: WRITTEN_OUTCOME }))
+    await vi.waitFor(() => expect(menuName()).toBe('Four days'))
+  })
+
+  it('goes back to the example when a written draft fails', async () => {
+    const reply = streamedDraft()
+    workspace({ freeDraft: true })
+    fireEvent.change(topic(), { target: { value: 'Our onboarding' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
+    await act(async () => reply.text('<presentation>\n# Less is **more**\n\n---\n\n# Same'))
+    expect(await screen.findByRole('region', { name: 'Your slides so far' })).toBeTruthy()
+    await act(async () => reply.send({ type: 'outcome', outcome: { kind: 'invalid-output' } }))
+    expect((await screen.findByRole('status')).textContent).toContain('didn’t work this time')
+    expect(screen.queryByRole('region', { name: 'Your slides so far' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Open this example' }).hasAttribute('disabled')).toBe(
+      false,
+    )
+  })
+
+  it('keeps the first slides while the draft is repaired', async () => {
+    const reply = streamedDraft()
+    workspace({ freeDraft: true })
+    fireEvent.change(topic(), { target: { value: 'Our onboarding' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Make a free AI draft' }))
+    await act(async () => reply.text('<presentation>\n# Less is **more**\n\n---\n\n# Same'))
+    await act(async () => reply.send({ type: 'retry' }))
+    await act(async () => reply.text('<presentation>\n# Other\n\n---\n\n# Second\n\n---\n'))
+    const written = screen.getByRole('region', { name: 'Your slides so far' })
+    expect(within(written).getByLabelText('Less is more')).toBeTruthy()
+    expect(within(written).queryByLabelText('Other')).toBeNull()
   })
 
   it('prefers the local ChatGPT plan over the free AI draft', async () => {
@@ -224,10 +268,35 @@ function hostedDraft(outcome: object) {
     if (url.includes('status')) return Response.json({ available: false, reason: 'Hosted.' })
     if (url.includes('ai-draft')) {
       briefs.push(JSON.parse(String(init?.body)).brief)
-      return Response.json(outcome)
+      return draftReply([{ type: 'outcome', outcome }])
     }
     return new Response(null, { status: 404 })
   })
+}
+
+const WRITTEN_OUTCOME = {
+  kind: 'presentation',
+  source: '---\ntitle: Four days\n---\n\n# Less is **more**\n\n---\n\n# Same pay\n',
+}
+
+function draftReply(events: object[]) {
+  return new Response(events.map(e => `${JSON.stringify(e)}\n`).join(''))
+}
+
+function streamedDraft() {
+  let controller: ReadableStreamDefaultController<Uint8Array> | undefined
+  const body = new ReadableStream<Uint8Array>({ start: c => void (controller = c) })
+  const encoder = new TextEncoder()
+  const send = (event: { type: string; [key: string]: unknown }) => {
+    controller?.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
+    if (event.type === 'outcome') controller?.close()
+    return new Promise(resolve => setTimeout(resolve, 0))
+  }
+  vi.stubGlobal('fetch', async (url: string) => {
+    if (url.includes('status')) return Response.json({ available: false, reason: 'Hosted.' })
+    return new Response(body)
+  })
+  return { send, text: (text: string) => send({ type: 'text', text }) }
 }
 
 function signedIn() {

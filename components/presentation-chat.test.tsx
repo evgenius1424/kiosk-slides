@@ -26,6 +26,7 @@ function chat() {
       <PresentationChat
         source=""
         onPresentation={() => ''}
+        onWriting={() => {}}
         onOpen={() => {}}
         onCopyPrompt={() => {}}
         onRequestTaken={() => {}}

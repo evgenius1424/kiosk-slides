@@ -11,6 +11,7 @@ import {
 import { useTranslations } from 'next-intl'
 import { PanelLeftClose, Plus } from 'lucide-react'
 import type { Presentation, SlideLook } from '@/lib/presentation'
+import type { SlideMark } from '@/lib/written-slides'
 import { SlideView } from '../slide'
 
 export type SlideMenuAt = { x: number; y: number; index: number }
@@ -24,6 +25,7 @@ export function SlideSidebar({
   look,
   index,
   changing,
+  marks = [],
   editable,
   readOnly,
   onSelect,
@@ -37,6 +39,7 @@ export function SlideSidebar({
   look: SlideLook
   index: number
   changing?: number
+  marks?: (SlideMark | undefined)[]
   editable: boolean
   readOnly: boolean
   onSelect: (index: number) => void
@@ -68,7 +71,7 @@ export function SlideSidebar({
         {slides.map((item, i) => (
           <button
             key={i}
-            className={`slide-nav ${index === i ? 'selected' : ''} ${changing === i ? 'is-changing' : ''} ${dropClass(drag.state, i)}`}
+            className={`slide-nav ${index === i ? 'selected' : ''} ${changing === i ? 'is-changing' : ''} ${marks[i] ? `is-${marks[i]}` : ''} ${dropClass(drag.state, i)}`}
             onPointerDown={e => drag.start(e, i)}
             onPointerMove={drag.move}
             onPointerUp={drag.end}
@@ -112,6 +115,12 @@ export function SlideSidebar({
               </span>
               <span className="thumb-name">
                 {item.title || t('sidebar.untitledSlide', { number: i + 1 })}
+                {marks[i] && marks[i] !== 'waiting' && (
+                  <span className="slide-mark">{t(`sidebar.marks.${marks[i]}`)}</span>
+                )}
+                {marks[i] === 'waiting' && (
+                  <span className="sr-only">{t('sidebar.marks.waiting')}</span>
+                )}
               </span>
             </span>
           </button>

@@ -275,6 +275,31 @@ kbd {
   font-size: 14px;
   line-height: 1.4;
 }
+.slide-mark {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: 1px;
+  animation: slide-mark-in 0.2s ease-out;
+}
+@keyframes slide-mark-in {
+  from {
+    opacity: 0;
+  }
+}
+.slide-nav .thumbnail,
+.slide-nav .thumb-name {
+  transition: opacity 0.2s ease-out;
+}
+.slide-nav.is-waiting .thumbnail,
+.slide-nav.is-waiting .thumb-name {
+  opacity: 0.4;
+}
 .add-slide {
   margin: 12px 16px;
   display: flex;
@@ -1095,8 +1120,48 @@ kbd {
     margin: 0;
   }
 }
+.start-slide-frame + .start-slide-frame {
+  animation-duration: 0.35s;
+}
+.start-written-bar {
+  justify-content: space-between;
+  min-height: 38px;
+  padding: 0 4px;
+}
+.start-written-bar > span {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.start-written-count {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.start-written-count li {
+  width: 22px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--foreground);
+  animation: start-fade 0.3s ease-out;
+}
+.start-written-count .is-writing {
+  background: var(--border);
+  animation: start-writing 1.2s ease-in-out infinite alternate;
+}
+@keyframes start-writing {
+  to {
+    opacity: 0.4;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .start-slide-frame {
+  .start-slide-frame,
+  .start-written-count li {
     animation: none;
   }
 }
