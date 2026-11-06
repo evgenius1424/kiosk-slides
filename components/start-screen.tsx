@@ -14,7 +14,10 @@ import {
   X,
 } from 'lucide-react'
 import { type DraftOutcome, MAX_BRIEF_LENGTH, requestDraft } from '@/lib/ai-draft'
-import { parsePresentation, presentationLook } from '@/lib/presentation'
+import { parsePresentation, presentationLook, type Presentation } from '@/lib/presentation'
+import { writtenReply } from '@/lib/chat'
+import { withLastStyle } from '@/lib/last-style'
+import { parseWritten } from '@/lib/written-slides'
 import { slideTitle } from '@/lib/player'
 import {
   GOALS,
@@ -36,6 +39,7 @@ const FEATURES = ['room', 'share', 'saved'] as const
 const MAX_TOPIC_LENGTH = MAX_BRIEF_LENGTH - longestRequestFrame()
 
 type DraftNote = 'used' | 'paused' | 'failed'
+type Written = { source: string; presentation: Presentation; done: boolean }
 
 export function resumingStart() {
   const resume = session(RESUME_KEY)
@@ -67,6 +71,7 @@ export function StartScreen({
   const [copied, setCopied] = useState<{ text: string; failed: boolean } | null>(null)
   const draftRef = useRef<AbortController | null>(null)
   const [draftState, setDraftState] = useState<'idle' | 'drafting' | DraftNote>('idle')
+  const [written, setWritten] = useState<Written | null>(null)
   const { connect, connecting } = useConnect(() => session(RESUME_KEY, null))
   const online = useOnline()
   const statusQ = useChatGPTStatus()
@@ -109,9 +114,13 @@ export function StartScreen({
   const makeDraft = async () => {
     if (!hasTopic) return topicRef.current?.focus()
     setDraftState('drafting')
+    setWritten(null)
     draftRef.current = new AbortController()
-    const outcome = await requestDraft(talkRequest(talk), draftRef.current.signal).catch(() => null)
+    const outcome = await requestDraft(talkRequest(talk), draftRef.current.signal, text =>
+      setWritten(shown => nextWritten(shown, text)),
+    ).catch(() => null)
     if (!outcome) return
+    setWritten(null)
     if (outcome.kind === 'presentation') {
       setDraftState('idle')
       session(DRAFT_KEY, null)
@@ -257,7 +266,14 @@ export function StartScreen({
             )}
           </form>
         )}
-        <Showcase example={example} busy={drafting} onOpen={onExample} />
+        {drafting && written ? (
+          <WrittenShowcase
+            written={written}
+            label={writingLabel(t, written, talk.length && LENGTHS[talk.length])}
+          />
+        ) : (
+          <Showcase example={example} busy={drafting} onOpen={onExample} />
+        )}
       </div>
       <footer className="start-footer">
         <button className="link-button" disabled={drafting} onClick={onBlank}>
@@ -335,15 +351,62 @@ function Showcase({
           <ArrowRight size={14} />
         </button>
       </div>
-      <ul className="start-features">
-        {FEATURES.map(id => (
-          <li key={id}>
-            <Check size={14} />
-            {t(`features.${id}`)}
-          </li>
-        ))}
-      </ul>
+      <Features />
     </section>
+  )
+}
+
+function WrittenShowcase({ written, label }: { written: Written; label: string }) {
+  const t = useTranslations('Start.showcase')
+  const { presentation } = written
+  const { slides, theme, tone } = presentation
+  const look = presentationLook(presentation)
+  const shown = slides.slice(-2)
+  return (
+    <section className="start-showcase" aria-label={t('written')}>
+      <div
+        className={`start-slide slide-backdrop ${theme}`}
+        style={{ '--slide-tone': tone } as React.CSSProperties}
+      >
+        {shown.map((slide, i) => (
+          <div
+            key={slides.length - shown.length + i}
+            className={`start-slide-frame slide-backdrop ${theme}`}
+            aria-label={slideTitle(slide)}
+            inert
+          >
+            <SlideView slide={slide} theme={theme} accent={tone} look={look} />
+          </div>
+        ))}
+      </div>
+      <div className="start-showcase-bar start-written-bar">
+        <ol className="start-written-count" aria-hidden="true">
+          {slides.map((_, i) => (
+            <li key={i} />
+          ))}
+          {!written.done && <li className="is-writing" />}
+        </ol>
+        <span role="status">
+          <span className="chat-spinner" />
+          {label}
+        </span>
+      </div>
+      <Features />
+    </section>
+  )
+}
+
+function Features() {
+  const t = useTranslations('Start.showcase')
+  return (
+    <ul className="start-features">
+      {FEATURES.map(id => (
+        <li key={id}>
+          <Check size={14} />
+          {t(`features.${id}`)}
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -377,6 +440,27 @@ function ChipRow<T extends string>({
       </div>
     </div>
   )
+}
+
+function nextWritten(shown: Written | null, text: string): Written | null {
+  const reply = writtenReply(text)
+  if (!reply?.source || (reply.source === shown?.source && reply.done === shown.done)) return shown
+  const presentation = parseWritten(withLastStyle(reply.source))
+  if (!presentation || presentation.slides.length < (shown?.presentation.slides.length ?? 0))
+    return shown
+  return { source: reply.source, presentation, done: reply.done }
+}
+
+function writingLabel(
+  t: ReturnType<typeof useTranslations<'Start'>>,
+  { presentation, done }: Written,
+  count: number | undefined,
+) {
+  const number = presentation.slides.length + 1
+  if (done) return t('draft.finishing')
+  return count && number <= count
+    ? t('draft.writingOf', { number, count })
+    : t('draft.writingSlide', { number })
 }
 
 function noteFor(outcome: DraftOutcome): DraftNote {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MAX_BRIEF_LENGTH, MAX_SLIDES } from '@/lib/ai-draft'
-import type { DraftLimit } from '@/lib/ai-draft'
+import type { DraftEvent, DraftLimit } from '@/lib/ai-draft'
 import type { Reply, Turn } from '@/lib/ai-draft/provider'
 import { parsePresentation } from '@/lib/presentation'
 
@@ -10,7 +10,15 @@ const gate = vi.hoisted(() => ({
   release: vi.fn<(ip: string | null) => Promise<void>>(),
 }))
 const provider = vi.hoisted(() => ({
-  complete: vi.fn<(system: string, turns: Turn[], signal: AbortSignal) => Promise<Reply>>(),
+  complete:
+    vi.fn<
+      (
+        system: string,
+        turns: Turn[],
+        signal: AbortSignal,
+        onText?: (text: string) => void,
+      ) => Promise<Reply>
+    >(),
 }))
 vi.mock('@/lib/ai-draft/gate', () => gate)
 vi.mock('@/lib/ai-draft/provider', async importOriginal => ({
@@ -40,7 +48,7 @@ describe('POST /api/ai-draft', () => {
     replies(VALID)
     const outcome = await draft()
     expect(outcome).toEqual({ kind: 'presentation', source: VALID.trim() })
-    expect(parsePresentation(outcome.source).slides).toHaveLength(2)
+    expect(parsePresentation(VALID).slides).toHaveLength(2)
     expect(provider.complete).toHaveBeenCalledOnce()
     expect(gate.record).toHaveBeenCalledWith('success', 100, 50)
     expect(gate.release).not.toHaveBeenCalled()
@@ -139,8 +147,46 @@ describe('POST /api/ai-draft', () => {
 
   it('says disabled without touching the gate while the deployment switch is off', async () => {
     const response = await post(JSON.stringify({ brief: 'A talk' }), 'application/json', false)
-    expect(await response.json()).toEqual({ kind: 'limit', reason: 'disabled' })
+    expect(await events(response)).toEqual([
+      { type: 'outcome', outcome: { kind: 'limit', reason: 'disabled' } },
+    ])
     expect(gate.admit).not.toHaveBeenCalled()
+  })
+
+  it('streams the reply as it is written, then the outcome', async () => {
+    replies('# One\n\n## Not allowed', VALID)
+    const response = await post(JSON.stringify({ brief: 'A talk' }))
+    const sent = await events(response)
+    const text = (from: number, to: number) =>
+      sent
+        .slice(from, to)
+        .map(e => (e.type === 'text' ? e.text : ''))
+        .join('')
+    const retry = sent.findIndex(e => e.type === 'retry')
+    expect(text(0, retry)).toContain('# One')
+    expect(text(retry, -1)).toContain(VALID)
+    expect(sent.at(-1)).toEqual({
+      type: 'outcome',
+      outcome: { kind: 'presentation', source: VALID.trim() },
+    })
+  })
+
+  it('stops writing and gives the draft back when the visitor leaves', async () => {
+    provider.complete.mockImplementation(
+      (_system, _turns, signal) =>
+        new Promise(resolve =>
+          signal.addEventListener('abort', () =>
+            resolve({ text: null, inputTokens: 0, outputTokens: 0 }),
+          ),
+        ),
+    )
+    const response = await post(JSON.stringify({ brief: 'A talk' }), 'application/json', true, {
+      'x-forwarded-for': '203.0.113.7',
+    })
+    await vi.waitFor(() => expect(provider.complete).toHaveBeenCalled())
+    await response.body?.cancel()
+    await vi.waitFor(() => expect(gate.release).toHaveBeenCalledWith('203.0.113.7'))
+    expect(gate.record).toHaveBeenCalledWith('provider-failure', 0, 0)
   })
 
   it('never caches and never echoes a secret', async () => {
@@ -154,11 +200,18 @@ describe('POST /api/ai-draft', () => {
 
 function replies(...sources: string[]) {
   for (const source of sources)
-    provider.complete.mockResolvedValueOnce({
-      text: `Here you go.\n<presentation>\n${source}\n</presentation>`,
-      inputTokens: 100,
-      outputTokens: 50,
+    provider.complete.mockImplementationOnce(async (_system, _turns, _signal, onText) => {
+      const text = `Here you go.\n<presentation>\n${source}\n</presentation>`
+      for (let i = 0; i < text.length; i += 16) onText?.(text.slice(i, i + 16))
+      return { text, inputTokens: 100, outputTokens: 50 }
     })
+}
+
+async function events(response: Response): Promise<DraftEvent[]> {
+  return (await response.text())
+    .split('\n')
+    .filter(Boolean)
+    .map(line => JSON.parse(line))
 }
 
 async function draft(
@@ -167,7 +220,8 @@ async function draft(
 ) {
   const response = await post(JSON.stringify({ brief }), 'application/json', true, headers)
   expect(response.status).toBe(200)
-  return response.json()
+  const outcome = (await events(response)).at(-1)
+  return outcome?.type === 'outcome' ? outcome.outcome : null
 }
 
 async function post(

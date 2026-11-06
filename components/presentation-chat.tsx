@@ -26,11 +26,19 @@ import {
   disconnectChatGPT,
   streamChat,
   visibleReply,
+  writtenReply,
 } from '@/lib/chat'
+import { slideLines } from '@/lib/presentation'
+import { parseWritten, slideChanges, type SlideChanges } from '@/lib/written-slides'
 import { preferredModel, useChatGPTStatus, useConnect, useModels } from './use-chatgpt'
 import { useOnline } from './use-online'
 
-type Entry = ChatMessage & { presentation?: string; notes?: string[]; error?: string }
+type Entry = ChatMessage & {
+  presentation?: string
+  changes?: SlideChanges
+  notes?: string[]
+  error?: string
+}
 type Conversation = { entries: Entry[]; input: string; live: Live | null }
 type Live = { text: string; notes: string[] }
 type ConversationEvent =
@@ -47,6 +55,7 @@ const EMPTY_CONVERSATION: Conversation = { entries: [], input: '', live: null }
 export function PresentationChat({
   source,
   onPresentation,
+  onWriting,
   onOpen,
   onCopyPrompt,
   onAddSkill,
@@ -55,6 +64,7 @@ export function PresentationChat({
 }: {
   source: string
   onPresentation: (source: string, fresh: boolean) => string
+  onWriting: (source: string | null, fresh: boolean) => void
   onOpen: () => void
   onCopyPrompt: () => void
   onAddSkill?: () => void
@@ -138,9 +148,12 @@ export function PresentationChat({
     let attempt = ''
     const notes: string[] = []
     let presentation = ''
+    let changes: SlideChanges | undefined
     const fresh = !entries.some(e => e.presentation)
     let reply = ''
     let error = ''
+    let written = ''
+    let repairing = false
     try {
       await streamChat(
         history.filter(e => e.content).map(({ role, content }) => ({ role, content })),
@@ -148,10 +161,17 @@ export function PresentationChat({
         model,
         event => {
           if (event.type === 'text') attempt += event.text
+          if (event.type === 'text' && !repairing) {
+            const next = writtenReply(attempt)?.source
+            if (next && next !== written) onWriting((written = next), fresh)
+          }
           if (event.type === 'retry') {
             notes.push(event.polish ? t('progress.polishing') : t('progress.fixing'))
             attempt = ''
+            repairing = true
           }
+          if (event.type === 'presentation' && !fresh)
+            changes = changesBetween(source, event.source)
           if (event.type === 'presentation')
             presentation = onPresentation(event.source, fresh && !presentation)
           if (event.type === 'done') reply = event.reply
@@ -163,9 +183,10 @@ export function PresentationChat({
     } catch (err) {
       error = controller.signal.aborted ? t('errors.stopped') : errorText(err, t)
     }
+    onWriting(null, fresh)
     dispatch({
       type: 'replied',
-      entry: { role: 'assistant', content: reply || '', presentation, notes, error },
+      entry: { role: 'assistant', content: reply || '', presentation, changes, notes, error },
     })
     abortRef.current = null
     if (/sign-in|session|connect again/i.test(error)) refresh()
@@ -288,6 +309,7 @@ export function PresentationChat({
               text={entry.content}
               notes={entry.notes || []}
               presentation={entry.presentation}
+              changes={entry.changes}
               error={entry.error}
             />
           ),
@@ -422,17 +444,20 @@ function AssistantBubble({
   text,
   notes,
   presentation,
+  changes,
   error,
   pending,
 }: {
   text: string
   notes: string[]
   presentation?: string
+  changes?: SlideChanges
   error?: string
   pending?: boolean
 }) {
   const t = useTranslations('Chat.progress')
   const reply = visibleReply(text)
+  const written = pending && reply.writing ? slideLines(writtenReply(text)?.source ?? '').length : 0
   return (
     <div className="chat-bubble assistant">
       {notes.map((note, i) => (
@@ -445,7 +470,7 @@ function AssistantBubble({
       {pending && (
         <span className="chat-note">
           <span className="chat-spinner" />
-          {reply.writing ? t('writing') : t('thinking')}
+          {reply.writing ? t('writingSlide', { number: written + 1 }) : t('thinking')}
         </span>
       )}
       {presentation && (
@@ -454,6 +479,7 @@ function AssistantBubble({
           {t('saved', { name: presentation })}
         </span>
       )}
+      {changes && <span className="chat-note">{changesText(changes, t)}</span>}
       {error && (
         <span className="chat-note error">
           <TriangleAlert size={12} />
@@ -462,6 +488,24 @@ function AssistantBubble({
       )}
     </div>
   )
+}
+
+function changesBetween(before: string, after: string) {
+  const old = parseWritten(before)
+  const next = parseWritten(after)
+  return old && next ? slideChanges(old.slides, next.slides) : undefined
+}
+
+function changesText(
+  { changed, added, removed }: SlideChanges,
+  t: ReturnType<typeof useTranslations<'Chat.progress'>>,
+) {
+  const parts = [
+    changed && t('changed', { count: changed }),
+    added && t('added', { count: added }),
+    removed && t('removed', { count: removed }),
+  ].filter(Boolean)
+  return parts.length ? parts.join(', ') : t('unchanged')
 }
 
 function conversationReducer(state: Conversation, event: ConversationEvent): Conversation {

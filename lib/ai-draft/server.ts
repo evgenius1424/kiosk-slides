@@ -1,6 +1,6 @@
 import { draftSystemPrompt } from '@/lib/chat-prompt'
 import { parsePresentation } from '@/lib/presentation'
-import { type DraftOutcome, MAX_SLIDES } from '.'
+import { type DraftOutcome, type DraftProgress, MAX_SLIDES } from '.'
 import { type DraftEvent, admit, record, release } from './gate'
 import { RESERVE_CENTS_PER_DRAFT, type Reply, type Turn, complete } from './provider'
 
@@ -14,6 +14,7 @@ export async function generateFreeDraft(
   brief: string,
   clientIp: string | null,
   signal: AbortSignal,
+  onProgress: (progress: DraftProgress) => void = () => {},
 ): Promise<DraftOutcome> {
   const limit = await admit(clientIp, RESERVE_CENTS_PER_DRAFT)
   if (limit) {
@@ -21,7 +22,7 @@ export async function generateFreeDraft(
     return { kind: 'limit', reason: limit }
   }
   const replies: Reply[] = []
-  const { event, source } = await write(brief, replies, signal).catch(err => {
+  const { event, source } = await write(brief, replies, signal, onProgress).catch(err => {
     console.error('ai-draft: draft failed', err)
     return { event: 'provider-failure' as const, source: '' }
   })
@@ -36,11 +37,13 @@ async function write(
   brief: string,
   replies: Reply[],
   signal: AbortSignal,
+  onProgress: (progress: DraftProgress) => void,
 ): Promise<{ event: DraftEvent; source: string }> {
   const system = await draftSystemPrompt()
   const turns: Turn[] = [{ role: 'user', content: brief }]
   for (let attempt = 0; attempt < 2; attempt++) {
-    const reply = await complete(system, turns, signal)
+    if (attempt) onProgress({ type: 'retry' })
+    const reply = await complete(system, turns, signal, text => onProgress({ type: 'text', text }))
     replies.push(reply)
     if (reply.text === null) return { event: 'provider-failure', source: '' }
     const checked = check(reply.text)

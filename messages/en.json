@@ -47,7 +47,12 @@
       "list": "Slides",
       "slide": "Slide {number}: ",
       "untitledSlide": "Slide {number}",
-      "add": "Add a slide"
+      "add": "Add a slide",
+      "marks": {
+        "new": "New",
+        "changed": "Changed",
+        "waiting": "Not written yet"
+      }
     },
     "newSlide": {
       "title": "New slide",
@@ -388,7 +393,11 @@
     "progress": {
       "fixing": "Fixing a small formatting issue…",
       "polishing": "Polishing the slides…",
-      "writing": "Writing slides…",
+      "writingSlide": "Writing slide {number}…",
+      "changed": "{count, plural, one {# slide changed} other {# slides changed}}",
+      "added": "{count, plural, one {# slide added} other {# slides added}}",
+      "removed": "{count, plural, one {# slide removed} other {# slides removed}}",
+      "unchanged": "No slides changed",
       "thinking": "Thinking…",
       "saved": "Saved as “{name}”"
     },
@@ -481,6 +490,9 @@
     "draft": {
       "make": "Make a free AI draft",
       "working": "Writing your slides…",
+      "writingOf": "Writing slide {number} of {count}…",
+      "writingSlide": "Writing slide {number}…",
+      "finishing": "Checking your slides…",
       "privacy": "One free AI draft a day. Your request goes to Anthropic to write the slides, and this site doesn’t keep it.",
       "used": "You’ve used today’s free AI draft. Keep editing here, or copy the prompt to use your preferred AI.",
       "paused": "Free AI drafts are paused for now. Keep editing here, or copy the prompt to use your preferred AI.",
@@ -498,6 +510,7 @@
     },
     "showcase": {
       "label": "Example slides",
+      "written": "Your slides so far",
       "previous": "Previous slide",
       "next": "Next slide",
       "count": "{number} / {count} · {title}",

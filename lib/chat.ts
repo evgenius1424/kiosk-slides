@@ -1,5 +1,6 @@
 import type { ChatGPTModel, ChatGPTStatus } from './chatgpt'
 import type { SlideAction } from './slide-actions'
+import { writtenSource } from './written-slides'
 
 export type { ChatGPTModel, ChatGPTStatus }
 export const MODEL_KEY = 'kiosk-chatgpt-model'
@@ -76,6 +77,17 @@ export function visibleReply(text: string) {
   const close = text.indexOf(CLOSE_TAG, open)
   const rest = close < 0 ? '' : text.slice(close + CLOSE_TAG.length)
   return { text: (text.slice(0, open) + rest).trim(), writing: close < 0 }
+}
+
+export function writtenReply(text: string) {
+  const open = text.lastIndexOf(OPEN_TAG)
+  if (open < 0) return null
+  const close = text.indexOf(CLOSE_TAG, open)
+  const done = close >= 0
+  return {
+    source: writtenSource(text.slice(open + OPEN_TAG.length, done ? close : undefined), done),
+    done,
+  }
 }
 
 async function stream(body: object, onEvent: (event: ChatEvent) => void, signal?: AbortSignal) {

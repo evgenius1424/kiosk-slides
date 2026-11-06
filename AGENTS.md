@@ -46,6 +46,7 @@ CI (`.github/workflows/ci.yml`) runs every step of `pnpm check`, then `pnpm buil
 | `lib/ai-guide.md`       | The format as taught to AI: FORMAT.md's rules without the presenter's settings         |
 | `lib/last-style.ts`     | Remembers the last chosen theme, color, font and text size for new presentations       |
 | `lib/ai-draft/`         | Free AI draft: browser contract in `index.ts`, server flow, Redis gate, Anthropic call |
+| `lib/written-slides.ts` | Finished slides of an AI reply still being written, and what a reply changed           |
 | `messages/en.json`      | Every UI string, read through next-intl                                                |
 | `skills/`               | The agent skill; its `scripts/`, `references/` and `assets/` are generated             |
 | `.claude-plugin/`       | Plugin and marketplace manifests that publish the skill                                |

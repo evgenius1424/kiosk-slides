@@ -9,9 +9,14 @@ const TIMEOUT_MS = 45_000
 export type Turn = { role: 'user' | 'assistant'; content: string }
 export type Reply = { text: string | null; inputTokens: number; outputTokens: number }
 
-export async function complete(system: string, turns: Turn[], signal: AbortSignal): Promise<Reply> {
+export async function complete(
+  system: string,
+  turns: Turn[],
+  signal: AbortSignal,
+  onText?: (text: string) => void,
+): Promise<Reply> {
   try {
-    const response = await new Anthropic({ maxRetries: 0, timeout: TIMEOUT_MS }).messages.create(
+    const stream = new Anthropic({ maxRetries: 0, timeout: TIMEOUT_MS }).messages.stream(
       {
         model: MODEL_ID,
         max_tokens: MAX_OUTPUT_TOKENS,
@@ -21,6 +26,8 @@ export async function complete(system: string, turns: Turn[], signal: AbortSigna
       },
       { signal },
     )
+    if (onText) stream.on('text', onText)
+    const response = await stream.finalMessage()
     if (response.stop_reason !== 'end_turn')
       console.error('ai-draft: model stopped early', response.stop_reason, response.usage)
     const text = response.content.map(block => (block.type === 'text' ? block.text : '')).join('')
