@@ -26,6 +26,16 @@ import {
   type Talk,
 } from '@/lib/talk'
 import { SlideView } from './slide'
+import {
+  LAB_MESSAGES,
+  SlideOutline,
+  labVariant,
+  slideHeadings,
+  useFakeStream,
+  useFinishedSlides,
+  useRotating,
+  writingLabel,
+} from './draft-lab'
 import { useChatGPTStatus, useConnect } from './use-chatgpt'
 import { useOnline } from './use-online'
 
@@ -79,6 +89,13 @@ export function StartScreen({
   const hasTopic = !!talk.topic.trim()
   const offerDraft =
     freeDraft && online && !status?.available && (!draftNote || draftNote === 'failed')
+  const [lab] = useState(labVariant)
+  const stream = useFakeStream(drafting && !!lab && lab !== 'now')
+  const live = useFinishedSlides(stream.text, stream.done)
+  const written = live?.slides.length ?? 0
+  const total = talk.length ? LENGTHS[talk.length] : undefined
+  const writing = writingLabel(written, total, stream.done)
+  const message = useRotating(drafting && lab === 'messages', LAB_MESSAGES)
 
   useEffect(() => topicRef.current?.focus(), [])
   useEffect(() => () => draftRef.current?.abort(), [])
@@ -233,9 +250,24 @@ export function StartScreen({
                 </>
               ) : offerDraft ? (
                 <>
-                  <button className="btn primary" type="submit" disabled={drafting}>
-                    <Sparkles size={14} />
-                    {drafting ? t('draft.working') : t('draft.make')}
+                  <button
+                    className="btn primary"
+                    type="submit"
+                    disabled={drafting}
+                    aria-busy={drafting && !!lab && lab !== 'now'}
+                  >
+                    {drafting && lab && lab !== 'now' ? (
+                      <span className="chat-spinner" />
+                    ) : (
+                      <Sparkles size={14} />
+                    )}
+                    {drafting
+                      ? lab === 'count'
+                        ? writing
+                        : lab === 'messages'
+                          ? message
+                          : t('draft.working')
+                      : t('draft.make')}
                   </button>
                   <button className="btn" type="button" onClick={copy} disabled={drafting}>
                     <Copy size={14} />
@@ -250,6 +282,9 @@ export function StartScreen({
               )}
             </div>
             {offerDraft && <p className="start-note">{t('draft.privacy')}</p>}
+            {drafting && lab === 'outline' && (
+              <SlideOutline titles={slideHeadings(live)} writing={writing} />
+            )}
             {draftNote && (
               <p className="start-note" role="status">
                 {t(`draft.${draftNote}`)}
@@ -257,7 +292,11 @@ export function StartScreen({
             )}
           </form>
         )}
-        <Showcase example={example} busy={drafting} onOpen={onExample} />
+        {drafting && lab === 'live' && live ? (
+          <LiveShowcase presentation={live} writing={writing} />
+        ) : (
+          <Showcase example={example} busy={drafting} onOpen={onExample} />
+        )}
       </div>
       <footer className="start-footer">
         <button className="link-button" disabled={drafting} onClick={onBlank}>
@@ -400,4 +439,63 @@ function session(key: string, value?: string | null) {
     else sessionStorage.setItem(key, value)
   } catch {}
   return null
+}
+
+function LiveShowcase({
+  presentation,
+  writing,
+}: {
+  presentation: ReturnType<typeof parsePresentation>
+  writing: string
+}) {
+  const t = useTranslations('Start.showcase')
+  const look = presentationLook(presentation)
+  const index = presentation.slides.length - 1
+  return (
+    <section className="start-showcase" aria-label="Your slides">
+      <div
+        className={`start-slide slide-backdrop ${presentation.theme}`}
+        style={{ '--slide-tone': presentation.tone } as React.CSSProperties}
+      >
+        {presentation.slides.slice(-2).map((shown, i, pair) => {
+          const number = index - pair.length + 1 + i
+          return (
+            <div
+              key={number}
+              className={`start-slide-frame lab-crossfade slide-backdrop ${presentation.theme}`}
+              aria-label={slideTitle(shown)}
+              inert
+            >
+              <SlideView
+                slide={shown}
+                theme={presentation.theme}
+                accent={presentation.tone}
+                look={look}
+              />
+            </div>
+          )
+        })}
+      </div>
+      <div className="start-showcase-bar lab-live-bar">
+        <ol className="lab-dots" aria-hidden="true">
+          {presentation.slides.map((_, i) => (
+            <li key={i} />
+          ))}
+          <li className="lab-dot-current" />
+        </ol>
+        <span className="lab-live-status" role="status">
+          <span className="chat-spinner" />
+          {writing}
+        </span>
+      </div>
+      <ul className="start-features">
+        {FEATURES.map(id => (
+          <li key={id}>
+            <Check size={14} />
+            {t(`features.${id}`)}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
 }
