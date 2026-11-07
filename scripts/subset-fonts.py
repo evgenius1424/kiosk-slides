@@ -28,6 +28,10 @@ FONTS = [
     ("onest-cyrillic", CYRILLIC, (400, 900)),
     ("archivo-expanded", LATIN, None),
     ("unbounded-cyrillic", CYRILLIC, (400, 900)),
+    ("literata", LATIN, (400, 900)),
+    ("literata-cyrillic", CYRILLIC, (400, 900)),
+    ("literata-italic", LATIN, (400, 900)),
+    ("literata-italic-cyrillic", CYRILLIC, (400, 900)),
 ]
 
 FEATURES = ["calt", "ccmp", "clig", "curs", "kern", "liga", "mark", "mkmk", "rlig", "rvrn"]
@@ -96,7 +100,7 @@ def check(path, source, keep, weights):
     fail = lambda message: sys.exit(f"{path.name}: {message}")
     if set(font.getBestCmap()) != keep:
         fail("characters differ from the plan")
-    axes = [(a.axisTag, a.minValue, a.maxValue) for a in font["fvar"].axes]
+    axes = [(a.axisTag, a.minValue, a.maxValue) for a in font["fvar"].axes if a.axisTag != "opsz"]
     if axes != [("wght", *weights)]:
         fail(f"axes are {axes}")
     features = set()

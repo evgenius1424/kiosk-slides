@@ -13,6 +13,7 @@ Each Latin font comes as two files. `-core` holds ASCII and the common punctuati
 | `archivo-expanded-*`    | Archivo Expanded    | The Archivo Project Authors (https://github.com/Omnibus-Type/Archivo); the Archivo width-125 instance |
 | `golos-text-*`          | Golos Text          | The Golos Text Project Authors (https://github.com/googlefonts/golos-text)                            |
 | `onest-cyrillic`        | Onest               | The Onest Project Authors (https://github.com/simpals/onest)                                          |
+| `literata-*`            | Literata            | The Literata Project Authors (https://github.com/googlefonts/literata)                                |
 | `unbounded-cyrillic`    | Unbounded           | The Unbounded Project Authors (https://github.com/googlefonts/unbounded)                              |
 
 Figtree uses Golos Text for Cyrillic, Bricolage Grotesque and Space Grotesk use Onest, and Archivo Expanded uses Unbounded.
