@@ -28,7 +28,7 @@ const GRAYS: Record<
     text: [0.985, 0.003],
   },
   'room-light': {
-    bg: [0.985, 0.003],
+    bg: [0.985, 0],
     surface: [0.956, 0.006],
     line: [0.871, 0.01],
     muted: [0.442, 0.02],
