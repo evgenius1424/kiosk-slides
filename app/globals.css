@@ -1930,10 +1930,10 @@ html:has(.is-presenting .studio) {
     width: auto;
     bottom: 12px;
   }
-  .canvas-shell .slide {
+  .canvas-shell .canvas-slide .slide {
     padding: 7cqw;
   }
-  .canvas-shell .slide-meta {
+  .canvas-shell .slide .slide-meta {
     font-size: 3cqw;
   }
   .canvas-shell .slide-label {
@@ -1942,20 +1942,20 @@ html:has(.is-presenting .studio) {
   .canvas-shell .slide h2 {
     font-size: calc(9cqw * var(--phone-fit, 1));
   }
-  .canvas-shell .slide-body {
+  .canvas-shell .slide .slide-body {
     font-size: calc(4cqw * var(--phone-fit, 1));
   }
-  .canvas-shell .slide-footer {
+  .canvas-shell .slide .slide-footer {
     font-size: 2.8cqw;
   }
-  .canvas-shell .slide-brand {
+  .canvas-shell .slide .slide-brand {
     font-size: 4cqw;
   }
   .canvas-shell .comparison {
     grid-template-columns: 1fr;
   }
-  .canvas-shell .comparison p,
-  .canvas-shell .slide-steps li,
+  .canvas-shell .slide .comparison p,
+  .canvas-shell .slide .slide-steps li,
   .canvas-shell .flow-box {
     font-size: calc(3.6cqw * var(--phone-fit, 1));
   }
@@ -1990,7 +1990,7 @@ html:has(.is-presenting .studio) {
   .canvas-shell .code-frame > div {
     font-size: calc(2.8cqw * var(--phone-fit, 1));
   }
-  .canvas-shell .slide-metric > span {
+  .canvas-shell .slide .slide-metric > span {
     font-size: calc(4cqw * var(--phone-fit, 1));
     max-width: 40cqw;
   }
@@ -2003,7 +2003,7 @@ html:has(.is-presenting .studio) {
   .canvas-shell .slide-buttons {
     gap: calc(2.4cqw * var(--phone-fit, 1));
   }
-  .canvas-shell .slide-buttons a {
+  .canvas-shell .slide .slide-buttons a {
     font-size: calc(3.6cqw * var(--phone-fit, 1));
     padding: 2cqw 3.2cqw;
   }
