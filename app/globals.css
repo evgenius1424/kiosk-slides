@@ -1940,10 +1940,10 @@ html:has(.is-presenting .studio) {
     display: none;
   }
   .canvas-shell .slide h2 {
-    font-size: 9cqw;
+    font-size: calc(9cqw * var(--phone-fit, 1));
   }
   .canvas-shell .slide-body {
-    font-size: 4cqw;
+    font-size: calc(4cqw * var(--phone-fit, 1));
   }
   .canvas-shell .slide-footer {
     font-size: 2.8cqw;
@@ -1957,22 +1957,22 @@ html:has(.is-presenting .studio) {
   .canvas-shell .comparison p,
   .canvas-shell .slide-steps li,
   .canvas-shell .flow-box {
-    font-size: 3.6cqw;
+    font-size: calc(3.6cqw * var(--phone-fit, 1));
   }
   .canvas-shell .widget-label {
-    font-size: 2.8cqw;
+    font-size: calc(2.8cqw * var(--phone-fit, 1));
   }
   .canvas-shell .slide-content {
-    gap: 5cqw;
+    gap: calc(5cqw * var(--phone-fit, 1));
   }
   .canvas-shell .slide-flow {
-    gap: 3cqw;
+    gap: calc(3cqw * var(--phone-fit, 1));
   }
   .canvas-shell .flow-line {
-    gap: 1.5cqw;
+    gap: calc(1.5cqw * var(--phone-fit, 1));
   }
   .canvas-shell .flow-arrow {
-    font-size: 3.6cqw;
+    font-size: calc(3.6cqw * var(--phone-fit, 1));
   }
   .canvas-shell .kind-code .slide-content {
     flex-direction: column;
@@ -1985,33 +1985,30 @@ html:has(.is-presenting .studio) {
     width: 100%;
   }
   .canvas-shell .code-frame pre {
-    font-size: 3.8cqw;
+    font-size: calc(3.8cqw * var(--phone-fit, 1));
   }
   .canvas-shell .code-frame > div {
-    font-size: 2.8cqw;
+    font-size: calc(2.8cqw * var(--phone-fit, 1));
   }
   .canvas-shell .slide-metric > span {
-    font-size: 4cqw;
+    font-size: calc(4cqw * var(--phone-fit, 1));
     max-width: 40cqw;
   }
   .canvas-shell .slide-steps li span {
-    font-size: 3cqw;
+    font-size: calc(3cqw * var(--phone-fit, 1));
     width: 6cqw;
     height: 6cqw;
     flex-shrink: 0;
   }
   .canvas-shell .slide-buttons {
-    gap: 2.4cqw;
+    gap: calc(2.4cqw * var(--phone-fit, 1));
   }
   .canvas-shell .slide-buttons a {
-    font-size: 3.6cqw;
+    font-size: calc(3.6cqw * var(--phone-fit, 1));
     padding: 2cqw 3.2cqw;
   }
-  .canvas-shell .slide-table th {
-    font-size: 2.8cqw;
-  }
-  .canvas-shell .slide-table td {
-    font-size: 3.4cqw;
+  .canvas-shell .slide-table {
+    --table-size: calc(3.4cqw * var(--phone-fit, 1));
   }
 }
 @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {

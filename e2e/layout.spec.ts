@@ -1,8 +1,8 @@
 import { execFileSync } from 'node:child_process'
-import { readdirSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { fonts, scales } from '@/lib/presentation'
-import { expect, test } from './fixtures'
+import { expect, openSaved, shownSlide, test } from './fixtures'
 
 const CLEAR = 2.5
 const CLEAR_WHEN_FULL = 1
@@ -15,6 +15,40 @@ const samples = [
 ]
 
 test.use({ viewport: { width: 1600, height: 900 } })
+
+test.describe('phone preview', () => {
+  test.use({ viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true })
+
+  for (const sample of samples)
+    test(`${path.basename(sample)} keeps every slide above the footer`, async ({ page }) => {
+      const source = readFileSync(sample, 'utf8')
+      await openSaved(page, { id: 'phone', name: 'Phone', source })
+      await page.evaluate(() => document.fonts.ready)
+      const name = await shownSlide(page).getAttribute('aria-label')
+      const count = Number(name!.match(/of (\d+)/)![1])
+      const problems: string[] = []
+      for (let number = 1; number <= count; number++) {
+        await page.goto(`/#${number}`)
+        const slide = shownSlide(page)
+        await expect(slide).toHaveAttribute('aria-label', new RegExp(`^Slide ${number} of`))
+        const gap = await slide.evaluate(frame => {
+          const content = frame.querySelector('.slide-content')!
+          const footer = frame.querySelector('.slide-footer')!.getBoundingClientRect()
+          const label = frame.querySelector('.slide-meta')!.getBoundingClientRect()
+          const items = [...content.children].map(item => item.getBoundingClientRect())
+          return {
+            top: items[0].top - label.bottom,
+            bottom: footer.top - items.at(-1)!.bottom,
+          }
+        })
+        if (gap.top < 0 || gap.bottom < 0)
+          problems.push(
+            `slide ${number}: ${gap.top.toFixed(1)}px below the label, ${gap.bottom.toFixed(1)}px above the footer`,
+          )
+      }
+      expect(problems).toEqual([])
+    })
+})
 
 for (const sample of samples)
   for (const scale of scales)
