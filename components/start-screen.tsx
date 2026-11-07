@@ -13,7 +13,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
-import { type DraftOutcome, MAX_BRIEF_LENGTH, requestDraft } from '@/lib/ai-draft'
+import { type DraftLimit, type DraftOutcome, MAX_BRIEF_LENGTH, requestDraft } from '@/lib/ai-draft'
 import {
   parsePresentation,
   presentationLook,
@@ -43,7 +43,15 @@ const SHOWCASE_MS = 5000
 const FEATURES = ['room', 'share', 'saved'] as const
 const MAX_TOPIC_LENGTH = MAX_BRIEF_LENGTH - longestRequestFrame()
 
-type DraftNote = 'used' | 'paused' | 'failed'
+type DraftNote = 'used' | 'full' | 'fullMonth' | 'paused' | 'failed'
+
+const LIMIT_NOTES: Record<DraftLimit, DraftNote> = {
+  'already-used': 'used',
+  capacity: 'full',
+  budget: 'fullMonth',
+  disabled: 'paused',
+}
+
 type Written = { source: string; presentation: Presentation; done: boolean }
 
 export function resumingStart() {
@@ -470,7 +478,7 @@ function writingLabel(
 
 function noteFor(outcome: DraftOutcome): DraftNote {
   if (outcome.kind !== 'limit') return 'failed'
-  return outcome.reason === 'already-used' ? 'used' : 'paused'
+  return LIMIT_NOTES[outcome.reason]
 }
 
 function draft(): Talk | null {

@@ -143,10 +143,10 @@ describe('start screen', () => {
   })
 
   it.each([
-    [{ kind: 'limit', reason: 'already-used' }, 'You’ve used today’s free AI draft'],
+    [{ kind: 'limit', reason: 'already-used' }, 'You’ve used your free AI drafts for today'],
     [{ kind: 'limit', reason: 'disabled' }, 'Free AI drafts are paused'],
-    [{ kind: 'limit', reason: 'capacity' }, 'Free AI drafts are paused'],
-    [{ kind: 'limit', reason: 'budget' }, 'Free AI drafts are paused'],
+    [{ kind: 'limit', reason: 'capacity' }, 'today’s are all used up'],
+    [{ kind: 'limit', reason: 'budget' }, 'this month’s are all used up'],
   ])('keeps the topic and falls back to the prompt on %o', async (outcome, note) => {
     hostedDraft(outcome)
     workspace({ freeDraft: true })
