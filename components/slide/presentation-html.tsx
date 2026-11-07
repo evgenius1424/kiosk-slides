@@ -4,6 +4,7 @@ import {
   findFont,
   fontFace,
   fontFilesFor,
+  slideColors,
   slideWords,
   type Presentation,
   type Theme,
@@ -59,6 +60,7 @@ export async function presentationHtml(
       return `<div class="portable-slide" role="region" aria-roledescription="slide" aria-label="${label}"><div class="slide-frame">${renderToStaticMarkup(<SlideView slide={embedded} theme={theme} accent={tone} look={look} />)}</div></div>`
     }),
   )
+  const colors = slideColors(tone, theme)
   const config = JSON.stringify({
     duration: presentation.duration,
     loop: presentation.loop,
@@ -75,7 +77,7 @@ export async function presentationHtml(
     credit: presentation.credit && site ? site : '',
     hash: SLIDE_HASH.source,
   })
-  return `<!doctype html><html lang="${look.language}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${faces.join('')}${slideStyles}${pageStyles(theme)}${printStyles}</style></head><body class="slide-backdrop ${theme}" style="--slide-tone:${tone}">${slides.join('')}${controls(words.fullScreen)}<div id="notice" role="status"></div><div id="spoken" aria-live="polite"></div><script>const config=${config};${player}</script></body></html>`
+  return `<!doctype html><html lang="${look.language}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${presentation.title.replace(/[<>&"]/g, '')}</title><style>${faces.join('')}${slideStyles}${pageStyles(colors['--slide-bg'])}${printStyles}</style></head><body class="slide-backdrop ${theme}" style="${cssVariables(colors)}">${slides.join('')}${controls(words.fullScreen)}<div id="notice" role="status"></div><div id="spoken" aria-live="polite"></div><script>const config=${config};${player}</script></body></html>`
 }
 
 export async function fetchAsDataUrl(src: string): Promise<string> {
@@ -89,14 +91,8 @@ export async function fetchAsDataUrl(src: string): Promise<string> {
 const SAFE_AREA =
   'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'
 
-const PAGE_BACKGROUNDS: Record<Theme, string> = {
-  'room-dark': '#121214',
-  'room-light': '#fafafa',
-  studio: '#000000',
-}
-
-const pageStyles = (theme: Theme) =>
-  `html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}html,body{margin:0;background:${PAGE_BACKGROUNDS[theme]};width:100%;height:100%;overflow:hidden;overscroll-behavior:none;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active,.portable-slide.kt-leave{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0;transition:opacity .2s ease-out}[data-settling] .portable-slide .slide{opacity:0;transition:none}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#notice a{color:inherit}#spoken{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
+const pageStyles = (background: string) =>
+  `html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}html,body{margin:0;background:${background};width:100%;height:100%;overflow:hidden;overscroll-behavior:none;font-family:Arial,sans-serif}.portable-slide{display:none;position:fixed;inset:0;box-sizing:border-box;padding:${SAFE_AREA};touch-action:pinch-zoom}.portable-slide.active,.portable-slide.kt-leave{display:flex;align-items:center;justify-content:center}.slide-frame{width:100%;height:100%;container-type:inline-size}@media(min-aspect-ratio:16/9){.slide-frame{width:auto;aspect-ratio:16/9;max-width:100%}}.portable-slide .slide{height:100%;border-radius:0;transition:opacity .2s ease-out}[data-settling] .portable-slide .slide{opacity:0;transition:none}#notice{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 20px;border-radius:8px;z-index:5}#notice:empty{display:none}#notice a{color:inherit}#spoken{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}#full{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:6;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#18181bb3;color:#fff;cursor:pointer;touch-action:manipulation;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .25s}#full[hidden]{display:none}#full.idle{opacity:0;pointer-events:none}#full .exit,.fullscreen #full .enter{display:none}.fullscreen #full .exit{display:block}`
 
 const printStyles = `@page{size:16in 9in;margin:0}@media print{html,body{width:auto;height:auto;overflow:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}.portable-slide,.portable-slide.active,.portable-slide.kt-leave{display:block;position:relative;inset:auto;width:16in;height:9in;padding:0;overflow:hidden;background:var(--slide-wash);break-inside:avoid}.portable-slide+.portable-slide{break-before:page}.slide-frame{width:100%;height:100%;aspect-ratio:auto}.portable-slide *{animation:none!important;transition:none!important}[data-settling] .portable-slide .slide{opacity:1}#full,#notice,#spoken{display:none!important}}`
 
@@ -147,4 +143,10 @@ function base64(bytes: Uint8Array) {
   for (let i = 0; i < bytes.length; i += 0x8000)
     binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
   return btoa(binary)
+}
+
+function cssVariables(variables: Record<string, string>) {
+  return Object.entries(variables)
+    .map(([name, value]) => `${name}:${value}`)
+    .join(';')
 }

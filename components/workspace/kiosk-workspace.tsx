@@ -11,6 +11,7 @@ import {
   parsePresentation,
   presentationLook,
   removeSlide,
+  slideColors,
   slideLines,
   slideSource,
   type Slide,
@@ -433,7 +434,7 @@ export function KioskWorkspace({
                 {slide && (
                   <div
                     className={`source-slide slide-backdrop ${theme}`}
-                    style={{ '--slide-tone': accent } as CSSProperties}
+                    style={slideColors(accent, theme) as CSSProperties}
                   >
                     <SlideView slide={slide} theme={theme} accent={accent} look={look} />
                   </div>

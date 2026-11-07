@@ -90,8 +90,8 @@ describe('parsePresentation: presentation and message slides', () => {
     const tone = (...lines: string[]) => parsePresentation(md('---', ...lines, '---', '# Hi')).tone
     expect(tone('theme: room-light')).toBe('#000000')
     expect(tone('theme: studio')).toBe('#ffffff')
-    expect(tone('theme: room-light', 'tone: teal')).toBe('#0f7f76')
-    expect(tone('tone: teal', 'theme: studio')).toBe('#5fe3d6')
+    expect(tone('theme: room-light', 'tone: teal')).toBe('#008874')
+    expect(tone('tone: teal', 'theme: studio')).toBe('#45dfca')
   })
 
   it('reads the credit flag', () => {
@@ -1001,7 +1001,7 @@ describe('setFrontMatter', () => {
 
   it('keeps settings apart between presentations', () => {
     const teal = setFrontMatter(md('---', 'title: A', '---', '# Hi'), 'tone', 'teal')
-    expect(parsePresentation(teal).tone).toBe('#4fd1c5')
+    expect(parsePresentation(teal).tone).toBe('#3cd9c4')
     expect(parsePresentation(md('---', 'title: B', '---', '# Hi')).tone).toBe(
       defaultTone('room-dark'),
     )

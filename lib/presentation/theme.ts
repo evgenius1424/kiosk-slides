@@ -5,10 +5,10 @@ export type Theme = (typeof themes)[number]
 
 export const tones = [
   tone('Mono', '#ffffff', '#000000', '#ffffff'),
-  tone('Violet', '#a594ff', '#5b45d6', '#b9abff'),
-  tone('Coral', '#ff8577', '#c8392b', '#ff9a8d'),
-  tone('Teal', '#4fd1c5', '#0f7f76', '#5fe3d6'),
-  tone('Amber', '#ffb547', '#a65d00', '#ffc566'),
+  tone('Violet', '#b0a2ff', '#5f42d3', '#b6aaff'),
+  tone('Coral', '#ff8577', '#d33d2c', '#ff917f'),
+  tone('Teal', '#3cd9c4', '#008874', '#45dfca'),
+  tone('Amber', '#ffb848', '#bd6100', '#ffc25b'),
 ] as const
 
 export const defaultTone = (theme: Theme) => tones[0].colors[theme]

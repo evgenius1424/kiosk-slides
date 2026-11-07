@@ -6,8 +6,10 @@ import {
   headingSize,
   tableSize,
   textFit,
+  slideColors,
   slideWords,
   DEFAULT_BRAND,
+  type Theme,
   type SlideLook,
   type HeadingPart,
   type Slide,
@@ -44,7 +46,7 @@ export function SlideView({
   miniature = false,
 }: {
   slide: Slide
-  theme?: string
+  theme?: Theme
   accent?: string
   look?: SlideLook
   miniature?: boolean
@@ -59,7 +61,7 @@ export function SlideView({
   const fit = textFit(slide, look)
   const words = slideWords[look.language]
   const style = {
-    '--slide-tone': accent,
+    ...slideColors(accent, theme),
     '--slide-font': fontStack(findFont(look.font), look.extended),
     ...(size && { '--heading-size': `${size}cqw` }),
     ...(table && { '--table-size': `${table}cqw` }),
