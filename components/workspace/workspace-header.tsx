@@ -38,15 +38,15 @@ export function WorkspaceHeader({
   const { shared } = library
   return (
     <header className="app-header">
-      <a href="/" className="brand">
-        <span className="brand-icon">
-          <Layers2 size={19} strokeWidth={2.2} />
+      {shared ? (
+        <a href="/" className="brand">
+          <Brand label={t('shared.home')} />
+        </a>
+      ) : (
+        <span className="brand">
+          <Brand label={t('brand')} />
         </span>
-        <span className="brand-name" aria-hidden="true">
-          Kiosk<span className="brand-light">Slides</span>
-        </span>
-        <span className="sr-only">{t('home')}</span>
-      </a>
+      )}
       {shared ? (
         <div className="shared-bar">
           <span>{t('shared.label')}</span>
@@ -150,5 +150,19 @@ export function EditorToolbar({
         )}
       </div>
     </div>
+  )
+}
+
+function Brand({ label }: { label: string }) {
+  return (
+    <>
+      <span className="brand-icon">
+        <Layers2 size={19} strokeWidth={2.2} />
+      </span>
+      <span className="brand-name" aria-hidden="true">
+        Kiosk<span className="brand-light">Slides</span>
+      </span>
+      <span className="sr-only">{label}</span>
+    </>
   )
 }
