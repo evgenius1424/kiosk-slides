@@ -167,12 +167,15 @@ describe('player words', () => {
 })
 
 describe('reduced motion', () => {
-  it('swaps every transition for a short fade on the site and in downloads', () => {
+  it('keeps each transition as a fade without movement on the site and in downloads', () => {
     const reduced = /@media\(prefers-reduced-motion:reduce\)\{(.*)\}/.exec(slideStyles)?.[1] ?? ''
     expect(reduced).toContain(
-      '[data-transition] .kt-enter{animation:kt-fade-in .16s linear both!important}',
+      '[data-transition=gentle] .kt-enter{animation:kt-fade-in .7s cubic-bezier(.16,1,.3,1) .18s both!important}',
     )
-    expect(reduced).toContain('[data-transition] .kt-leave{animation:none!important')
+    expect(reduced).toContain(
+      '[data-transition=slide] .kt-leave{animation:kt-fade-out .32s cubic-bezier(.4,0,1,1) both!important}',
+    )
+    expect(reduced).toContain('[data-transition=share] .kt-leave{visibility:hidden}')
     expect(reduced).not.toMatch(/kt-(rise|sink|slide)/)
   })
 })

@@ -224,6 +224,7 @@
         "help": "Instant cuts. Nothing moves."
       }
     },
+    "reducedMotionActive": "Your device is set to reduce motion, so slides fade in place instead of moving.",
     "shareSafeActive": "Screen-share safe is on, so every transition becomes a quick flat fade.",
     "shareSafe": "Screen-share safe",
     "shareSafeHelp": "Quick flat fades with no movement, blur or glow. Stays crisp when screen sharing and on meeting-room TVs."
