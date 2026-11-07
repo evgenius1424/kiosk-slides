@@ -51,8 +51,9 @@ async function change(page: Page) {
               leave: Number(getComputedStyle(leave).opacity),
               moving: [enter, leave].some(e => getComputedStyle(e).transform !== 'none'),
             })
-          if (performance.now() - start < 1200) requestAnimationFrame(sample)
-          else resolve(frames)
+          const done = frames.length > 0 && !enter
+          if (done || performance.now() - start > 5000) resolve(frames)
+          else requestAnimationFrame(sample)
         }
         requestAnimationFrame(sample)
       }),
