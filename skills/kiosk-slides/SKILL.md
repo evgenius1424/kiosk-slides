@@ -45,9 +45,9 @@ node scripts/render.mjs slides.md -o slides.html
 
 Options:
 
-- `--theme room-dark|room-light|studio` overrides the presentation's front-matter `theme:`.
+- `--theme room-dark|room-light|studio|paper|poster|marker` overrides the presentation's front-matter `theme:`.
 - `--tone mono|violet|coral|teal|amber` overrides the presentation's `tone:`, the background tone and the color of highlighted heading words. Any `#hex` color works too.
-- `--font classic|inter|figtree|bricolage-grotesque|space-grotesk|archivo-expanded|golos-text` overrides the presentation's `font:`. The chosen font is embedded, so the file still works offline.
+- `--font classic|inter|figtree|bricolage-grotesque|space-grotesk|archivo-expanded|golos-text|literata` overrides the presentation's `font:`. The chosen font is embedded, so the file still works offline.
 - `--scale normal|large|hero` overrides the presentation's `scale:`. `hero` makes headings as big as each one allows, for screens read from a distance.
 - `--brand <text>` replaces the `kiosk.` mark in the corner of every slide; `--brand none` hides it.
 - `--images <dir>` is the folder that `/images/…` paths resolve against. The default is the presentation's own folder, so `/images/logo.png` is read from `<presentation folder>/images/logo.png`.
@@ -68,7 +68,7 @@ For a PDF, open the HTML in a desktop browser and print it with Save as PDF: eve
 
 If it fails, the message starts with `Line N:` and names the rule; fix the Markdown and run it again. An image error means a URL could not be fetched or a `/images/` file is missing; ask the user for the file or remove that slide's image.
 
-Use `room-dark` for screens in dim rooms, TVs, and kiosks, `room-light` for bright rooms and projectors that wash out dark backgrounds, and `studio` for a bold true-black look on stage screens and video. Keep the default black and white `mono` tone unless the user asks for a color or one that matches their organization; then set it with `tone:` in the front matter or `--tone`. For an unattended screen or a big room, pass `--scale hero`.
+Use `room-dark` for screens in dim rooms, TVs, and kiosks, `room-light` for bright rooms and projectors that wash out dark backgrounds, `studio` for a bold true-black look on stage screens and video, `paper` for a warm, book-like talk, `poster` for a loud full-color look, and `marker` for bright rooms where the key words should pop out in a colored pill. Keep the default black and white `mono` tone unless the user asks for a color or one that matches their organization; then set it with `tone:` in the front matter or `--tone`. For an unattended screen or a big room, pass `--scale hero`.
 
 When you hand over the HTML, say how to present it:
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["skills/render.ts", "scripts/*.mjs"],
+  "entry": ["skills/render.ts", "scripts/*.mjs", "scripts/theme-lab/render.tsx"],
   "ignoreExportsUsedInFile": true,
   "ignoreDependencies": ["postcss-load-config"],
   "ignoreBinaries": ["java"],

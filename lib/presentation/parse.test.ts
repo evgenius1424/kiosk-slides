@@ -92,6 +92,16 @@ describe('parsePresentation: presentation and message slides', () => {
     expect(tone('theme: studio')).toBe('#ffffff')
     expect(tone('theme: room-light', 'tone: teal')).toBe('#008874')
     expect(tone('tone: teal', 'theme: studio')).toBe('#45dfca')
+    expect(tone('theme: marker')).toBe('#fed835')
+    expect(tone('theme: poster')).toBe('#fd6844')
+  })
+
+  it('starts each theme in its own font unless the font is set', () => {
+    const font = (...lines: string[]) => parsePresentation(md('---', ...lines, '---', '# Hi')).font
+    expect(font()).toBe('classic')
+    expect(font('theme: paper')).toBe('literata')
+    expect(font('theme: poster')).toBe('archivo-expanded')
+    expect(font('theme: marker', 'font: figtree')).toBe('figtree')
   })
 
   it('reads the credit flag', () => {
@@ -528,7 +538,7 @@ describe('parsePresentation: errors', () => {
 
   it('rejects an unknown theme on its front-matter line', () => {
     expect(error(md('---', 'title: T', 'theme: neon', '---', '# Hi'))).toBe(
-      'Line 3: Unknown theme “neon”. Use room-dark or room-light or studio.',
+      'Line 3: Unknown theme “neon”. Use room-dark, room-light, studio, paper, poster, marker.',
     )
   })
 })

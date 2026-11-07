@@ -27,7 +27,7 @@ import { SITE_URL } from '@/lib/site'
 const SITE_TIMEOUT_MS = 3000
 
 const usage =
-  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light|studio] [--tone mono|violet|coral|teal|amber|#hex] [--font name] [--scale normal|large|hero] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--no-credit] [--no-link] [--no-open] [--check] [--format]'
+  'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light|studio|paper|poster|marker] [--tone mono|violet|coral|teal|amber|#hex] [--font name] [--scale normal|large|hero] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--no-credit] [--no-link] [--no-open] [--check] [--format]'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -60,7 +60,7 @@ async function main() {
   if (!input) throw new Error(usage)
   const source = await readFile(input, 'utf8')
   if (values.theme !== undefined && !isTheme(values.theme))
-    throw new Error(`Unknown theme “${values.theme}”. Use ${themes.join(' or ')}.`)
+    throw new Error(`Unknown theme “${values.theme}”. Use ${themes.join(', ')}.`)
   const presentation = withLook(
     parsePresentation(values.theme ? setPresentationTheme(source, values.theme) : source),
   )
