@@ -23,7 +23,7 @@ export default defineConfig({
     },
     {
       name: 'webkit',
-      testMatch: 'pdf-match.spec.ts',
+      testMatch: ['pdf-match.spec.ts', 'transitions.spec.ts'],
       use: { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } },
     },
   ],
