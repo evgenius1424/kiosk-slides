@@ -21,7 +21,7 @@
     }
   },
   "Workspace": {
-    "home": "Kiosk Slides home",
+    "brand": "Kiosk Slides",
     "settings": "Settings",
     "download": "Download",
     "downloadHint": "Download as a web page or a PDF",
