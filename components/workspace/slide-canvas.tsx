@@ -1,12 +1,23 @@
 'use client'
 
-import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react'
 import { slideColors, type Presentation, type SlideLook } from '@/lib/presentation'
 import { SETTLE_MS, SWIPE, WHEEL, swipeDelta } from '@/lib/player'
 import { SlideView } from '../slide'
 import type { Player } from './use-player'
+
+const PHONE = '(max-width: 650px)'
+const MIN_FIT = 0.6
+const FIT_STEPS = 7
 
 export function useCanvas({ player, preview }: { player: Player; preview: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -44,6 +55,10 @@ export function useCanvas({ player, preview }: { player: Player; preview: boolea
     const target = ref.current
     if (target) return hideWhileResizing(target)
   }, [preview])
+  useEffect(() => {
+    const target = ref.current
+    if (target) return refitOnResize(target)
+  }, [preview])
   return { ref }
 }
 
@@ -68,6 +83,9 @@ export function SlideCanvas({
   const ta = useTranslations('SlideActions')
   const { theme, tone: accent, slides } = presentation
   const { change, index, slide, presenting } = player
+  useLayoutEffect(() => {
+    if (canvasRef.current) fitToPhone(canvasRef.current)
+  }, [canvasRef, slide, change, look, theme, presenting])
   return (
     <>
       <div
@@ -148,6 +166,44 @@ export function SlideCanvas({
       )}
     </>
   )
+}
+
+function refitOnResize(target: HTMLElement) {
+  const refit = () => fitToPhone(target)
+  const observer = new ResizeObserver(refit)
+  observer.observe(target)
+  document.fonts?.addEventListener?.('loadingdone', refit)
+  return () => {
+    observer.disconnect()
+    document.fonts?.removeEventListener?.('loadingdone', refit)
+  }
+}
+
+function fitToPhone(shell: HTMLElement) {
+  const phone = window.matchMedia?.(PHONE).matches
+  for (const frame of shell.querySelectorAll<HTMLElement>('.canvas-slide')) {
+    frame.style.removeProperty('--phone-fit')
+    if (!phone || fits(frame)) continue
+    let low = MIN_FIT
+    let high = 1
+    for (let step = 0; step < FIT_STEPS; step++) {
+      const middle = (low + high) / 2
+      frame.style.setProperty('--phone-fit', String(middle))
+      if (fits(frame)) low = middle
+      else high = middle
+    }
+    frame.style.setProperty('--phone-fit', String(low))
+  }
+}
+
+function fits(frame: HTMLElement) {
+  const content = frame.querySelector<HTMLElement>('.slide-content')
+  const first = content?.firstElementChild as HTMLElement | null
+  const last = content?.lastElementChild as HTMLElement | null
+  if (!content || !first || !last) return true
+  const style = getComputedStyle(content)
+  const room = content.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)
+  return last.offsetTop + last.offsetHeight - first.offsetTop <= room + 0.5
 }
 
 function hideWhileResizing(target: HTMLElement) {
