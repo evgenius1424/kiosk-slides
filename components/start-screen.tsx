@@ -14,7 +14,12 @@ import {
   X,
 } from 'lucide-react'
 import { type DraftOutcome, MAX_BRIEF_LENGTH, requestDraft } from '@/lib/ai-draft'
-import { parsePresentation, presentationLook, type Presentation } from '@/lib/presentation'
+import {
+  parsePresentation,
+  presentationLook,
+  slideColors,
+  type Presentation,
+} from '@/lib/presentation'
 import { writtenReply } from '@/lib/chat'
 import { withLastStyle } from '@/lib/last-style'
 import { parseWritten } from '@/lib/written-slides'
@@ -324,7 +329,7 @@ function Showcase({
     >
       <div
         className={`start-slide slide-backdrop ${presentation.theme}`}
-        style={{ '--slide-tone': presentation.tone } as React.CSSProperties}
+        style={slideColors(presentation.tone, presentation.theme) as React.CSSProperties}
         onPointerEnter={() => setAuto(false)}
       >
         <div key={index} className="start-slide-frame" aria-label={slideTitle(slide)} inert>
@@ -366,7 +371,7 @@ function WrittenShowcase({ written, label }: { written: Written; label: string }
     <section className="start-showcase" aria-label={t('written')}>
       <div
         className={`start-slide slide-backdrop ${theme}`}
-        style={{ '--slide-tone': tone } as React.CSSProperties}
+        style={slideColors(tone, theme) as React.CSSProperties}
       >
         {shown.map((slide, i) => (
           <div

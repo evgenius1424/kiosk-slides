@@ -23,7 +23,7 @@ describe('last style', () => {
     const { theme, tone, title } = presentation
     expect({ theme, tone, title, scale: presentationLook(presentation).scale }).toEqual({
       theme: 'studio',
-      tone: '#b9abff',
+      tone: '#b6aaff',
       title: 'New',
       scale: 'hero',
     })

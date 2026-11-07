@@ -40,7 +40,7 @@ describe('skill renderer', () => {
     const site = await presentationHtml(
       { ...presentation, font: 'inter' },
       {
-        tone: '#4fd1c5',
+        tone: '#3cd9c4',
         transition: 'slide',
         site: SITE_URL,
         embedImage: src => dataUrl(`public${src}`, 'image/png'),

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { parsePresentation, type Transition } from '@/lib/presentation'
+import { parsePresentation, slideColors, type Transition } from '@/lib/presentation'
 import { slideStyles } from '@/lib/slide-styles'
 import { presentationHtml } from './presentation-html'
 
@@ -73,7 +73,11 @@ describe('presentationHtml', () => {
 
   it('fills the space around a centered slide with the slide background', async () => {
     const html = await render()
-    expect(html).toContain('<body class="slide-backdrop room-dark" style="--slide-tone:#669a98">')
+    const { '--slide-bg': background, ...rest } = slideColors('#669a98', 'room-dark')
+    expect(html).toContain(`html,body{margin:0;background:${background};`)
+    expect(html).toContain(
+      `<body class="slide-backdrop room-dark" style="--slide-tone:#669a98;--slide-bg:${background};--slide-surface:${rest['--slide-surface']}`,
+    )
     expect(html).toContain('viewport-fit=cover')
   })
 
