@@ -25,7 +25,7 @@ Look up every file you changed in the coverage table. If a function you changed 
 
 Last confirmed against the code at commit `4e7023f` (Let Undo take back Clean up), together with the notice Undo fix that added the `Undo` model. Move this commit forward only after you have read every change to the covered code since it and confirmed each model still describes it.
 
-Not covered: the undo history shared between two tabs through `localStorage` (each tab writes its own copy over the other's), Ask AI replies, slide AI actions (behind `SLIDE_AI`), the offline service worker, downloads, and anything a model leaves out of its comment at the top.
+Not covered: the undo history shared between two tabs through `localStorage` (each tab writes its own copy over the other's), the paste notice's Undo in `use-library.ts` (it removes the pasted presentation rather than stepping back through history, does nothing once another presentation is open, and is checked in `flows.test.tsx`), Ask AI replies, slide AI actions (behind `SLIDE_AI`), the offline service worker, downloads, and anything a model leaves out of its comment at the top.
 
 ## Run
 

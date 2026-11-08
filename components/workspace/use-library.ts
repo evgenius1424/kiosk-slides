@@ -199,6 +199,7 @@ export function useLibrary({
     notice(t('toast.pasted', { name: target.name }), {
       label: t('toast.undo'),
       run: () => {
+        if (latestRef.current.library.current !== target.id) return
         setLibrary(l => ({
           current: previous.id,
           items: reuse
