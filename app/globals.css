@@ -569,6 +569,11 @@ kbd {
 .inspector:focus {
   outline: none;
 }
+@media (min-width: 1100px) {
+  .settings-open:not(.is-presenting) .editor-body {
+    padding-right: 364px;
+  }
+}
 .inspector-heading {
   display: flex;
   align-items: center;
@@ -1525,6 +1530,7 @@ html:has(.is-presenting .studio) {
   position: relative;
   min-width: 0;
   max-width: 360px;
+  margin-left: -10px;
 }
 .presentation-selector {
   border: 0;
@@ -1534,7 +1540,6 @@ html:has(.is-presenting .studio) {
   gap: 10px;
   max-width: 100%;
   padding: 8px 10px;
-  margin-left: -10px;
   border-radius: 6px;
   color: var(--muted-foreground);
 }
@@ -1556,7 +1561,7 @@ html:has(.is-presenting .studio) {
 .presentation-popover {
   position: absolute;
   top: calc(100% + 8px);
-  left: -10px;
+  left: 0;
   z-index: 40;
   width: min(340px, calc(100vw - 24px));
   padding: 8px;
@@ -1803,8 +1808,10 @@ html:has(.is-presenting .studio) {
   overflow-wrap: anywhere;
 }
 @media (max-width: 650px) {
-  .presentation-selector {
+  .presentation-menu {
     margin-left: 0;
+  }
+  .presentation-selector {
     padding: 8px;
   }
   .presentation-popover {
@@ -1956,11 +1963,36 @@ html:has(.is-presenting .studio) {
   }
   .canvas-shell .slide .comparison p,
   .canvas-shell .slide .slide-steps li,
+  .canvas-shell .slide .slide-bullets li,
+  .canvas-shell .slide .slide-checklist li,
   .canvas-shell .flow-box {
     font-size: calc(3.6cqw * var(--phone-fit, 1));
   }
-  .canvas-shell .widget-label {
+  .canvas-shell .widget-label,
+  .canvas-shell .slide .slide-quote figcaption,
+  .canvas-shell .slide .slide-image figcaption,
+  .canvas-shell .slide .chart-legend {
     font-size: calc(2.8cqw * var(--phone-fit, 1));
+  }
+  .canvas-shell .slide :is(.slide-bullets, .slide-checklist) {
+    gap: calc(2.4cqw * var(--phone-fit, 1));
+  }
+  .canvas-shell .slide-bullets li::before {
+    width: 2cqw;
+    height: 2px;
+    transform: translateY(-0.8cqw);
+  }
+  .canvas-shell .slide-checklist li > span {
+    width: 3.6cqw;
+    height: 3.6cqw;
+    font-size: 2.4cqw;
+  }
+  .canvas-shell .slide .slide-quote blockquote {
+    font-size: calc(5cqw * var(--phone-fit, 1));
+  }
+  .canvas-shell .chart-legend span {
+    width: 2.2cqw;
+    height: 2.2cqw;
   }
   .canvas-shell .slide-content {
     gap: calc(5cqw * var(--phone-fit, 1));

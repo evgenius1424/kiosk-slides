@@ -348,7 +348,7 @@ export function KioskWorkspace({
     <>
       <main
         inert={!!start}
-        className={`workspace ${library.loaded ? '' : 'is-loading'} ${player.presenting ? 'is-presenting' : ''} ${player.presenting && player.idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'}`}
+        className={`workspace ${library.loaded ? '' : 'is-loading'} ${player.presenting ? 'is-presenting' : ''} ${player.presenting && player.idle ? 'is-idle' : ''} ${sidebar ? '' : 'sidebar-hidden'} ${settings.open && !shared ? 'settings-open' : ''}`}
       >
         <WorkspaceHeader
           library={library}
