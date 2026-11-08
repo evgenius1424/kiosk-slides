@@ -184,6 +184,64 @@ describe('undo and redo', () => {
     expect(stored().find(p => p.id === 'other')!.source).toBe('# Four\n')
     expect(stored().find(p => p.id === 'mine')!.source).not.toContain('# Three')
   })
+
+  it('keeps Undo and Redo with each presentation across a switch', async () => {
+    const other = '# Four\n\n---\n\n# Five\n'
+    store(item('mine', example), item('other', other))
+    workspace()
+    await screen.findByText('The example')
+    fireEvent.click(slideButton(3))
+    fireEvent.keyDown(slideButton(3), { key: 'Delete' })
+    openPresentation('other')
+    press('z')
+    expect(screen.getByText('Nothing to undo')).toBeTruthy()
+    expect(stored().find(p => p.id === 'other')!.source).toBe(other)
+    openPresentation('The example')
+    press('z')
+    expect(stored().find(p => p.id === 'mine')!.source).toBe(example)
+    openPresentation('other')
+    press('z', true)
+    expect(screen.getByText('Nothing to redo')).toBeTruthy()
+    openPresentation('The example')
+    press('z', true)
+    expect(stored().find(p => p.id === 'mine')!.source).not.toContain('# Three')
+  })
+
+  it('keeps a slide selected when Undo takes back the selected new slide', async () => {
+    store(item('mine', example))
+    workspace()
+    await screen.findByText('The example')
+    fireEvent.click(slideButton(3))
+    fireEvent.click(screen.getByRole('button', { name: 'Add a slide' }))
+    expect(slideButton(4).getAttribute('aria-current')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }))
+    press('z')
+    expect(stored()[0].source).toBe(example)
+    expect(slideButton(3).getAttribute('aria-current')).toBeTruthy()
+    expect(shownSlide()).toContain('Three')
+  })
+
+  it('leaves a pasted presentation alone when its notice Undo is pressed after switching', async () => {
+    const other = '# Four\n\n---\n\n# Five\n'
+    store(item('mine', example), item('other', other))
+    workspace()
+    await screen.findByText('The example')
+    paste('# Pasted **here**\n')
+    openPresentation('other')
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(stored().some(p => p.source === '# Pasted **here**\n')).toBe(true)
+    expect(shownSlide()).toContain('Four')
+  })
+
+  it('takes back a paste from its notice while the pasted presentation is open', async () => {
+    store(item('mine', example))
+    workspace()
+    await screen.findByText('The example')
+    paste('# Pasted **here**\n')
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(stored().some(p => p.source === '# Pasted **here**\n')).toBe(false)
+    expect(shownSlide()).toContain('One')
+  })
 })
 
 function workspace() {
