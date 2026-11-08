@@ -36,12 +36,13 @@ beforeEach(() => {
   sessionStorage.clear()
   history.replaceState(null, '', '/')
   replies = []
-  vi.stubGlobal('fetch', async (url: string) => {
+  vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
     if (url.includes('status'))
       return Response.json({ available: true, connected: true, email: 'a@b.c', planUsage: true })
     if (url.includes('models')) return Response.json({ models: [{ slug: 'm', name: 'M' }] })
     const reply = streamedReply()
     replies.push(reply)
+    init?.signal?.addEventListener('abort', reply.abort)
     return new Response(reply.body)
   })
 })
@@ -92,6 +93,57 @@ describe('Ask AI while it writes', () => {
     await act(async () => replies[1].close())
     await vi.waitFor(() => expect(listed()).toEqual(['One', 'Two', 'Three']))
     expect(marks()).toEqual([])
+  })
+
+  it('keeps the slides as they were when the reply is stopped', async () => {
+    await askForSlides()
+    await finish(0, FIRST)
+    const before = sources()
+    await ask('Rewrite it')
+    await write(1, '<presentation>\n# Other\n\n---\n')
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+    await vi.waitFor(() => expect(listed()).toEqual(['One', 'Two', 'Three']))
+    expect(marks()).toEqual([])
+    expect(sources()).toEqual(before)
+  })
+
+  it('keeps the slides when the reply holds no presentation', async () => {
+    await askForSlides()
+    await finish(0, FIRST)
+    const before = sources()
+    await ask('What do you think?')
+    await act(async () => {
+      await replies[1].send({ type: 'text', text: 'It reads well.' })
+      await replies[1].send({ type: 'done', reply: 'It reads well.' })
+      await replies[1].close()
+    })
+    expect(listed()).toEqual(['One', 'Two', 'Three'])
+    expect(sources()).toEqual(before)
+  })
+
+  it('leaves every presentation alone when another one is opened while it writes', async () => {
+    await askForSlides()
+    await finish(0, FIRST)
+    await ask('Rewrite it')
+    await write(1, '<presentation>\n# Other\n\n---\n')
+    paste('# Pasted **here**\n')
+    await act(async () => {
+      await replies[1].send({ type: 'presentation', source: '# Other\n' })
+      await replies[1].close()
+    })
+    expect(listed()).toEqual(['Pasted here'])
+    expect(sources()).toEqual([FIRST, '# Pasted **here**\n'])
+  })
+
+  it('takes back an edit with one Undo', async () => {
+    await askForSlides()
+    await finish(0, TITLED)
+    const before = sources()
+    await ask('Shorter plan, and swap the risks for next steps')
+    await finish(1, EDITED)
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(sources()).toEqual(before)
+    expect(listed()).toEqual(['One', 'Two', 'Three'])
   })
 })
 
@@ -151,17 +203,35 @@ function note() {
   return document.querySelector('.chat-bubble.assistant .chat-note')?.textContent
 }
 
+function sources(): string[] {
+  const { items } = JSON.parse(localStorage.getItem('kiosk-presentations') || '{"items":[]}')
+  return items.map((p: { source: string }) => p.source)
+}
+
+function paste(text: string) {
+  const event = new Event('paste', { bubbles: true, cancelable: true })
+  Object.assign(event, { clipboardData: { getData: () => text } })
+  act(() => {
+    document.body.dispatchEvent(event)
+  })
+}
+
 function streamedReply() {
   let controller: ReadableStreamDefaultController<Uint8Array> | undefined
   const body = new ReadableStream<Uint8Array>({ start: c => void (controller = c) })
   const encoder = new TextEncoder()
   const send = (event: { type: string; [key: string]: unknown }) => {
-    controller?.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
+    try {
+      controller?.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
+    } catch {}
     return new Promise(resolve => setTimeout(resolve, 0))
   }
   const close = () => {
-    controller?.close()
+    try {
+      controller?.close()
+    } catch {}
     return new Promise(resolve => setTimeout(resolve, 0))
   }
-  return { body, send, close }
+  const abort = () => controller?.error(new DOMException('Aborted', 'AbortError'))
+  return { body, send, close, abort }
 }
