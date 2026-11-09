@@ -1,6 +1,7 @@
 import type { Widget } from './components'
 import type { MessageWidget, Presentation, SlideChrome } from './types'
 import subsets from './font-files.json'
+import { PILL_PAD, PILL_TALL_LINE_HEIGHT, PILL_TRACKING } from './pill'
 import { WIDGET_GAP, textLines, widgetHeight } from './widget-height'
 import type { Language } from './words'
 
@@ -13,6 +14,7 @@ export type FontFile = {
   weights: string
   range: string
   role: 'core' | 'extended' | 'cyrillic'
+  italic?: boolean
 }
 
 export type Font = {
@@ -21,6 +23,7 @@ export type Font = {
   width: number
   cyrillicWidth: number
   files: FontFile[]
+  fallback: string
 }
 
 export type PresentationLook = { font: string; scale: Scale; brand: string; language: Language }
@@ -52,6 +55,19 @@ export const fonts: Font[] = [
     ...latin('Golos Text', 'golos-text'),
     cyrillic('Golos Text', 'golos-text-cyrillic'),
   ]),
+  font(
+    'literata',
+    'Literata',
+    0.61,
+    0.68,
+    [
+      ...latin('Literata', 'literata'),
+      cyrillic('Literata', 'literata-cyrillic'),
+      ...latin('Literata', 'literata-italic').map(italic),
+      italic(cyrillic('Literata', 'literata-italic-cyrillic')),
+    ],
+    'Georgia,serif',
+  ),
 ]
 
 export const EXTENDED_TEXT = extendedText(fonts.flatMap(f => f.files))
@@ -77,7 +93,7 @@ export const fontId = (value: string) =>
   fonts.find(f => f.id === value.trim().toLowerCase().replace(/\s+/g, '-'))?.id
 
 export const fontFace = (file: FontFile, src: string, extended: boolean) =>
-  `@font-face{font-family:'${fontFamily(file.family, extended)}';src:url(${src}) format('woff2');font-weight:${file.weights};font-display:swap;unicode-range:${file.range}}`
+  `@font-face{font-family:'${fontFamily(file.family, extended)}';src:url(${src}) format('woff2');font-weight:${file.weights};${file.italic ? 'font-style:italic;' : ''}font-display:swap;unicode-range:${file.range}}`
 
 export const siteFontFaces = (src: (file: string) => string) =>
   fontFiles(fonts)
@@ -94,7 +110,7 @@ export const fontFamily = (family: string, extended: boolean) =>
 
 export const fontStack = (font: Font, extended: boolean) =>
   [...new Set(font.files.map(f => `'${fontFamily(f.family, extended)}'`))]
-    .concat('Arial', 'Helvetica', 'sans-serif')
+    .concat(font.fallback)
     .join(',')
 
 export const fontFilesFor = (font: Font, extended: boolean, text: string) =>
@@ -107,13 +123,11 @@ export const fontChars = (file: FontFile, text: string) => {
   return [...new Set(text)].filter(c => chars.has(c.codePointAt(0)!))
 }
 
-export function headingSize(
-  slide: SizedSlide,
-  { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
-): number | undefined {
-  if (scale === 'normal') return undefined
-  const box = boxes[scale]
-  const { text, charWidth, textWidth, body } = measure(slide, box, font)
+export function headingSize(slide: SizedSlide, { scale, font, pill }: Sizing): number | undefined {
+  if (scale === 'normal' && !pill) return undefined
+  const box = sizedBox(scale, pill)
+  const { text, charWidth, textWidth, body } = measure(slide, box, font, pill)
+  if (scale === 'normal') return normalPillHeading(slide, box, text, charWidth, textWidth)
   if (slide.kind === 'message') {
     const height = box.height - body
     return fit(
@@ -133,7 +147,7 @@ export function headingSize(
       : WIDGET_GAP +
         widgetHeight(
           slide,
-          { ...box.text, table: tableSize(slide, { scale, font }) ?? TABLE_TEXT },
+          { ...box.text, table: tableSize(slide, { scale, font, pill }) ?? TABLE_TEXT },
           textWidth,
         )
   const height = box.room - CLEARANCE - body - below
@@ -142,18 +156,15 @@ export function headingSize(
     charWidth,
     width,
     box.widget,
-    MIN_HEADING,
+    pill ? MIN_PILL_HEADING : MIN_HEADING,
     (lines, size) => lines <= most && lines * box.lineHeight * size <= height,
   )
 }
 
-export function tableSize(
-  slide: SizedSlide,
-  { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
-): number | undefined {
+export function tableSize(slide: SizedSlide, { scale, font, pill }: Sizing): number | undefined {
   if (slide.kind !== 'table') return undefined
-  const box = boxes[scale]
-  const { text, charWidth, textWidth, body } = measure(slide, box, font)
+  const box = sizedBox(scale, pill)
+  const { text, charWidth, textWidth, body } = measure(slide, box, font, pill)
   const room = box.room - CLEARANCE - body - headingHeight(text, charWidth, box, MIN_HEADING)
   for (let size = TABLE_TEXT; size > MIN_TABLE_TEXT; size = round(size - 0.05)) {
     const height = WIDGET_GAP + widgetHeight(slide, { ...box.text, table: size }, textWidth)
@@ -162,25 +173,21 @@ export function tableSize(
   return MIN_TABLE_TEXT
 }
 
-export function textFit(
-  slide: SizedSlide,
-  { scale, font }: Pick<PresentationLook, 'scale' | 'font'>,
-): number | undefined {
+export function textFit(slide: SizedSlide, { scale, font, pill }: Sizing): number | undefined {
   if (slide.kind === 'code' || slide.kind === 'table') return undefined
-  const box = boxes[scale]
-  const { text, charWidth, textWidth } = measure(slide, box, font)
-  const size = headingSize(slide, { scale, font }) ?? NORMAL_HEADING[slide.kind] ?? MIN_HEADING
+  const box = sizedBox(scale, pill)
+  const { text, charWidth, textWidth } = measure(slide, box, font, pill)
+  const size =
+    headingSize(slide, { scale, font, pill }) ?? NORMAL_HEADING[slide.kind] ?? MIN_HEADING
   const room = box.room - CLEARANCE - headingHeight(text, charWidth, box, size)
-  const height = (fit: number) =>
-    bodyHeight(slide.body, box, textWidth, fit) +
-    (slide.kind === 'message'
-      ? 0
-      : WIDGET_GAP + widgetHeight(slide, scaled(box.text, fit), textWidth))
+  const height = (fit: number) => contentHeight(slide, box, textWidth, fit)
   if (height(1) <= room || height(MIN_TEXT_FIT) === height(1)) return undefined
   for (let fit = 0.95; fit > MIN_TEXT_FIT; fit = round(fit - 0.05))
     if (height(fit) <= room) return fit
   return MIN_TEXT_FIT
 }
+
+type Sizing = Pick<PresentationLook, 'scale' | 'font'> & { pill?: boolean }
 
 type SizedSlide = Pick<SlideChrome, 'heading' | 'body'> & (MessageWidget | Widget)
 
@@ -195,6 +202,8 @@ const MIN_TABLE_TEXT = 1.3
 const CLEARANCE = 1.5
 const HEADING_CHAR = 0.85
 const MIN_TEXT_FIT = 0.6
+const MIN_PILL_HEADING = 3.3
+const PILL_ROOM = 0.6
 
 const NORMAL_HEADING: Partial<Record<SizedSlide['kind'], number>> = {
   message: 6.5,
@@ -238,8 +247,50 @@ const boxes = {
   },
 }
 
-function measure(slide: SizedSlide, box: Box, font: string) {
-  const text = slide.heading.map(p => p.text).join('')
+function normalPillHeading(
+  slide: SizedSlide,
+  box: Box,
+  text: string,
+  charWidth: number,
+  textWidth: number,
+) {
+  if (slide.kind === 'code' || slide.kind === 'table') return undefined
+  const start = NORMAL_HEADING[slide.kind] ?? MIN_HEADING
+  const below = contentHeight(slide, box, textWidth, MIN_TEXT_FIT)
+  for (let size = start; size > MIN_PILL_HEADING; size -= 0.25)
+    if (headingHeight(text, charWidth, box, size) + below <= box.room - CLEARANCE)
+      return size === start ? undefined : size
+  return MIN_PILL_HEADING
+}
+
+function contentHeight(slide: SizedSlide, box: Box, textWidth: number, fit: number) {
+  return (
+    bodyHeight(slide.body, box, textWidth, fit) +
+    (slide.kind === 'message'
+      ? 0
+      : WIDGET_GAP + widgetHeight(slide, scaled(box.text, fit), textWidth))
+  )
+}
+
+function pillPadding(font: string) {
+  return '_'.repeat(Math.ceil((PILL_PAD * 2 - PILL_TRACKING) / findFont(font).width))
+}
+
+function sizedBox(scale: Scale, pill?: boolean): Box {
+  const box = boxes[scale]
+  if (!pill) return box
+  return {
+    ...box,
+    lineHeight: PILL_TALL_LINE_HEIGHT,
+    height: box.height - PILL_ROOM,
+    room: box.room - PILL_ROOM,
+  }
+}
+
+function measure(slide: SizedSlide, box: Box, font: string, pill?: boolean) {
+  const text = slide.heading
+    .map(p => (pill && p.highlight ? pillPadding(font) + p.text : p.text))
+    .join('')
   const textWidth = fontWidth(font, slideText(slide))
   return {
     text,
@@ -323,8 +374,9 @@ function font(
   width: number,
   cyrillicWidth: number,
   files: FontFile[],
+  fallback = 'Arial,Helvetica,sans-serif',
 ): Font {
-  return { id, name, width, cyrillicWidth, files }
+  return { id, name, width, cyrillicWidth, files, fallback }
 }
 
 function latin(family: string, name: string): FontFile[] {
@@ -341,6 +393,10 @@ function cyrillic(family: string, name: string): FontFile {
 function subset(family: string, file: string, role: FontFile['role']): FontFile {
   const { weights, range } = subsets[file as keyof typeof subsets]
   return { family, file, weights, range, role }
+}
+
+function italic(file: FontFile): FontFile {
+  return { ...file, italic: true }
 }
 
 function codepoints(range: string) {

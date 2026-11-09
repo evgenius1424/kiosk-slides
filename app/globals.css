@@ -1291,6 +1291,15 @@ html:has(.is-presenting .room-light) {
 html:has(.is-presenting .studio) {
   background: #000000;
 }
+html:has(.is-presenting .paper) {
+  background: #f3ece1;
+}
+html:has(.is-presenting .marker) {
+  background: #f6f6f6;
+}
+html:has(.is-presenting .poster) {
+  background: #111111;
+}
 @media (min-aspect-ratio: 16/9) {
   .is-presenting .canvas-slide {
     width: auto;

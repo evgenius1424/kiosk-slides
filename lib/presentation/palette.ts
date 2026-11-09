@@ -1,8 +1,10 @@
-import type { Theme } from './theme'
+import { toneInk, type Theme } from './theme'
 
 export const slideColors = (tone: string, theme: Theme) => {
-  const hue = toneHue(tone)
-  const gray = (role: keyof typeof GRAYS.studio) => {
+  const ink = toneInk(tone)
+  if (theme === 'poster') return posterColors(tone, ink)
+  const hue = theme === 'paper' ? PAPER_HUE : toneHue(tone)
+  const gray = (role: Role) => {
     const [lightness, chroma] = GRAYS[theme][role]
     return hue === undefined ? oklchHex(lightness, 0, 0) : oklchHex(lightness, chroma, hue)
   }
@@ -13,13 +15,13 @@ export const slideColors = (tone: string, theme: Theme) => {
     '--slide-line': gray('line'),
     '--slide-muted': gray('muted'),
     '--slide-text': gray('text'),
+    '--slide-ink': ink,
   }
 }
 
-const GRAYS: Record<
-  Theme,
-  Record<'bg' | 'surface' | 'line' | 'muted' | 'text', [number, number]>
-> = {
+type Role = 'bg' | 'surface' | 'line' | 'muted' | 'text'
+
+const GRAYS: Record<Exclude<Theme, 'poster'>, Record<Role, [number, number]>> = {
   'room-dark': {
     bg: [0.183, 0.006],
     surface: [0.262, 0.01],
@@ -41,9 +43,43 @@ const GRAYS: Record<
     muted: [0.652, 0.014],
     text: [1, 0],
   },
+  paper: {
+    bg: [0.945, 0.016],
+    surface: [0.915, 0.02],
+    line: [0.82, 0.03],
+    muted: [0.47, 0.03],
+    text: [0.23, 0.015],
+  },
+  marker: {
+    bg: [0.972, 0],
+    surface: [0.935, 0.006],
+    line: [0.87, 0.01],
+    muted: [0.44, 0.02],
+    text: [0.2, 0.01],
+  },
 }
 
+const PAPER_HUE = (80 / 180) * Math.PI
+
 const NEUTRAL_CHROMA = 0.03
+
+function posterColors(tone: string, ink: string) {
+  const back = parseHex(tone) ?? [1, 1, 1]
+  const front = parseHex(ink)!
+  return {
+    '--slide-tone': tone,
+    '--slide-bg': tone,
+    '--slide-surface': mixHex(front, back, 0.1),
+    '--slide-line': ink,
+    '--slide-muted': mixHex(front, back, 0.8),
+    '--slide-text': ink,
+    '--slide-ink': ink,
+  }
+}
+
+function mixHex(front: Rgb, back: Rgb, amount: number) {
+  return hex(front.map((c, i) => c * amount + back[i] * (1 - amount)) as Rgb)
+}
 
 function toneHue(tone: string) {
   const rgb = parseHex(tone)
@@ -71,8 +107,12 @@ function parseHex(color: string): Rgb | undefined {
 
 function oklchHex(lightness: number, chroma: number, hue: number) {
   const rgb = oklabToLinear(lightness, chroma * Math.cos(hue), chroma * Math.sin(hue))
+  return hex(rgb.map(c => fromLinear(Math.min(1, Math.max(0, c)))) as Rgb)
+}
+
+function hex(rgb: Rgb) {
   return `#${rgb
-    .map(c => Math.round(fromLinear(Math.min(1, Math.max(0, c))) * 255))
+    .map(c => Math.round(c * 255))
     .map(c => c.toString(16).padStart(2, '0'))
     .join('')}`
 }
