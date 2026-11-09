@@ -21,6 +21,7 @@ import {
   type Theme,
 } from '@/lib/presentation'
 import { isStyleKey, rememberStyle } from '@/lib/last-style'
+import { useReducedMotion } from '../use-reduced-motion'
 import { loadFonts } from './load-fonts'
 import type { Player } from './use-player'
 
@@ -76,6 +77,7 @@ export function SettingsPanel({
   const [brandDraft, setBrandDraft] = useState<string | null>(null)
   const { theme, tone: accent, transition, duration, loop, credit } = presentation
   const { safe, playing } = player
+  const still = useReducedMotion() && transition !== 'none'
   const latest = useRef({ source, presentationId })
   const lastChange = useRef({ key: '', wrote: '' })
   useEffect(() => {
@@ -277,7 +279,11 @@ export function SettingsPanel({
           <ChevronDown size={13} />
         </div>
         <p className="setting-help">
-          {safe ? ts('shareSafeActive') : ts(`transitions.${transition}.help`)}
+          {safe
+            ? ts('shareSafeActive')
+            : still
+              ? ts('reducedMotionActive')
+              : ts(`transitions.${transition}.help`)}
         </p>
         <div className="setting-row safe-row">
           <span>{ts('shareSafe')}</span>

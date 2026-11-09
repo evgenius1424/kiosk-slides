@@ -77,12 +77,24 @@ export function swipeDelta(dx: number, dy: number, vertical: boolean) {
 
 export const transitionStyles = `
 .kt-enter{z-index:1}.kt-leave{z-index:0;pointer-events:none}.kt-enter,.kt-leave{will-change:opacity,transform}
-[data-transition=gentle] .kt-enter{animation:kt-rise .7s cubic-bezier(.16,1,.3,1) .18s both}[data-transition=gentle] .kt-leave{animation:kt-sink .26s cubic-bezier(.4,0,1,1) both}
-[data-transition=fade] .kt-enter{animation:kt-fade-in .45s ease-out .15s both}[data-transition=fade] .kt-leave{animation:kt-fade-out .3s ease-in both}
-[data-transition=slide] .kt-enter{animation:kt-slide-in .6s cubic-bezier(.16,1,.3,1) .1s both}[data-transition=slide] .kt-leave{animation:kt-slide-out .32s cubic-bezier(.4,0,1,1) both}
-[data-transition=share] .kt-enter{animation:kt-fade-in .16s linear both}[data-transition=share] .kt-leave{visibility:hidden}
+${motionRules()}
 @keyframes kt-fade-in{from{opacity:0}}@keyframes kt-fade-out{to{opacity:0}}
 @keyframes kt-rise{from{opacity:0;transform:translateY(2.5%) scale(.985)}}@keyframes kt-sink{to{opacity:0;transform:translateY(-1.2%) scale(.995)}}
 @keyframes kt-slide-in{from{opacity:0;transform:translateX(calc(var(--kt-dir,1)*12%))}}@keyframes kt-slide-out{to{opacity:0;transform:translateX(calc(var(--kt-dir,1)*-12%))}}
-@media(prefers-reduced-motion:reduce){[data-transition] .kt-enter{animation:kt-fade-in .16s linear both!important}[data-transition] .kt-leave{animation:none!important;visibility:hidden}[data-transition=none] .kt-enter{animation:none!important}}
+@media(prefers-reduced-motion:reduce){${stillRules()}}
 `
+
+function motionRules() {
+  return `[data-transition=gentle] .kt-enter{animation:kt-rise .7s cubic-bezier(.16,1,.3,1) .18s both}[data-transition=gentle] .kt-leave{animation:kt-sink .26s cubic-bezier(.4,0,1,1) both}
+[data-transition=fade] .kt-enter{animation:kt-fade-in .45s ease-out .15s both}[data-transition=fade] .kt-leave{animation:kt-fade-out .3s ease-in both}
+[data-transition=slide] .kt-enter{animation:kt-slide-in .6s cubic-bezier(.16,1,.3,1) .1s both}[data-transition=slide] .kt-leave{animation:kt-slide-out .32s cubic-bezier(.4,0,1,1) both}
+[data-transition=share] .kt-enter{animation:kt-fade-in .16s linear both}[data-transition=share] .kt-leave{visibility:hidden}`
+}
+
+function stillRules() {
+  return motionRules()
+    .replace(/\n/g, '')
+    .replace(/kt-(rise|slide-in)/g, 'kt-fade-in')
+    .replace(/kt-(sink|slide-out)/g, 'kt-fade-out')
+    .replaceAll(' both}', ' both!important}')
+}
