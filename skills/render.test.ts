@@ -58,10 +58,30 @@ describe('skill renderer', () => {
       expect(output.printed).toContain('Opened in your browser')
       expect(output.printed).not.toContain('http://')
       expect(output.opened).toBe((link as { url: string }).url)
-      expect((await renderWithBrowser('local.html', '--no-link')).opened).toBe(
+      expect((await renderWithBrowser('local.html', ['--no-link'])).opened).toBe(
         path.join(dir, 'local.html'),
       )
       expect(render('quiet.html')).not.toContain('https://')
+    },
+  )
+
+  it.skipIf(process.platform === 'win32')(
+    'builds the share link without the browser compression API that older Node lacks',
+    async () => {
+      const link = await shareLink(await readFile('public/example.md', 'utf8'), siteUrl)
+      const output = await renderWithBrowser('old-node.html', [], {
+        NODE_OPTIONS: `--import=data:text/javascript,${encodeURIComponent('delete globalThis.CompressionStream')}`,
+      })
+      expect(output.opened).toBe((link as { url: string }).url)
+    },
+  )
+
+  it.skipIf(process.platform === 'win32')(
+    'says nothing opened when the browser command fails',
+    async () => {
+      const output = await renderWithBrowser('failed.html', [], { OPENER_EXIT: '3' })
+      expect(output.printed).toContain('Wrote ')
+      expect(output.printed).not.toContain('Opened in your browser')
     },
   )
 
@@ -87,12 +107,15 @@ function render(out: string, ...options: string[]) {
   return run(out, ['--no-open', ...options])
 }
 
-async function renderWithBrowser(out: string, ...options: string[]) {
+async function renderWithBrowser(out: string, options: string[] = [], env = {}) {
   const bin = path.join(dir, 'bin')
   const log = path.join(dir, `${out}.opened`)
   await mkdir(bin, { recursive: true })
   for (const name of ['open', 'xdg-open']) {
-    await writeFile(path.join(bin, name), `#!/bin/sh\nprintf '%s' "$1" > "$OPENED_LOG"\n`)
+    await writeFile(
+      path.join(bin, name),
+      `#!/bin/sh\nprintf '%s' "$1" > "$OPENED_LOG"\nexit "\${OPENER_EXIT:-0}"\n`,
+    )
     await chmod(path.join(bin, name), 0o755)
   }
   const script = path.join(dir, 'scripts/render-local.mjs')
@@ -103,9 +126,14 @@ async function renderWithBrowser(out: string, ...options: string[]) {
       CI: '',
       SSH_CONNECTION: '',
       SSH_TTY: '',
+      HTTPS_PROXY: '',
+      https_proxy: '',
+      ALL_PROXY: '',
+      all_proxy: '',
       PATH: `${bin}${path.delimiter}${process.env.PATH}`,
       DISPLAY: ':0',
       OPENED_LOG: log,
+      ...env,
     },
   })
   return { printed, opened: await waitForFile(log) }

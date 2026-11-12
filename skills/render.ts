@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
+import { deflateRawSync } from 'node:zlib'
 import {
   fontId,
   fonts,
@@ -24,7 +25,8 @@ import { presentationHtml, fetchAsDataUrl } from '@/components/slide/presentatio
 import { shareLink } from '@/lib/share'
 import { SITE_URL } from '@/lib/site'
 
-const SITE_TIMEOUT_MS = 3000
+const SITE_TIMEOUT_MS = 2000
+const OPEN_WAIT_MS = 1500
 
 const usage =
   'Usage: render.mjs slides.md [-o slides.html] [--theme room-dark|room-light|studio] [--tone mono|violet|coral|teal|amber|#hex] [--font name] [--scale normal|large|hero] [--brand text|none] [--images dir] [--transition gentle|fade|slide|none] [--share-safe] [--no-motion] [--no-credit] [--no-link] [--no-open] [--check] [--format]'
@@ -58,6 +60,8 @@ main().catch(err => {
 async function main() {
   const input = positionals[0]
   if (!input) throw new Error(usage)
+  const wantsLink = !values.check && !values['no-open'] && !values['no-link']
+  const reachable = wantsLink ? siteReachable() : Promise.resolve(false)
   const source = await readFile(input, 'utf8')
   if (values.theme !== undefined && !isTheme(values.theme))
     throw new Error(`Unknown theme “${values.theme}”. Use ${themes.join(' or ')}.`)
@@ -90,7 +94,7 @@ async function main() {
   await writeFile(out, html)
   console.log(`${summary(presentation)}\nWrote ${out}`)
   if (values['no-open']) return
-  const link = values['no-link'] ? undefined : await shareUrl(source)
+  const link = (await reachable) ? await shareUrl(source) : undefined
   if (await openInBrowser(link ?? path.resolve(out))) console.log('Opened in your browser')
 }
 
@@ -107,36 +111,36 @@ function withLook(presentation: Presentation): Presentation {
 }
 
 async function shareUrl(source: string) {
-  const link = await shareLink(source, SITE_URL).catch(() => undefined)
-  if (!link || !('url' in link)) return
-  return (await siteReachable()) ? link.url : undefined
+  const link = await shareLink(source, SITE_URL, bytes => deflateRawSync(bytes))
+  return 'url' in link ? link.url : undefined
 }
 
 function siteReachable() {
+  const env = process.env
+  const proxied = Boolean(env.HTTPS_PROXY || env.https_proxy || env.ALL_PROXY || env.all_proxy)
   return fetch(SITE_URL, { method: 'HEAD', signal: AbortSignal.timeout(SITE_TIMEOUT_MS) })
     .then(response => response.ok)
-    .catch(() => false)
+    .catch(() => proxied)
 }
 
-function openInBrowser(target: string) {
-  const command = browserCommand(target)
-  if (!command) return Promise.resolve(false)
-  return new Promise<boolean>(resolve => {
-    const child = spawn(command[0], command[1], { detached: true, stdio: 'ignore' })
-    child.once('error', () => resolve(false))
-    child.once('spawn', () => {
-      child.unref()
-      resolve(true)
-    })
-  })
+async function openInBrowser(target: string) {
+  for (const [command, args] of browserCommands())
+    if (await launch(command, [...args, target])) return true
+  return false
 }
 
-function browserCommand(target: string): [string, string[]] | undefined {
+function browserCommands() {
   const env = process.env
-  if (env.CI || env.SSH_CONNECTION || env.SSH_TTY) return
-  if (process.platform === 'darwin') return ['open', [target]]
-  if (process.platform === 'win32') return ['rundll32', ['url.dll,FileProtocolHandler', target]]
-  if (env.DISPLAY || env.WAYLAND_DISPLAY) return ['xdg-open', [target]]
+  const commands: [string, string[]][] = []
+  if (env.CI || env.SSH_CONNECTION || env.SSH_TTY) return commands
+  if (process.platform === 'darwin') commands.push(['open', []])
+  else if (process.platform === 'win32')
+    commands.push(['rundll32', ['url.dll,FileProtocolHandler']])
+  else {
+    if (env.WSL_DISTRO_NAME) commands.push(['wslview', []])
+    if (env.DISPLAY || env.WAYLAND_DISPLAY) commands.push(['xdg-open', []])
+  }
+  return commands
 }
 
 function summary(presentation: Presentation) {
@@ -164,4 +168,20 @@ async function embed(src: string, imageDir: string) {
 async function embedFont(file: string) {
   const data = await readFile(new URL(`../assets/fonts/${file}`, import.meta.url))
   return `data:font/woff2;base64,${data.toString('base64')}`
+}
+
+function launch(command: string, args: string[]) {
+  return new Promise<boolean>(resolve => {
+    const child = spawn(command, args, { detached: true, stdio: 'ignore' })
+    const timer = setTimeout(() => {
+      child.unref()
+      resolve(true)
+    }, OPEN_WAIT_MS)
+    const finish = (opened: boolean) => {
+      clearTimeout(timer)
+      resolve(opened)
+    }
+    child.once('error', () => finish(false))
+    child.once('exit', code => finish(code === 0))
+  })
 }
