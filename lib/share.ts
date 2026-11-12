@@ -10,15 +10,20 @@ const BROKEN_LINK = 'Broken share link'
 
 export type ShareLink = { url: string } | { tooBig: true }
 
-export async function shareLink(markdown: string, site: string): Promise<ShareLink> {
+type Deflate = (bytes: Uint8Array) => Uint8Array | Promise<Uint8Array>
+
+export async function shareLink(
+  markdown: string,
+  site: string,
+  deflate: Deflate = deflateRaw,
+): Promise<ShareLink> {
   if (/\bdata:[\w/+.-]+;base64,/i.test(markdown)) return { tooBig: true }
-  const url = `${site.replace(/\/$/, '')}/${SHARE_PREFIX}${await encodeShare(markdown)}`
+  const url = `${site.replace(/\/$/, '')}/${SHARE_PREFIX}${await encodeShare(markdown, deflate)}`
   return url.length > SHARE_LIMIT ? { tooBig: true } : { url }
 }
 
-export async function encodeShare(markdown: string) {
-  const bytes = await pipe(new TextEncoder().encode(markdown), new CompressionStream('deflate-raw'))
-  return VERSION + toBase64Url(bytes)
+export async function encodeShare(markdown: string, deflate: Deflate = deflateRaw) {
+  return VERSION + toBase64Url(await deflate(new TextEncoder().encode(markdown)))
 }
 
 export async function decodeShare(payload: string) {
@@ -42,6 +47,10 @@ export function readShareHash(hash: string) {
 
 export function shareSlideHash(payload: string, index: number) {
   return `${SHARE_PREFIX}${payload}${index ? `&${index + 1}` : ''}`
+}
+
+function deflateRaw(bytes: Uint8Array) {
+  return pipe(bytes, new CompressionStream('deflate-raw'))
 }
 
 async function pipe(bytes: Uint8Array, stream: CompressionStream | DecompressionStream) {

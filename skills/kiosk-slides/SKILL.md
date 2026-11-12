@@ -62,7 +62,7 @@ Options:
 
 After writing the HTML, the renderer opens the presentation in the person's browser and prints `Opened in your browser`. By default it opens kiosk-slides.com with the whole presentation inside the link, so the person can edit, restyle and share it there, and the same link shows the slides on a phone, a TV or another computer with nothing uploaded. When the site can't be reached or the presentation is too big for a link, it opens the HTML file instead. Say in one sentence that it is open in their browser. Never print, paste or shorten the link.
 
-When there is no browser to open, such as over SSH or in a cloud session, nothing opens and nothing is printed. Then the HTML file is how the person sees the slides: hand it over and say how to present it.
+When there is no browser to open, such as over SSH or in a cloud session, or the browser fails to start, nothing opens and `Opened in your browser` is not printed. Then the HTML file is how the person sees the slides: hand it over and say how to present it.
 
 For a PDF, open the HTML in a desktop browser and print it with Save as PDF: every slide prints on its own 16:9 page, in the same theme, tone and font, with selectable text. No other tool is needed.
 
