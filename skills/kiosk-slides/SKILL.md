@@ -9,6 +9,8 @@ argument-hint: <presentation request>
 
 A presentation is one Markdown file, and `scripts/render.mjs` renders it to the same HTML the Kiosk Slides site downloads: identical slide markup and styles, every image and font embedded, keyboard and autoplay controls built in, no server or network needed to present it. It needs Node 18 or later and nothing else.
 
+The commands below use `node`. If `node` is not installed, run the same script with `bun scripts/render.mjs …` or `deno run -A scripts/render.mjs …` instead; the output is identical. If none of the three is installed, don't install anything: write the Markdown, then tell the person to copy it and paste it anywhere on kiosk-slides.com, which opens it as slides there.
+
 The Markdown is always the source. Don't edit the generated HTML by hand; change the Markdown or the render options and render again.
 
 ## Pick the path
