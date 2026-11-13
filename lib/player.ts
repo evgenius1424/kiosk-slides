@@ -8,9 +8,9 @@ export type PlayerAction =
   'next' | 'previous' | 'first' | 'last' | 'autoplay' | 'fullscreen' | 'shareSafe'
 
 export const TRANSITION_MS: Record<ActiveTransition, number> = {
-  gentle: 880,
-  fade: 600,
-  slide: 700,
+  gentle: 640,
+  fade: 450,
+  slide: 530,
   share: 160,
   none: 0,
 }
@@ -77,9 +77,9 @@ export function swipeDelta(dx: number, dy: number, vertical: boolean) {
 
 export const transitionStyles = `
 .kt-enter{z-index:1}.kt-leave{z-index:0;pointer-events:none}.kt-enter,.kt-leave{will-change:opacity,transform}
-[data-transition=gentle] .kt-enter{animation:kt-rise .7s cubic-bezier(.16,1,.3,1) .18s both}[data-transition=gentle] .kt-leave{animation:kt-sink .26s cubic-bezier(.4,0,1,1) both}
-[data-transition=fade] .kt-enter{animation:kt-fade-in .45s ease-out .15s both}[data-transition=fade] .kt-leave{animation:kt-fade-out .3s ease-in both}
-[data-transition=slide] .kt-enter{animation:kt-slide-in .6s cubic-bezier(.16,1,.3,1) .1s both}[data-transition=slide] .kt-leave{animation:kt-slide-out .32s cubic-bezier(.4,0,1,1) both}
+[data-transition=gentle] .kt-enter{animation:kt-rise .6s cubic-bezier(.23,1,.32,1) .04s both}[data-transition=gentle] .kt-leave{animation:kt-sink .24s cubic-bezier(.23,1,.32,1) both}
+[data-transition=fade] .kt-enter{animation:kt-fade-in .45s ease both}[data-transition=fade] .kt-leave{animation:kt-fade-out .25s ease .15s both}
+[data-transition=slide] .kt-enter{animation:kt-slide-in .5s cubic-bezier(.23,1,.32,1) .03s both}[data-transition=slide] .kt-leave{animation:kt-slide-out .26s cubic-bezier(.23,1,.32,1) both}
 [data-transition=share] .kt-enter{animation:kt-fade-in .16s linear both}[data-transition=share] .kt-leave{visibility:hidden}
 @keyframes kt-fade-in{from{opacity:0}}@keyframes kt-fade-out{to{opacity:0}}
 @keyframes kt-rise{from{opacity:0;transform:translateY(2.5%) scale(.985)}}@keyframes kt-sink{to{opacity:0;transform:translateY(-1.2%) scale(.995)}}
