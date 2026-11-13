@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { JSDOM } from 'jsdom'
 import { createTranslator } from 'next-intl'
 import { describe, expect, it, vi } from 'vitest'
-import { parsePresentation, slideWords } from '@/lib/presentation'
+import { parsePresentation, slideWords, type Transition } from '@/lib/presentation'
 import {
   PLAYER_KEYS,
   SETTLE_MS,
@@ -69,6 +69,15 @@ describe('exported presentation player', () => {
         return Math.abs(delta) > SWIPE.distance ? (delta < 0 ? 2 : 0) : 1
       }),
     )
+  })
+
+  it('swaps at once when the next slide is asked for during a transition', async () => {
+    const page = await open('', { transition: 'gentle' })
+    page.press({ key: 'ArrowRight' })
+    expect(page.moving()).toEqual([0, 1])
+    page.press({ key: 'ArrowRight' })
+    expect(page.moving()).toEqual([])
+    expect(page.active()).toBe(2)
   })
 
   it('counts wheel lines the same way as the site', async () => {
@@ -187,7 +196,10 @@ describe('slide in the address', () => {
   })
 })
 
-async function open(hash = '', { site = '', credit = true } = {}) {
+async function open(
+  hash = '',
+  { site = '', credit = true, transition = 'none' as Transition } = {},
+) {
   const ending = site ? { loop: false, duration: 0.01, credit } : {}
   const html = await presentationHtml(
     {
@@ -198,7 +210,7 @@ async function open(hash = '', { site = '', credit = true } = {}) {
     {
       tone: '#74747e',
       site,
-      transition: 'none',
+      transition,
       embedImage: async src => src,
       embedFont: async file => file,
     },
@@ -223,6 +235,7 @@ async function open(hash = '', { site = '', credit = true } = {}) {
     hash: () => window.location.hash,
     history: () => window.history.length,
     active: () => slides.findIndex(s => s.classList.contains('active')),
+    moving: () => slides.flatMap((s, i) => (s.matches('.kt-enter, .kt-leave') ? [i] : [])),
     notice: () => document.querySelector('#notice')!.textContent,
     link: () => document.querySelector<HTMLAnchorElement>('#notice a'),
     slideText: () => slides.map(s => s.textContent).join(''),

@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { SITE_NAME } from '@/lib/site'
 
-const BACKGROUND = '#f5f6f3'
+const BACKGROUND = '#f7f7f8'
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const t = await getTranslations('Metadata')

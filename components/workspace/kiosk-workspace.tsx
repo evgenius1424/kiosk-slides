@@ -92,7 +92,7 @@ export function KioskWorkspace({
   const [replied, setReplied] = useState<Replied | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const sourceRef = useRef(source)
-  const { toast, notice, dismiss } = useToast()
+  const { toast, notice, dismiss, hold } = useToast()
   const versions = useVersions()
   const player = usePlayer(presentation, notice)
   const { index, at, slide, go, setIndex } = player
@@ -470,7 +470,7 @@ export function KioskWorkspace({
         <div className="sr-only" aria-live="polite">
           {player.change.count ? player.slideName : ''}
         </div>
-        <Toast toast={toast} onDismiss={dismiss} />
+        <Toast toast={toast} onDismiss={dismiss} onHold={hold} />
         {slideMenu && (
           <SlideActionMenu
             at={slideMenu}
