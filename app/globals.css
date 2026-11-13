@@ -22,12 +22,14 @@
   --border: #dddde2;
   --ring: #71717a;
   --surface: #fff;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 * {
   box-sizing: border-box;
 }
 html {
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 html,
 body {
@@ -68,11 +70,44 @@ a {
 }
 .btn,
 .icon-btn,
-.start-chips button {
-  transition: transform 0.1s ease-out;
+.start-chips button,
+.skill-places button,
+.add-slide,
+.go-to-line,
+.toggle,
+.color-choice,
+.toast-action {
+  transition: transform 160ms var(--ease-out);
 }
-:is(.btn, .icon-btn, .start-chips button):not(:disabled):active {
+:is(
+    .btn,
+    .icon-btn,
+    .start-chips button,
+    .skill-places button,
+    .add-slide,
+    .go-to-line,
+    .toggle,
+    .color-choice,
+    .toast-action,
+    .present-exit
+  ):not(:disabled):active {
   transform: scale(0.97);
+}
+:is(
+  .slide-nav,
+  .slide-menu button,
+  .download-popover button,
+  .presentation-popover li,
+  .presentation-new,
+  .presentation-selector
+):active {
+  background: var(--muted);
+}
+.view-tabs > button:active {
+  color: var(--foreground);
+}
+:is(.link-button, .presenter-tip button):active {
+  opacity: 0.6;
 }
 button svg {
   flex-shrink: 0;
@@ -285,7 +320,7 @@ kbd {
   font-size: 11px;
   font-weight: 500;
   vertical-align: 1px;
-  animation: slide-mark-in 0.2s ease-out;
+  animation: slide-mark-in 200ms var(--ease-out);
 }
 @keyframes slide-mark-in {
   from {
@@ -294,7 +329,7 @@ kbd {
 }
 .slide-nav .thumbnail,
 .slide-nav .thumb-name {
-  transition: opacity 0.2s ease-out;
+  transition: opacity 200ms var(--ease-out);
 }
 .slide-nav.is-waiting .thumbnail,
 .slide-nav.is-waiting .thumb-name {
@@ -444,11 +479,11 @@ kbd {
 }
 .canvas-shell:has(.slide-working) .canvas-slide {
   opacity: 0.6;
-  transition: opacity 0.2s ease-out;
+  transition: opacity 200ms var(--ease-out);
 }
 .canvas-shell::before,
 .canvas-slide > * {
-  transition: opacity 0.2s ease-out;
+  transition: opacity 200ms var(--ease-out);
 }
 .canvas-shell[data-settling]::before,
 .canvas-shell[data-settling] .canvas-slide > * {
@@ -475,6 +510,25 @@ kbd {
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 12px 45px #0002;
+}
+.slide-menu,
+.presentation-popover,
+.download-popover {
+  transform-origin: top left;
+  transition:
+    opacity 150ms var(--ease-out),
+    scale 150ms var(--ease-out);
+}
+.download-popover {
+  transform-origin: top right;
+}
+@starting-style {
+  .slide-menu,
+  .presentation-popover,
+  .download-popover {
+    opacity: 0;
+    scale: 0.97;
+  }
 }
 .slide-menu button {
   display: flex;
@@ -669,6 +723,9 @@ kbd {
   border: 0;
   border-radius: 15px;
   background: #d4d4d8;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 160ms ease;
 }
 .toggle > span {
   display: block;
@@ -676,6 +733,7 @@ kbd {
   height: 16px;
   border-radius: 50%;
   background: white;
+  transition: transform 160ms var(--ease-out);
 }
 .toggle.on {
   background: var(--primary);
@@ -843,6 +901,18 @@ kbd {
   border-radius: 7px;
   z-index: 30;
   font-size: 14px;
+  transition:
+    opacity 400ms ease,
+    translate 400ms ease;
+}
+@starting-style {
+  .toast {
+    opacity: 0;
+    translate: 0 100%;
+  }
+  .is-presenting .toast {
+    translate: 0 -100%;
+  }
 }
 .toast-action {
   margin-left: 6px;
@@ -871,6 +941,21 @@ kbd {
 }
 .workspace-dialog::backdrop {
   background: #0006;
+}
+.workspace-dialog[open],
+.workspace-dialog[open]::backdrop {
+  transition:
+    opacity 200ms var(--ease-out),
+    scale 200ms var(--ease-out);
+}
+@starting-style {
+  .workspace-dialog[open] {
+    opacity: 0;
+    scale: 0.96;
+  }
+  .workspace-dialog[open]::backdrop {
+    opacity: 0;
+  }
 }
 .dialog-heading {
   display: flex;
@@ -1153,7 +1238,7 @@ kbd {
   height: 4px;
   border-radius: 2px;
   background: var(--foreground);
-  animation: start-fade 0.3s ease-out;
+  animation: start-fade 300ms var(--ease-out);
 }
 .start-written-count .is-writing {
   background: var(--border);
@@ -1162,12 +1247,6 @@ kbd {
 @keyframes start-writing {
   to {
     opacity: 0.4;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .start-slide-frame,
-  .start-written-count li {
-    animation: none;
   }
 }
 .start-footer {
@@ -1244,7 +1323,9 @@ kbd {
   color: #fff;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  transition: opacity 0.2s ease-out;
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 160ms var(--ease-out);
 }
 @media (hover: hover) and (pointer: fine) {
   .present-exit:hover {
@@ -2083,11 +2164,30 @@ html:has(.is-presenting .studio) {
   *,
   *::before,
   *::after {
-    animation: none !important;
-    transition: none !important;
+    scale: none !important;
+    translate: none !important;
   }
-  :is(.btn, .icon-btn, .start-chips button):active {
+  :is(
+    .btn,
+    .icon-btn,
+    .start-chips button,
+    .skill-places button,
+    .add-slide,
+    .go-to-line,
+    .toggle,
+    .color-choice,
+    .toast-action,
+    .present-exit
+  ):active {
     transform: none !important;
+  }
+  .toggle > span {
+    transition: none;
+  }
+  .slide-nav.is-changing .thumbnail,
+  .start-written-count .is-writing,
+  .chat-spinner {
+    animation: none;
   }
 }
 .chat-empty > svg {

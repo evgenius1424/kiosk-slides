@@ -136,7 +136,7 @@ Switch(p) ==
   /\ open' = p
   /\ UNCHANGED <<src, hist, redo, toast, want, wantUndo, wantRedo>>
 
-\* The notice times out after 8 seconds.
+\* The notice times out after 8 seconds on screen.
 Expire ==
   /\ toast # NoToast
   /\ toast' = NoToast

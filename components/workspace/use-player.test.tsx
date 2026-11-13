@@ -22,6 +22,15 @@ describe('player', () => {
     act(() => result.current.move(-1))
     expect(result.current.at).toBe(0)
   })
+
+  it('swaps at once when the next slide is asked for during a transition', () => {
+    const { result } = renderHook(() => usePlayer(three, () => {}), { wrapper })
+    act(() => result.current.move(1))
+    expect(result.current.change.leaving).toBe(three.slides[0])
+    act(() => result.current.move(1))
+    expect(result.current.change.leaving).toBeNull()
+    expect(result.current.index).toBe(2)
+  })
 })
 
 describe('player reducer', () => {

@@ -226,7 +226,7 @@ function useSlideChange(index: number, slide: Slide | undefined, motion: ActiveT
     setChange({
       index,
       slide,
-      leaving: motion === 'none' ? null : (change.slide ?? null),
+      leaving: motion === 'none' || change.leaving ? null : (change.slide ?? null),
       direction: index < change.index ? -1 : 1,
       count: change.count + 1,
     })
