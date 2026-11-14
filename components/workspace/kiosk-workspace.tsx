@@ -45,6 +45,7 @@ import { SlideCanvas, useCanvas } from './slide-canvas'
 import { SlideSidebar, type SlideMenuAt } from './slide-sidebar'
 import { Toast, useToast } from './toast'
 import { useDownload } from './use-download'
+import { useLaser } from './use-laser'
 import { useLibrary, usePasteAnywhere } from './use-library'
 import { usePlayer, useSlideHash } from './use-player'
 import { useShortcuts, type SlideKey } from './use-shortcuts'
@@ -98,6 +99,7 @@ export function KioskWorkspace({
   const { index, at, slide, go, setIndex } = player
   const settings = useSettingsPanel()
   const canvas = useCanvas({ player, preview: tab === 'preview' })
+  const laser = useLaser(player.presenting, notice)
   const restartChat = () => setChatKey(k => k + 1)
   const library = useLibrary({
     example,
@@ -292,6 +294,7 @@ export function KioskWorkspace({
       else present()
     }
     if (action === 'shareSafe') player.toggleSafe()
+    if (action === 'laser') laser.toggle()
   }
   useEffect(() => {
     sourceRef.current = source
@@ -406,6 +409,7 @@ export function KioskWorkspace({
                 player={player}
                 presentation={presentation}
                 look={look}
+                laser={laser}
                 working={slideActions.working?.index === at}
                 actions={
                   slideAi &&

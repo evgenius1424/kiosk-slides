@@ -15,6 +15,7 @@ const SHORTCUTS = [
   'autoplay',
   'present',
   'shareSafe',
+  'laser',
   'leave',
   'ends',
   'tidy',

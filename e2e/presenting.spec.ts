@@ -74,8 +74,33 @@ test('moves with the on-screen buttons', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Previous slide' })).toBeDisabled()
 })
 
+test('draws with the laser pointer and lets the ink fade', async ({ page }) => {
+  await page.keyboard.press('f')
+  const laser = page.getByRole('button', { name: 'Laser pointer' })
+  await page.keyboard.press('l')
+  await expect(laser).toHaveAttribute('aria-pressed', 'true')
+  await page.mouse.move(300, 300)
+  await page.mouse.down()
+  await page.mouse.move(500, 360, { steps: 12 })
+  await page.mouse.up()
+  await page.keyboard.press('ArrowRight')
+  await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 2 of 3/)
+  await expect.poll(() => inked(page)).toBe(true)
+  await page.keyboard.press('l')
+  await expect(laser).toHaveAttribute('aria-pressed', 'false')
+  await expect.poll(() => inked(page), { timeout: 5000 }).toBe(false)
+})
+
 async function startAutoplay(page: Page) {
   await expect(page.locator('main.workspace')).not.toHaveClass(/is-loading/)
   await page.keyboard.press('p')
   await expect(page.getByText('Autoplay on')).toBeVisible()
+}
+
+function inked(page: Page) {
+  return page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('.laser-layer')!
+    const { data } = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height)
+    return data.some((value, i) => i % 4 === 3 && value > 0)
+  })
 }

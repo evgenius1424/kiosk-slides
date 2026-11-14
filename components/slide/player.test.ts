@@ -47,6 +47,18 @@ describe('exported presentation player', () => {
     expect(page.notice()).toBe('Screen-share safe on')
   })
 
+  it('turns the laser pointer on and off and holds swipes while it is on', async () => {
+    const page = await open()
+    page.press({ key: 'L' })
+    expect([page.notice(), page.laser()]).toEqual([PLAYER_WORDS.laser.on, true])
+    page.swipe(-80, 0)
+    expect(page.active()).toBe(0)
+    page.press({ key: 'l' })
+    expect([page.notice(), page.laser()]).toEqual([PLAYER_WORDS.laser.off, false])
+    page.swipe(-80, 0)
+    expect(page.active()).toBe(1)
+  })
+
   it('reads swipes the same way as the site', async () => {
     const swipes = [
       [-80, 10],
@@ -164,6 +176,11 @@ describe('player words', () => {
     expect({
       autoplay: { on: t('autoplay', { on: 'true' }), off: t('autoplay', { on: 'false' }) },
       shareSafe: { on: t('shareSafe', { on: 'true' }), off: t('shareSafe', { on: 'false' }) },
+      laser: {
+        on: t('laser', { on: 'true' }),
+        off: t('laser', { on: 'false' }),
+        label: createTranslator({ locale: 'en', messages, namespace: 'Workspace.canvas' })('laser'),
+      },
       end: t('end'),
       credit: createTranslator({ locale: 'en', messages, namespace: 'Workspace.shared' })('credit'),
       slide: createTranslator({ locale: 'en', messages, namespace: 'Workspace.canvas' })('slide', {
@@ -251,5 +268,8 @@ async function open(
     wheel: (deltaY: number, deltaMode: number) => fire('wheel', { deltaY, deltaMode }),
     resize: () => window.dispatchEvent(new window.Event('resize')),
     settling: () => document.documentElement.hasAttribute('data-settling'),
+    laser: () =>
+      document.documentElement.hasAttribute('data-laser') &&
+      document.querySelector('#laser')!.getAttribute('aria-pressed') === 'true',
   }
 }
