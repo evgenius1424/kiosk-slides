@@ -76,9 +76,8 @@ test('moves with the on-screen buttons', async ({ page }) => {
 
 test('draws with the laser pointer and lets the ink fade', async ({ page }) => {
   await page.keyboard.press('f')
-  const laser = page.getByRole('button', { name: 'Laser pointer' })
   await page.keyboard.press('l')
-  await expect(laser).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText('Laser pointer on')).toBeVisible()
   await page.mouse.move(300, 300)
   await page.mouse.down()
   await page.mouse.move(500, 360, { steps: 12 })
@@ -88,7 +87,7 @@ test('draws with the laser pointer and lets the ink fade', async ({ page }) => {
   await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 2 of 3/)
   await expect.poll(() => inked(page)).toBe(true)
   await page.keyboard.press('l')
-  await expect(laser).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.getByText('Laser pointer off')).toBeVisible()
   await expect.poll(() => inked(page), { timeout: 5000 }).toBe(false)
 })
 

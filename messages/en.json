@@ -67,7 +67,6 @@
       "next": "Next slide",
       "enter": "Enter presentation mode",
       "leave": "Leave presentation",
-      "laser": "Laser pointer",
       "slide": "Slide {number} of {count}: {title}",
       "empty": "Fix the text in Edit to see your slides."
     },

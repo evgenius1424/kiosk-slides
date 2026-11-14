@@ -9,7 +9,7 @@ import {
   type RefObject,
 } from 'react'
 import { useTranslations } from 'next-intl'
-import { ChevronLeft, ChevronRight, Expand, Highlighter, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react'
 import { slideColors, type Presentation, type SlideLook } from '@/lib/presentation'
 import { SETTLE_MS, SWIPE, WHEEL, swipeDelta } from '@/lib/player'
 import { SlideView } from '../slide'
@@ -86,7 +86,7 @@ export function SlideCanvas({
   const ta = useTranslations('SlideActions')
   const { theme, tone: accent, slides } = presentation
   const { change, index, slide, presenting } = player
-  const { setLayer, on: pointing, toggle: togglePointer } = laser
+  const { setLayer: setLaserLayer } = laser
   useLayoutEffect(() => {
     if (canvasRef.current) fitToPhone(canvasRef.current)
   }, [canvasRef, slide, change, look, theme, presenting])
@@ -122,7 +122,7 @@ export function SlideCanvas({
             <p className="canvas-empty">{t('canvas.empty')}</p>
           )}
         </div>
-        {presenting && <canvas ref={setLayer} className="laser-layer" aria-hidden="true" />}
+        {presenting && <canvas ref={setLaserLayer} className="laser-layer" aria-hidden="true" />}
         {working && (
           <div className="slide-working" role="status">
             <span className="chat-spinner" />
@@ -166,15 +166,6 @@ export function SlideCanvas({
       {actions}
       {presenting && (
         <>
-          <button
-            className="present-exit present-laser"
-            aria-label={t('canvas.laser')}
-            aria-pressed={pointing}
-            style={slideColors(accent, theme) as CSSProperties}
-            onClick={togglePointer}
-          >
-            <Highlighter size={19} />
-          </button>
           <button className="present-exit" aria-label={t('canvas.leave')} onClick={player.leave}>
             <X size={20} />
           </button>

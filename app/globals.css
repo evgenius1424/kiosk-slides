@@ -1332,13 +1332,6 @@ kbd {
     background: #18181b;
   }
 }
-.present-laser {
-  right: calc(max(14px, env(safe-area-inset-right)) + 54px);
-}
-.present-laser[aria-pressed='true'] {
-  background: var(--slide-tone);
-  color: var(--slide-bg);
-}
 .laser-layer {
   position: fixed;
   inset: 0;

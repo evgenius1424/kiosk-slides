@@ -179,7 +179,6 @@ describe('player words', () => {
       laser: {
         on: t('laser', { on: 'true' }),
         off: t('laser', { on: 'false' }),
-        label: createTranslator({ locale: 'en', messages, namespace: 'Workspace.canvas' })('laser'),
       },
       end: t('end'),
       credit: createTranslator({ locale: 'en', messages, namespace: 'Workspace.shared' })('credit'),
@@ -268,8 +267,6 @@ async function open(
     wheel: (deltaY: number, deltaMode: number) => fire('wheel', { deltaY, deltaMode }),
     resize: () => window.dispatchEvent(new window.Event('resize')),
     settling: () => document.documentElement.hasAttribute('data-settling'),
-    laser: () =>
-      document.documentElement.hasAttribute('data-laser') &&
-      document.querySelector('#laser')!.getAttribute('aria-pressed') === 'true',
+    laser: () => document.documentElement.hasAttribute('data-laser'),
   }
 }
