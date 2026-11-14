@@ -87,9 +87,10 @@
     },
     "toast": {
       "swipe": "Swipe to change slides",
-      "keys": "Esc to exit · P to autoplay",
+      "keys": "Esc to exit · P to autoplay · L to point",
       "autoplay": "{on, select, true {Autoplay on} other {Autoplay off}}",
       "shareSafe": "{on, select, true {Screen-share safe on} other {Screen-share safe off}}",
+      "laser": "{on, select, true {Laser pointer on · hold and drag to draw} other {Laser pointer off}}",
       "end": "End of presentation",
       "created": "{name} created · write, paste, or ask AI",
       "loaded": "{name} · {count, plural, one {# slide} other {# slides}}",
@@ -286,6 +287,10 @@
       "shareSafe": {
         "name": "Screen-share safe",
         "keys": "<kbd>S</kbd>"
+      },
+      "laser": {
+        "name": "Laser pointer, hold and drag to draw",
+        "keys": "<kbd>L</kbd>"
       },
       "leave": {
         "name": "Leave presentation",

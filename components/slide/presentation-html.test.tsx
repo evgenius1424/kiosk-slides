@@ -49,7 +49,7 @@ describe('presentationHtml', () => {
     const print = html.slice(html.indexOf('@media print'))
     expect(print).toContain('print-color-adjust:exact')
     expect(print).toContain('.portable-slide+.portable-slide{break-before:page}')
-    expect(print).toContain('#full,#notice,#spoken{display:none!important}')
+    expect(print).toContain('#full,#ink,#notice,#spoken{display:none!important}')
   })
 
   it('embeds images through the given function', async () => {

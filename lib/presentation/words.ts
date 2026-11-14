@@ -11,6 +11,7 @@ export type SlideWords = {
   player: {
     autoplay: { on: string; off: string }
     shareSafe: { on: string; off: string }
+    laser: { on: string; off: string }
     end: string
     credit: string
     slide: string
@@ -28,6 +29,10 @@ export const slideWords: Record<Language, SlideWords> = {
     player: {
       autoplay: { on: 'Autoplay on', off: 'Autoplay off' },
       shareSafe: { on: 'Screen-share safe on', off: 'Screen-share safe off' },
+      laser: {
+        on: 'Laser pointer on · hold and drag to draw',
+        off: 'Laser pointer off',
+      },
       end: 'End of presentation',
       credit: 'Made with Kiosk Slides',
       slide: 'Slide {number} of {count}: {title}',
@@ -43,6 +48,10 @@ export const slideWords: Record<Language, SlideWords> = {
     player: {
       autoplay: { on: 'Автопоказ включён', off: 'Автопоказ выключен' },
       shareSafe: { on: 'Режим для показа экрана включён', off: 'Режим для показа экрана выключен' },
+      laser: {
+        on: 'Лазерная указка включена · зажмите и ведите, чтобы рисовать',
+        off: 'Лазерная указка выключена',
+      },
       end: 'Конец презентации',
       credit: 'Сделано в Kiosk Slides',
       slide: 'Слайд {number} из {count}: {title}',

@@ -5,7 +5,7 @@ import { slideWords, type Language } from './presentation/words'
 
 export type ActiveTransition = Transition | 'share'
 export type PlayerAction =
-  'next' | 'previous' | 'first' | 'last' | 'autoplay' | 'fullscreen' | 'shareSafe'
+  'next' | 'previous' | 'first' | 'last' | 'autoplay' | 'fullscreen' | 'shareSafe' | 'laser'
 
 export const TRANSITION_MS: Record<ActiveTransition, number> = {
   gentle: 880,
@@ -28,6 +28,7 @@ export const PLAYER_KEYS: Record<string, PlayerAction> = {
   p: 'autoplay',
   f: 'fullscreen',
   s: 'shareSafe',
+  l: 'laser',
 }
 
 export const SWIPE = { distance: 45, ratio: 1.2 }
@@ -35,6 +36,7 @@ export const WHEEL = { distance: 65, settleMs: 240, lineHeight: 16 }
 export const IDLE_MS = 2600
 export const SETTLE_MS = 250
 export const SLIDE_HASH = /^#(\d+)$/
+export const LASER = { trailMs: 280, holdMs: 1600, fadeMs: 450, dot: 0.9, ink: 0.5 }
 
 export function activeTransition(transition: Transition, shareSafe: boolean): ActiveTransition {
   return shareSafe && transition !== 'none' ? 'share' : transition

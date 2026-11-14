@@ -63,6 +63,7 @@ Describe your talk, read the result, press Present. That is the whole workflow.
 Slides today are mostly seen through a video call or on a TV across a table. Kiosk Slides is designed for that, not for a printed handout:
 
 - **Screen-share safe mode** turns every transition into a quick, flat fade that stays crisp when the picture is compressed. Press `S` while presenting.
+- **Laser pointer**: press `L` while presenting and the cursor becomes a glowing dot everyone on the call can follow. Hold and drag to circle or underline something; the ink fades on its own a moment later.
 - **Calm transitions**: Gentle, Crossfade, Slide, or none at all.
 - **Big text sizes**, up to a hero setting where every heading fills the screen.
 - **Autoplay and looping**, so a presentation can run on its own on an unattended screen.

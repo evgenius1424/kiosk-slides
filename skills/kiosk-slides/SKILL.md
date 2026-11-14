@@ -77,6 +77,7 @@ When you hand over the HTML, say how to present it:
 - Open it in any browser and go full screen (F11, or Ctrl+Cmd+F on a Mac).
 - Arrow keys, Page Up/Down, Space, or the scroll wheel move between slides.
 - P toggles autoplay; any click or manual move pauses it. Durations and looping come from the presentation.
+- L turns on a laser pointer; holding and dragging draws ink that fades by itself.
 
 ## Rules that are easy to miss
 

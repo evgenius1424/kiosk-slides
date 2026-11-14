@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react'
 import { slideColors, type Presentation, type SlideLook } from '@/lib/presentation'
 import { SETTLE_MS, SWIPE, WHEEL, swipeDelta } from '@/lib/player'
 import { SlideView } from '../slide'
+import type { LaserControl } from './use-laser'
 import type { Player } from './use-player'
 
 const PHONE = '(max-width: 650px)'
@@ -67,12 +68,14 @@ export function SlideCanvas({
   player,
   presentation,
   look,
+  laser,
   working,
   actions,
   onPresent,
 }: {
   canvasRef: RefObject<HTMLDivElement | null>
   player: Player
+  laser: LaserControl
   presentation: Presentation
   look: SlideLook
   working: boolean
@@ -83,6 +86,7 @@ export function SlideCanvas({
   const ta = useTranslations('SlideActions')
   const { theme, tone: accent, slides } = presentation
   const { change, index, slide, presenting } = player
+  const { setLayer: setLaserLayer } = laser
   useLayoutEffect(() => {
     if (canvasRef.current) fitToPhone(canvasRef.current)
   }, [canvasRef, slide, change, look, theme, presenting])
@@ -118,6 +122,7 @@ export function SlideCanvas({
             <p className="canvas-empty">{t('canvas.empty')}</p>
           )}
         </div>
+        {presenting && <canvas ref={setLaserLayer} className="laser-layer" aria-hidden="true" />}
         {working && (
           <div className="slide-working" role="status">
             <span className="chat-spinner" />
@@ -160,9 +165,11 @@ export function SlideCanvas({
       </div>
       {actions}
       {presenting && (
-        <button className="present-exit" aria-label={t('canvas.leave')} onClick={player.leave}>
-          <X size={20} />
-        </button>
+        <>
+          <button className="present-exit" aria-label={t('canvas.leave')} onClick={player.leave}>
+            <X size={20} />
+          </button>
+        </>
       )}
     </>
   )
@@ -232,7 +239,7 @@ function onSwipe(target: HTMLElement, move: (delta: number) => void, vertical: b
         : null
   }
   const up = (event: TouchEvent) => {
-    if (!start) return
+    if (!start || target.hasAttribute('data-laser')) return
     const dx = event.changedTouches[0].clientX - start.x
     const dy = event.changedTouches[0].clientY - start.y
     start = null
