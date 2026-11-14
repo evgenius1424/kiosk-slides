@@ -83,6 +83,7 @@ test('draws with the laser pointer and lets the ink fade', async ({ page }) => {
   await page.mouse.down()
   await page.mouse.move(500, 360, { steps: 12 })
   await page.mouse.up()
+  expect(await page.evaluate(() => getSelection()?.toString())).toBe('')
   await page.keyboard.press('ArrowRight')
   await expect(shownSlide(page)).toHaveAccessibleName(/^Slide 2 of 3/)
   await expect.poll(() => inked(page)).toBe(true)
